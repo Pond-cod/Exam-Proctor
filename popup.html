@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Proctor Lock</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+      --danger: #d93025;
+      --danger-hover: #b31412;
+      --success: #1e8e3e;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #202124;
+      --text-muted: #5f6368;
+      --border: #dadce0;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      width: 340px;
+      padding: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .app-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .version-tag {
+      font-size: 11px;
+      background: #e8f0fe;
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-left: auto;
+    }
+
+    .tabs {
+      display: flex;
+      background: #e9ecef;
+      padding: 3px;
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 7px 4px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 12.5px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    .tab.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .panel {
+      display: none;
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(60,64,67,0.12);
+    }
+    .panel.active { display: block; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #3c4043;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
+    }
+    input:disabled {
+      background: #f1f3f4;
+      color: #70757a;
+      cursor: not-allowed;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 8px;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-secondary { background: #f1f3f4; color: #3c4043; }
+    .btn-secondary:hover { background: #e8eaed; }
+    .btn-sm { padding: 6px 10px; font-size: 12px; margin-bottom: 6px; }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      padding: 8px;
+      background: #f1f3f4;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .status-badge.active {
+      background: #fce8e6;
+      color: var(--danger);
+      font-weight: bold;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9aa0a6;
+    }
+    .status-badge.active .status-dot {
+      background: var(--danger);
+      animation: blink 1s infinite;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: -6px;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-header">
+    <div class="app-title">🛡️ Exam Proctor Lock</div>
+    <span class="version-tag">v2.1</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabStudent">👨‍🎓 สำหรับผู้เข้าสอบ</div>
+    <div class="tab" id="tabAdmin">⚙️ ตั้งค่า / Monitor</div>
+  </div>
+
+  <!-- แท็บสำหรับผู้เข้าสอบ -->
+  <div class="panel active" id="panelStudent">
+    <label for="studentId">1. รหัสนักเรียน (ตัวเลขเท่านั้น) *</label>
+    <input type="text" id="studentId" inputmode="numeric" placeholder="กรอกรหัสนักเรียน เช่น 660101" autocomplete="off" />
+    <div id="studentIdError" style="color: #d93025; font-size: 11.5px; margin-top: -6px; margin-bottom: 8px; display: none; font-weight: 600;"></div>
+
+    <label for="customFormUrl">2. ลิงก์ข้อสอบ (ใช้ฟอร์มไหนก็ได้) *</label>
+    <button id="detectTabBtn" class="btn-secondary btn-sm" style="display:none; margin-bottom:8px; background:#e8f0fe; color:#1a73e8; border:1px solid #c2e7ff; font-weight:600;">
+      🎯 ตรวจพบฟอร์ม: ใช้แท็บปัจจุบันทำข้อสอบ
+    </button>
+    <input type="text" id="customFormUrl" placeholder="https://docs.google.com/forms/... หรือ https://forms.gle/..." />
+    <div class="hint" id="formUrlHint">*วางลิงก์ Google Forms ใดก็ได้ที่ได้รับมอบหมาย</div>
+    <div id="formUrlError" style="color: #d93025; font-size: 11.5px; margin-top: -4px; margin-bottom: 8px; display: none; font-weight: 600;"></div>
+
+    <button id="startBtn" class="btn-primary">🚀 เริ่มทำข้อสอบ (ล็อกหน้าจอเต็มจอ)</button>
+    <button id="stopBtn" class="btn-danger" style="display: none;">🔓 สิ้นสุดการสอบ (ปลดล็อกระบบ)</button>
+
+    <div class="status-badge" id="statusBadge">
+      <span class="status-dot"></span>
+      <span id="statusText">สถานะ: ยังไม่ได้เริ่มสอบ</span>
+    </div>
+  </div>
+
+  <!-- แท็บสำหรับผู้คุมสอบ (Admin) -->
+  <div class="panel" id="panelAdmin">
+    <div id="adminLoginBox">
+      <label>รหัสผ่านผู้คุมสอบ (Admin Passcode)</label>
+      <input type="password" id="adminPassInput" placeholder="กรอกรหัสผ่าน (เริ่มต้น: 1234)" />
+      <button id="loginAdminBtn" class="btn-primary">🔓 เข้าสู่ระบบตั้งค่า</button>
+    </div>
+
+    <div id="adminConfigBox" style="display: none;">
+      <label>1. กำหนดลิงก์ข้อสอบกลาง (Google Forms)</label>
+      <input type="text" id="cfgFormUrl" placeholder="https://docs.google.com/forms/... หรือ forms.gle/..." />
+      <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <button id="grabCurrentTabAdminBtn" class="btn-secondary btn-sm" style="flex:1;">🎯 ดึงลิงก์จากแท็บปัจจุบัน</button>
+        <button id="clearFormUrlBtn" class="btn-secondary btn-sm" style="flex:1;">❌ ล้าง URL (เปิดอิสระ)</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; font-size:12px;">
+        <input type="checkbox" id="cfgLockUrl" style="width:auto; margin:0;" />
+        <label for="cfgLockUrl" style="margin:0; font-weight:normal; cursor:pointer;">ล็อกลิงก์นี้ให้นักเรียนทุกคน (ห้ามเปลี่ยน)</label>
+      </div>
+      <div class="hint">*หากเว้นว่างไว้ นักเรียนสามารถวาง Google Forms ใดก็ได้เพื่อเข้าสอบ</div>
+
+      <label>2. Webhook URL (Google Apps Script / Discord)</label>
+      <input type="text" id="cfgWebhookUrl" value="https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec" />
+
+      <label>3. รหัสลับเข้าสอบ (Secret Token - ถ้ามี)</label>
+      <input type="text" id="cfgSecretToken" value="EXAM_LOCK_999" />
+      <div class="hint">*กรณีฟอร์มมีคำถามตรวจสอบรหัสลับ (ถ้าไม่มีฟอร์มจะสอบได้ตามปกติ)</div>
+
+      <label>4. รหัสผ่านผู้คุมสอบ (Admin Passcode)</label>
+      <input type="text" id="cfgAdminPass" value="1234" />
+      <div class="hint">*รหัสผ่านสำหรับปลดล็อกและตั้งค่า (ค่าเริ่มต้น: 1234)</div>
+
+      <button id="saveCfgBtn" class="btn-success">💾 บันทึกการตั้งค่า</button>
+      <button id="testWebhookBtn" class="btn-secondary btn-sm">📡 ทดสอบส่งสัญญาณ Webhook</button>
+      <button id="openMonitorBtn" class="btn-secondary">🖥️ เปิดหน้าจอ Admin Monitor แบบสด</button>
+      <a href="https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing" target="_blank" style="text-decoration:none; display:flex; align-items:center; justify-content:center; padding:7px 10px; background:#f1f3f4; color:#3c4043; border-radius:6px; font-size:12px; font-weight:600; margin-top:4px;">📊 เปิดดู Google Sheets</a>
+      
+      <div id="saveStatus" style="display:none; color: var(--success); font-size:12px; text-align:center; font-weight:bold; margin-top:6px;">
+        ✅ บันทึกการตั้งค่าสำเร็จ!
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

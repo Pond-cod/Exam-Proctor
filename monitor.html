@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Exam Monitor - ติดตามการคุมสอบแบบ Real-time</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --danger: #d93025;
+      --danger-bg: #fce8e6;
+      --success: #1e8e3e;
+      --success-bg: #e6f4ea;
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --text: #202124;
+      --muted: #5f6368;
+      --border: #dadce0;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Prompt', sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 24px;
+      color: var(--text);
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--card);
+      padding: 28px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f3f4;
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-live {
+      background: var(--success-bg);
+      color: #137333;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #f8f9fa; }
+    .btn-primary { background: var(--primary); color: white; border: none; }
+    .btn-primary:hover { background: #1557b0; }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+    .btn-success {
+      background: var(--success);
+      color: white;
+      border: none;
+    }
+    .btn-success:hover { background: #187a33; }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      border: none;
+    }
+    .btn-danger:hover { background: #b31412; }
+    .input-field {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🖥️ Admin Exam Monitor (ระบบติดตามการคุมสอบสด)</h1>
+      <div class="header-actions">
+        <a href="https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing" target="_blank" class="btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📊 เปิด Google Sheets</a>
+        <button class="btn" id="simulateBtn">🧪 ทดสอบจำลองแจ้งเตือน</button>
+        <span class="badge-live" id="syncStatus">● กำลังเชื่อมต่อข้อมูล...</span>
+      </div>
+    </div>
+
+    <!-- แผงตั้งค่าและควบคุมระบบคุมสอบทั้งหมด (Admin Settings & Control Panel) -->
+    <div class="settings-card" id="settingsCard" style="background:#ffffff; border:1px solid #d2e3fc; border-radius:10px; padding:18px; margin-bottom:24px; box-shadow:0 2px 8px rgba(26,115,232,0.08);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid #edf2f7; padding-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:22px;">⚙️</span>
+          <div>
+            <div style="font-weight:700; font-size:15px; color:#1a73e8; display:flex; align-items:center; gap:8px;">
+              <span>แผงควบคุมและตั้งค่าระบบคุมสอบ (Admin Settings & Control Center)</span>
+              <span id="formUrlModeBadge" style="font-size:11.5px; padding:2px 10px; border-radius:12px; background:#e8f0fe; color:#1a73e8; font-weight:600;">
+                ⚪ โหมดอิสระ
+              </span>
+            </div>
+            <div style="font-size:12px; color:#5f6368; margin-top:2px;">
+              ทุกการตั้งค่าในหน้านี้จะซิงค์ไปยัง Extension และอุปกรณ์ของผู้สอบทั้งหมดโดยอัตโนมัติ
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-sm" id="toggleSettingsBtn" style="font-weight:600;">🔽 ย่อ/ขยายการตั้งค่า</button>
+      </div>
+
+      <div id="settingsContent" style="margin-top:16px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:18px;">
+          
+          <!-- ฝั่งซ้าย: ลิงก์ข้อสอบ Google Forms -->
+          <div style="background:#f8f9fa; border:1px solid #dadce0; border-radius:8px; padding:16px;">
+            <label style="font-weight:700; font-size:13px; color:#202124; display:block; margin-bottom:6px;">
+              1. กำหนดลิงก์ข้อสอบกลาง (Google Forms URL)
+            </label>
+            <input type="text" id="cfgFormUrl" class="input-field" placeholder="วางลิงก์ Google Forms (https://docs.google.com/forms/... หรือ forms.gle/...)" />
+            
+            <div style="display:flex; gap:6px; margin-top:8px; margin-bottom:10px; flex-wrap:wrap;">
+              <button class="btn btn-sm" id="openFormBtn">🔗 เปิดดูฟอร์ม</button>
+              <button class="btn btn-sm" id="copyFormBtn">📋 คัดลอกลิงก์</button>
+              <button class="btn btn-sm" id="clearFormBtn" style="color:#d93025;">❌ ล้างค่า (โหมดอิสระ)</button>
+            </div>
+
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; color:#3c4043; font-weight:600; margin-top:8px;">
+              <input type="checkbox" id="cfgLockUrl" style="width:16px; height:16px; cursor:pointer;" />
+              <span>🔒 ล็อกลิงก์นี้ให้นักเรียนทุกคน (ไม่อนุญาตให้แก้ไข/เปลี่ยนฟอร์ม)</span>
+            </label>
+            <div style="font-size:11.5px; color:#5f6368; margin-top:4px; line-height:1.4;">
+              *หากติ๊กช่องนี้ ผู้สอบจะถูกบังคับเปิดเฉพาะข้อสอบชุดนี้เท่านั้น ไม่สามารถแก้ไขลิงก์ใน Extension ได้
+            </div>
+          </div>
+
+          <!-- ฝั่งขวา: Webhook, Token, รหัสผ่าน Admin -->
+          <div style="background:#f8f9fa; border:1px solid #dadce0; border-radius:8px; padding:16px;">
+            <label style="font-weight:700; font-size:13px; color:#202124; display:block; margin-bottom:6px;">
+              2. Webhook URL (Google Apps Script / Discord)
+            </label>
+            <input type="text" id="cfgWebhookUrl" class="input-field" placeholder="URL เว็บแอป Google Apps Script หรือ Discord Webhook" />
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+              <div>
+                <label style="font-weight:700; font-size:13px; color:#202124; display:block; margin-bottom:6px;">
+                  3. รหัสลับเข้าสอบ (Secret Token)
+                </label>
+                <input type="text" id="cfgSecretToken" class="input-field" placeholder="เช่น EXAM_LOCK_999" />
+                <div style="font-size:11px; color:#5f6368; margin-top:4px;">*กรณีฟอร์มมีคำถามตรวจสอบรหัสลับ</div>
+              </div>
+              <div>
+                <label style="font-weight:700; font-size:13px; color:#202124; display:block; margin-bottom:6px;">
+                  4. รหัสผ่านผู้คุมสอบ (Admin Passcode)
+                </label>
+                <input type="text" id="cfgAdminPass" class="input-field" placeholder="ค่าเริ่มต้น: 1234" />
+                <div style="font-size:11px; color:#5f6368; margin-top:4px;">*สำหรับปลดล็อก Extension หรือตั้งค่า</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- แถบปุ่มบันทึกและจัดการ -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:14px; border-top:1px solid #e8eaed; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="saveAllSettingsBtn" style="padding:9px 20px; font-size:13.5px; font-weight:700;">
+              💾 บันทึกการตั้งค่าทั้งหมด
+            </button>
+            <button class="btn" id="testWebhookBtn" style="padding:9px 16px; font-size:13px;">
+              📡 ทดสอบส่งสัญญาณ Webhook
+            </button>
+            <a href="https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing" target="_blank" class="btn" style="text-decoration:none; padding:9px 16px; font-size:13px;">
+              📊 เปิดดู Google Sheets
+            </a>
+          </div>
+
+          <div id="saveToast" style="display:none; color:#1e8e3e; font-weight:700; font-size:13px;">
+            ✅ บันทึกการตั้งค่าทั้งหมดเรียบร้อยแล้ว! (ข้อมูลซิงค์กับ Extension เรียบร้อย)
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-title">จำนวนผู้เข้าสอบที่พบในระบบ</div>
+        <div class="stat-val" id="totalStudents">0 คน</div>
+      </div>
+      <div class="stat-card alert">
+        <div class="stat-title">ตรวจพบการทำผิดกฎ (สลับจอ/เปิดแท็บ)</div>
+        <div class="stat-val" id="totalViolations">0 ครั้ง</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-title">ผู้สอบที่ส่งข้อสอบเรียบร้อยแล้ว</div>
+        <div class="stat-val" id="totalSubmitted">0 คน</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาด้วยรหัส/ชื่อผู้สอบ หรือประเภทเหตุการณ์..." />
+      <div>
+        <button class="btn" id="refreshBtn">🔄 รีเฟรชข้อมูล</button>
+        <button class="btn" id="clearLocalBtn">🗑️ ล้างข้อมูลหน้าจอ</button>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 18%;">เวลาที่บันทึก</th>
+          <th style="width: 25%;">รหัส / ชื่อผู้เข้าสอบ</th>
+          <th style="width: 42%;">สถานะ / พฤติกรรมที่ตรวจพบ</th>
+          <th style="width: 15%;">สะสมทำผิด</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody">
+        <tr><td colspan="4" style="text-align:center; padding: 24px;">กำลังโหลดข้อมูลจาก Google Sheets Webhook...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="monitor.js"></script>
+</body>
+</html>

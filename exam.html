@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบคุมสอบออนไลน์ - Exam Proctor Web</title>
+  <meta name="description" content="ระบบคุมสอบออนไลน์ ครอบ Google Forms พร้อมระบบตรวจสอบการสลับหน้าจอและป้องกันการทุจริต">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 1. หน้า Portal เข้าสู่การสอบ (ก่อนเริ่มสอบ) -->
+  <div id="examPortalView">
+    <div class="portal-box">
+      <div class="portal-icon">🎓</div>
+      <h1 class="portal-title" id="portalExamTitle">แบบทดสอบออนไลน์</h1>
+      <p class="portal-subtitle">ระบบคุมสอบป้องกันการสลับหน้าจอและตรวจจับการทุจริต</p>
+
+      <!-- กล่องใส่ลิงก์ข้อสอบสำรอง (กรณีเปิดหน้านี้โดดๆ โดยไม่มีพารามิเตอร์) -->
+      <div id="manualFormBox" style="display: none; text-align: left; margin-bottom: 20px;">
+        <label class="form-label">ลิงก์ Google Forms ข้อสอบ *</label>
+        <input type="url" id="manualFormUrl" class="form-control" placeholder="https://docs.google.com/forms/d/e/.../viewform">
+      </div>
+
+      <div class="rules-list">
+        <strong>⚠️ ข้อกำหนดและระเบียบการสอบ:</strong>
+        <ul style="margin-top: 8px;">
+          <li>ต้องเปิดเบราว์เซอร์ในโหมดเต็มจอ (Fullscreen) ตลอดการสอบ</li>
+          <li>ห้ามสลับแท็บ ย่อหน้าจอ หรือเปิดโปรแกรมอื่นทับ (ระบบจะส่งรายงานไปยังผู้คุมสอบทันที)</li>
+          <li>เมื่อทำข้อสอบเสร็จแล้ว ให้กดปุ่ม <strong>ส่ง (Submit)</strong> ในแบบฟอร์ม จากนั้นกดปุ่มสิ้นสุดการสอบด้านบน</li>
+        </ul>
+      </div>
+
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label" for="studentIdInput">1. รหัสนักเรียน (ตัวเลขเท่านั้น) *</label>
+        <input 
+          type="text" 
+          id="studentIdInput" 
+          class="form-control" 
+          inputmode="numeric" 
+          pattern="[0-9]*" 
+          placeholder="กรอกรหัสประจำตัวนักเรียน เช่น 55441"
+          autocomplete="off"
+          required
+        >
+      </div>
+
+      <button id="startExamBtn" class="btn btn-primary btn-block btn-lg">
+        🚀 เริ่มทำข้อสอบ (ล็อกหน้าจอเต็มจอ)
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. หน้าคุมสอบเต็มจอ ครอบ Google Forms (Active Exam View) -->
+  <div id="examActiveView">
+    <!-- แถบควบคุมความปลอดภัยด้านบน -->
+    <header class="proctor-header-bar">
+      <div class="header-left">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>กำลังคุมสอบ</span>
+        </div>
+        <div>วิชา: <strong id="headerExamTitle">กำลังโหลด...</strong></div>
+        <div>รหัสผู้สอบ: <strong id="headerStudentId" style="color: #60a5fa;">-</strong></div>
+      </div>
+
+      <div class="header-center">
+        <div class="exam-timer">
+          ⏱️ <span id="examTimer">00:00</span>
+        </div>
+        <span id="headerViolationCount" class="badge badge-danger" style="display:none;">ผิดกฎ: 0 ครั้ง</span>
+      </div>
+
+      <div class="header-right">
+        <button id="finishExamBtn" class="btn btn-success" style="padding: 6px 14px; font-size: 13px;">
+          ✅ ฉันส่งข้อสอบเรียบร้อยแล้ว
+        </button>
+        <button id="adminUnlockBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">
+          🔓 ปลดล็อก (Admin)
+        </button>
+      </div>
+    </header>
+
+    <!-- พื้นที่แสดง Google Forms ใน iframe เต็มจอ -->
+    <main class="exam-iframe-container">
+      <iframe 
+        id="examIframe" 
+        class="exam-iframe" 
+        src="about:blank"
+        allow="fullscreen; autoplay; microphone; camera"
+      ></iframe>
+    </main>
+  </div>
+
+  <!-- 3. Violation Modal เมื่อหลุดจากโหมดเต็มจอ -->
+  <div id="violationModal" class="violation-modal">
+    <div class="violation-box">
+      <div class="violation-icon">🚨</div>
+      <h2 class="violation-title">ตรวจพบการออกจากโหมดเต็มจอ!</h2>
+      <p class="violation-desc">
+        ระบบตรวจพบว่าคุณได้ออกจากโหมดเต็มหน้าจอ หรือพยายามสลับหน้าต่าง<br>
+        <strong>เหตุการณ์นี้ถูกบันทึกและส่งไปยังผู้คุมสอบเรียบร้อยแล้ว</strong><br>
+        กรุณากดปุ่มด้านล่างเพื่อกลับเข้าสู่โหมดเต็มจอทันที
+      </p>
+      <button id="returnFullscreenBtn" class="btn btn-danger btn-lg btn-block">
+        🔄 กลับเข้าสู่โหมดเต็มจอทันที
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast แจ้งเตือนด่วน -->
+  <div id="toastAlert" class="toast-alert"></div>
+
+  <!-- โหลดสคริปต์ -->
+  <script src="js/config.js"></script>
+  <script src="js/proctor.js"></script>
+</body>
+</html>
