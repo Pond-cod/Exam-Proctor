@@ -15,8 +15,8 @@ function playAdminChime() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
     gain.gain.setValueAtTime(0.2, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
     osc.connect(gain);
@@ -65,7 +65,7 @@ function generateExamLink() {
   const passcode = (document.getElementById("examPasscodeInput").value || "").trim() || DEFAULT_ADMIN_PASSCODE;
 
   if (!rawFormUrl) {
-    alert("⚠️ กรุณาระบุลิงก์ Google Forms ก่อนสร้างห้องสอบ");
+    alert("กรุณาระบุลิงก์ Google Forms ก่อนสร้างห้องสอบ");
     document.getElementById("examFormUrlInput").focus();
     return;
   }
@@ -113,7 +113,6 @@ function generateExamLink() {
 function saveRoomToHistory(roomConfig, fullUrl) {
   try {
     let history = JSON.parse(localStorage.getItem("examRoomsHistory") || "[]");
-    // ลบอันเก่าที่ซ้ำออก
     history = history.filter((r) => r.fullUrl !== fullUrl);
     history.unshift({
       title: roomConfig.title,
@@ -121,7 +120,6 @@ function saveRoomToHistory(roomConfig, fullUrl) {
       createdAt: new Date().toLocaleString("th-TH"),
       fullUrl: fullUrl
     });
-    // เก็บสูงสุด 10 ห้องล่าสุด
     history = history.slice(0, 10);
     localStorage.setItem("examRoomsHistory", JSON.stringify(history));
     renderRoomHistory();
@@ -136,19 +134,19 @@ function renderRoomHistory() {
   try {
     const history = JSON.parse(localStorage.getItem("examRoomsHistory") || "[]");
     if (history.length === 0) {
-      container.innerHTML = `<div style="color: var(--text-muted); font-size: 13px;">ยังไม่มีประวัติการสร้างห้องสอบ</div>`;
+      container.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; padding: 12px 0;">ยังไม่มีประวัติการสร้างห้องสอบ</div>`;
       return;
     }
 
     container.innerHTML = history.map((room) => `
-      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+      <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
         <div style="overflow: hidden;">
           <strong style="display: block; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${room.title}</strong>
           <span style="font-size: 12px; color: var(--text-muted);">${room.createdAt}</span>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="copySpecificUrl('${room.fullUrl}')">📋 คัดลอก</button>
-          <a class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" href="${room.fullUrl}" target="_blank">🔗 เปิดดู</a>
+          <button class="btn btn-secondary" style="padding: 5px 12px; font-size: 12px;" onclick="copySpecificUrl('${room.fullUrl}')">คัดลอก</button>
+          <a class="btn btn-primary" style="padding: 5px 12px; font-size: 12px;" href="${room.fullUrl}" target="_blank">เปิดดู</a>
         </div>
       </div>
     `).join("");
@@ -157,7 +155,7 @@ function renderRoomHistory() {
 
 window.copySpecificUrl = function(url) {
   navigator.clipboard.writeText(url).then(() => {
-    alert("✅ คัดลอกลิงก์ห้องสอบเรียบร้อยแล้ว");
+    alert("คัดลอกลิงก์ห้องสอบเรียบร้อยแล้ว");
   });
 };
 
@@ -183,11 +181,11 @@ function fetchMonitorLogs() {
       allLogs = fetchedList;
       renderMonitorLogs();
       if (syncStatus) {
-        syncStatus.textContent = `● ซิงค์ล่าสุด: ${new Date().toLocaleTimeString("th-TH")}`;
+        syncStatus.textContent = `ซิงค์ล่าสุด: ${new Date().toLocaleTimeString("th-TH")}`;
       }
     })
     .catch((err) => {
-      if (syncStatus) syncStatus.textContent = `⚠️ ขาดการเชื่อมต่อ Webhook`;
+      if (syncStatus) syncStatus.textContent = `ขาดการเชื่อมต่อ Webhook`;
     });
 }
 
@@ -219,7 +217,6 @@ function renderMonitorLogs() {
   if (totalViolationsEl) totalViolationsEl.textContent = `${currentTotalViolations} ครั้ง`;
   if (totalSubmittedEl) totalSubmittedEl.textContent = `${submittedSet.size} คน`;
 
-  // เสียงแจ้งเตือนเมื่อยอดทำผิดกฎเพิ่ม
   if (currentTotalViolations > previousViolationCount && previousViolationCount > 0) {
     playAdminChime();
   }
@@ -235,11 +232,10 @@ function renderMonitorLogs() {
   });
 
   if (filtered.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 28px; color: var(--text-muted);">ยังไม่มีข้อมูลเหตุการณ์</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 24px; color: var(--text-muted);">ยังไม่มีข้อมูลเหตุการณ์</td></tr>`;
     return;
   }
 
-  // เรียงลำดับจากเหตุการณ์ล่าสุดขึ้นก่อน
   const reversed = [...filtered].reverse();
 
   tableBody.innerHTML = reversed.map((item) => {
@@ -248,8 +244,8 @@ function renderMonitorLogs() {
     const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
     const rowClass = (isStart || isEnd) ? "success-row" : "violation-row";
     const badge = (isStart || isEnd)
-      ? `<span class="badge badge-success">${isStart ? "🟢 เริ่มสอบ" : "✅ ส่งแล้ว"}</span>`
-      : `<span class="badge badge-danger">🚨 ผิดกฎ</span>`;
+      ? `<span class="badge badge-success">${isStart ? "เริ่มสอบ" : "ส่งข้อสอบแล้ว"}</span>`
+      : `<span class="badge badge-danger">แจ้งเตือน</span>`;
 
     return `
       <tr class="${rowClass}">
@@ -268,11 +264,11 @@ async function testWebhookPing() {
   const testBtn = document.getElementById("testWebhookBtn");
 
   testBtn.disabled = true;
-  testBtn.textContent = "⏳ กำลังทดสอบ...";
+  testBtn.textContent = "กำลังทดสอบ...";
 
   const payload = {
     studentId: "ทดสอบระบบ (Test Ping)",
-    violation: "ทดสอบการเชื่อมต่อ Webhook จาก Web App Studio",
+    violation: "ทดสอบการเชื่อมต่อ Webhook จาก Exam Proctor Studio",
     timestamp: new Date().toISOString(),
     time: new Date().toLocaleTimeString("th-TH"),
     date: new Date().toLocaleDateString("th-TH"),
@@ -286,13 +282,13 @@ async function testWebhookPing() {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
-    alert(`✅ ส่งข้อความทดสอบสำเร็จ! (Status: ${res.status})\nคุณสามารถตรวจดูผลใน Google Sheets ได้ทันที`);
+    alert(`ส่งข้อความทดสอบสำเร็จ (Status: ${res.status})\nสามารถตรวจดูผลใน Google Sheets ได้ทันที`);
     fetchMonitorLogs();
   } catch (err) {
-    alert(`⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ:\n${err.message}`);
+    alert(`เกิดข้อผิดพลาดในการเชื่อมต่อ: ${err.message}`);
   } finally {
     testBtn.disabled = false;
-    testBtn.textContent = "📡 ทดสอบส่งสัญญาณ Webhook";
+    testBtn.textContent = "ทดสอบ Webhook";
   }
 }
 
@@ -301,7 +297,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTabNavigation();
   renderRoomHistory();
 
-  // กำหนดค่าเริ่มต้น
   const webhookInput = document.getElementById("examWebhookInput");
   if (webhookInput && !webhookInput.value) {
     webhookInput.value = DEFAULT_WEBHOOK_URL;
@@ -311,13 +306,11 @@ document.addEventListener("DOMContentLoaded", () => {
     passInput.value = DEFAULT_ADMIN_PASSCODE;
   }
 
-  // ปุ่มสร้างลิงก์
   const generateBtn = document.getElementById("generateLinkBtn");
   if (generateBtn) {
     generateBtn.addEventListener("click", generateExamLink);
   }
 
-  // ปุ่มคัดลอกลิงก์
   const copyBtn = document.getElementById("copyLinkBtn");
   if (copyBtn) {
     copyBtn.addEventListener("click", () => {
@@ -325,20 +318,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (linkDisplay && linkDisplay.value) {
         navigator.clipboard.writeText(linkDisplay.value).then(() => {
           const originalText = copyBtn.innerHTML;
-          copyBtn.innerHTML = "✅ คัดลอกแล้ว!";
+          copyBtn.innerHTML = "คัดลอกแล้ว";
           setTimeout(() => { copyBtn.innerHTML = originalText; }, 2000);
         });
       }
     });
   }
 
-  // ปุ่มทดสอบ Webhook
   const testWebhookBtn = document.getElementById("testWebhookBtn");
   if (testWebhookBtn) {
     testWebhookBtn.addEventListener("click", testWebhookPing);
   }
 
-  // ปุ่มเปิด Google Sheets
   const openSheetBtn = document.getElementById("openSheetBtn");
   if (openSheetBtn) {
     openSheetBtn.addEventListener("click", () => {
@@ -346,13 +337,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ช่องค้นหาใน Monitor
   const searchLogInput = document.getElementById("searchLogInput");
   if (searchLogInput) {
     searchLogInput.addEventListener("input", renderMonitorLogs);
   }
 
-  // ปุ่มรีเฟรช Monitor
   const refreshLogsBtn = document.getElementById("refreshLogsBtn");
   if (refreshLogsBtn) {
     refreshLogsBtn.addEventListener("click", fetchMonitorLogs);

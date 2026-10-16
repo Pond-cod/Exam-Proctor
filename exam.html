@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบคุมสอบออนไลน์ - Exam Proctor Web</title>
-  <meta name="description" content="ระบบคุมสอบออนไลน์ ครอบ Google Forms พร้อมระบบตรวจสอบการสลับหน้าจอและป้องกันการทุจริต">
+  <title>ระบบคุมสอบออนไลน์</title>
+  <meta name="description" content="ระบบคุมสอบออนไลน์ระดับสถานศึกษา ครอบ Google Forms พร้อมระบบตรวจสอบความซื่อสัตย์ในการสอบ">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,27 +12,27 @@
   <!-- 1. หน้า Portal เข้าสู่การสอบ (ก่อนเริ่มสอบ) -->
   <div id="examPortalView">
     <div class="portal-box">
-      <div class="portal-icon">🎓</div>
+      <div class="portal-badge">ระบบคุมสอบออนไลน์</div>
       <h1 class="portal-title" id="portalExamTitle">แบบทดสอบออนไลน์</h1>
-      <p class="portal-subtitle">ระบบคุมสอบป้องกันการสลับหน้าจอและตรวจจับการทุจริต</p>
+      <p class="portal-subtitle">กรุณาระบุรหัสประจำตัวเพื่อเข้าสู่การสอบ</p>
 
       <!-- กล่องใส่ลิงก์ข้อสอบสำรอง (กรณีเปิดหน้านี้โดดๆ โดยไม่มีพารามิเตอร์) -->
       <div id="manualFormBox" style="display: none; text-align: left; margin-bottom: 20px;">
-        <label class="form-label">ลิงก์ Google Forms ข้อสอบ *</label>
+        <label class="form-label" for="manualFormUrl">ลิงก์ Google Forms ข้อสอบ *</label>
         <input type="url" id="manualFormUrl" class="form-control" placeholder="https://docs.google.com/forms/d/e/.../viewform">
       </div>
 
       <div class="rules-list">
-        <strong>⚠️ ข้อกำหนดและระเบียบการสอบ:</strong>
-        <ul style="margin-top: 8px;">
-          <li>ต้องเปิดเบราว์เซอร์ในโหมดเต็มจอ (Fullscreen) ตลอดการสอบ</li>
-          <li>ห้ามสลับแท็บ ย่อหน้าจอ หรือเปิดโปรแกรมอื่นทับ (ระบบจะส่งรายงานไปยังผู้คุมสอบทันที)</li>
-          <li>เมื่อทำข้อสอบเสร็จแล้ว ให้กดปุ่ม <strong>ส่ง (Submit)</strong> ในแบบฟอร์ม จากนั้นกดปุ่มสิ้นสุดการสอบด้านบน</li>
-        </ul>
+        <strong style="color: var(--text-primary);">ข้อกำหนดและระเบียบการสอบ:</strong>
+        <ol>
+          <li>ต้องทำข้อสอบในโหมดเต็มหน้าจอ (Fullscreen) ตลอดระยะเวลาการสอบ</li>
+          <li>ห้ามสลับแท็บ ย่อหน้าจอ หรือเปิดโปรแกรมอื่น ระบบจะบันทึกเวลาและส่งรายงานไปยังผู้คุมสอบ</li>
+          <li>เมื่อทำข้อสอบเสร็จสิ้น ให้กดปุ่มส่ง (Submit) ในแบบฟอร์ม จากนั้นกดปุ่ม "ส่งข้อสอบเรียบร้อยแล้ว" ด้านบน</li>
+        </ol>
       </div>
 
       <div class="form-group" style="text-align: left;">
-        <label class="form-label" for="studentIdInput">1. รหัสนักเรียน (ตัวเลขเท่านั้น) *</label>
+        <label class="form-label" for="studentIdInput">รหัสประจำตัวนักเรียน (ตัวเลขเท่านั้น) *</label>
         <input 
           type="text" 
           id="studentIdInput" 
@@ -46,7 +46,7 @@
       </div>
 
       <button id="startExamBtn" class="btn btn-primary btn-block btn-lg">
-        🚀 เริ่มทำข้อสอบ (ล็อกหน้าจอเต็มจอ)
+        เข้าสู่ห้องสอบ (เปิดเต็มหน้าจอ)
       </button>
     </div>
   </div>
@@ -56,7 +56,7 @@
     <!-- แถบควบคุมความปลอดภัยด้านบน -->
     <header class="proctor-header-bar">
       <div class="header-left">
-        <div class="status-indicator">
+        <div class="status-pill">
           <span class="status-dot"></span>
           <span>กำลังคุมสอบ</span>
         </div>
@@ -66,17 +66,17 @@
 
       <div class="header-center">
         <div class="exam-timer">
-          ⏱️ <span id="examTimer">00:00</span>
+          เวลา: <span id="examTimer">00:00</span>
         </div>
-        <span id="headerViolationCount" class="badge badge-danger" style="display:none;">ผิดกฎ: 0 ครั้ง</span>
+        <span id="headerViolationCount" class="badge badge-danger" style="display:none;">แจ้งเตือน: 0 ครั้ง</span>
       </div>
 
       <div class="header-right">
-        <button id="finishExamBtn" class="btn btn-success" style="padding: 6px 14px; font-size: 13px;">
-          ✅ ฉันส่งข้อสอบเรียบร้อยแล้ว
+        <button id="finishExamBtn" class="btn btn-success" style="padding: 5px 14px; font-size: 13px;">
+          ส่งข้อสอบเรียบร้อยแล้ว
         </button>
-        <button id="adminUnlockBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">
-          🔓 ปลดล็อก (Admin)
+        <button id="adminUnlockBtn" class="btn btn-secondary" style="padding: 5px 12px; font-size: 13px;">
+          ปลดล็อกระบบ (สำหรับครู)
         </button>
       </div>
     </header>
@@ -95,15 +95,14 @@
   <!-- 3. Violation Modal เมื่อหลุดจากโหมดเต็มจอ -->
   <div id="violationModal" class="violation-modal">
     <div class="violation-box">
-      <div class="violation-icon">🚨</div>
-      <h2 class="violation-title">ตรวจพบการออกจากโหมดเต็มจอ!</h2>
+      <h2 class="violation-title">แจ้งเตือน: หลุดจากโหมดเต็มหน้าจอ</h2>
       <p class="violation-desc">
-        ระบบตรวจพบว่าคุณได้ออกจากโหมดเต็มหน้าจอ หรือพยายามสลับหน้าต่าง<br>
-        <strong>เหตุการณ์นี้ถูกบันทึกและส่งไปยังผู้คุมสอบเรียบร้อยแล้ว</strong><br>
-        กรุณากดปุ่มด้านล่างเพื่อกลับเข้าสู่โหมดเต็มจอทันที
+        ระบบตรวจพบว่าหน้าจอหลุดจากโหมดเต็มหน้าจอ หรือมีการสลับหน้าต่าง<br>
+        <strong>เหตุการณ์นี้ถูกบันทึกและส่งรายงานไปยังผู้คุมสอบเรียบร้อยแล้ว</strong><br>
+        กรุณากดปุ่มด้านล่างเพื่อกลับเข้าสู่โหมดเต็มหน้าจอทันที
       </p>
       <button id="returnFullscreenBtn" class="btn btn-danger btn-lg btn-block">
-        🔄 กลับเข้าสู่โหมดเต็มจอทันที
+        กลับเข้าสู่โหมดเต็มหน้าจอ
       </button>
     </div>
   </div>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exam Proctor Studio - ระบบสร้างห้องสอบและคุมสอบออนไลน์</title>
-  <meta name="description" content="ระบบสร้างลิงก์ห้องสอบ Google Forms แบบมีระบบคุมสอบเต็มจอและตรวจจับการสลับหน้าจอ">
+  <meta name="description" content="ระบบสร้างลิงก์ห้องสอบและคุมสอบออนไลน์ระดับสถานศึกษา ครอบ Google Forms พร้อมระบบตรวจสอบความซื่อสัตย์ในการสอบ">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,49 +12,50 @@
   <!-- แถบเมนูด้านบน -->
   <nav class="navbar">
     <a href="index.html" class="brand">
-      <div class="brand-icon">🛡️</div>
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
       <div>
-        <div>Exam Proctor Studio</div>
-        <div style="font-size: 11px; font-weight: 400; color: #818cf8;">Web Application Edition v3.0</div>
+        <div class="brand-title">Exam Proctor Studio</div>
+        <div class="brand-subtitle">ระบบบริหารจัดการห้องสอบออนไลน์</div>
       </div>
     </a>
 
     <div class="nav-links">
-      <button class="nav-tab-btn active" data-target="creatorSection">🛠️ สร้างห้องสอบ</button>
-      <button class="nav-tab-btn" data-target="monitorSection">📊 หน้าจอคุมสอบสด</button>
-      <button class="nav-tab-btn" data-target="historySection">📁 ประวัติห้องสอบ</button>
+      <button class="nav-tab-btn active" data-target="creatorSection">สร้างห้องสอบ</button>
+      <button class="nav-tab-btn" data-target="monitorSection">หน้าจอคุมสอบสด</button>
+      <button class="nav-tab-btn" data-target="historySection">ประวัติห้องสอบ</button>
     </div>
   </nav>
 
   <main class="container">
 
-    <!-- 1. หน้าสร้างห้องสอบ (Exam Link Generator) -->
+    <!-- 1. ส่วนสร้างห้องสอบ (Exam Link Generator) -->
     <section id="creatorSection" class="view-section active">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">
-            <span>🚀</span>
-            <span>สร้างลิงก์ห้องสอบใหม่ (สร้าง Sub-link ส่งให้นักเรียน)</span>
-          </div>
-          <span class="badge badge-success">รองรับ Google Forms ทุกรูปแบบ</span>
+          <div class="card-title">สร้างห้องสอบใหม่ (สร้างลิงก์ส่งให้นักเรียน)</div>
+          <span class="badge badge-neutral">รองรับ Google Forms ทุกรูปแบบ</span>
         </div>
 
         <form id="createExamForm" onsubmit="event.preventDefault();">
           <div class="form-group">
-            <label class="form-label" for="examTitleInput">1. ชื่อวิชา / หัวข้อการสอบ *</label>
+            <label class="form-label" for="examTitleInput">1. ชื่อวิชา หรือหัวข้อการสอบ *</label>
             <input 
               type="text" 
               id="examTitleInput" 
               class="form-control" 
-              placeholder="เช่น แบบทดสอบวิชาคณิตศาสตร์ ม.3 บทที่ 2"
+              placeholder="ตัวอย่าง: แบบทดสอบวิชาคณิตศาสตร์ ม.3 บทที่ 2"
               value="แบบทดสอบออนไลน์"
               required
             >
-            <div class="form-hint">ชื่อนี้จะปรากฏบนหน้าจอนักเรียนและในรายงานสรุปผล</div>
+            <div class="form-hint">ชื่อนี้จะปรากฏบนแถบด้านบนของหน้าจอนักเรียนและในรายงานสรุปผล</div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="examFormUrlInput">2. ลิงก์ Google Forms ข้อสอบ (ใส่ URL ไหนก็ได้) *</label>
+            <label class="form-label" for="examFormUrlInput">2. ลิงก์ Google Forms ข้อสอบ *</label>
             <input 
               type="url" 
               id="examFormUrlInput" 
@@ -62,19 +63,19 @@
               placeholder="https://docs.google.com/forms/d/e/.../viewform หรือ https://forms.gle/..."
               required
             >
-            <div class="form-hint">💡 ใส่ลิงก์ Google Forms ใดก็ได้ ระบบจะแปลงเป็นรูปแบบ Iframe Embed อัตโนมัติ</div>
+            <div class="form-hint">สามารถใส่ลิงก์ Google Forms ได้ทุกรูปแบบ ระบบจะปรับแต่งเพื่อแสดงผลในหน้าจอคุมสอบให้อัตโนมัติ</div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="examWebhookInput">3. Webhook URL (Google Apps Script บันทึกผล)</label>
+              <label class="form-label" for="examWebhookInput">3. Webhook URL (Google Apps Script สำหรับบันทึกผล)</label>
               <input 
                 type="url" 
                 id="examWebhookInput" 
                 class="form-control" 
                 placeholder="https://script.google.com/macros/s/.../exec"
               >
-              <div class="form-hint">ค่าเริ่มต้นจะบันทึกลงใน Google Sheets บัญชีกลางให้อัตโนมัติ</div>
+              <div class="form-hint">บันทึกข้อมูลและประวัติการสอบลงใน Google Sheets โดยตรง</div>
             </div>
 
             <div class="form-group">
@@ -86,40 +87,37 @@
                 placeholder="1234"
                 value="1234"
               >
-              <div class="form-hint">ใช้สำหรับให้ครูปลดล็อกหน้าจอของนักเรียนในกรณีฉุกเฉิน</div>
+              <div class="form-hint">ใช้สำหรับครูผู้คุมสอบในการปลดล็อกหน้าจอเครื่องนักเรียนในกรณีฉุกเฉิน</div>
             </div>
           </div>
 
-          <button type="button" id="generateLinkBtn" class="btn btn-primary btn-lg btn-block" style="margin-top: 12px;">
-            ✨ สร้างลิงก์ห้องสอบสำหรับส่งให้นักเรียน
+          <button type="button" id="generateLinkBtn" class="btn btn-primary btn-lg btn-block" style="margin-top: 10px;">
+            สร้างลิงก์ห้องสอบสำหรับส่งให้นักเรียน
           </button>
         </form>
 
-        <!-- กล่องผลลัพธ์ลิงก์ห้องสอบ (แสดงเมื่อสร้างสำเร็จ) -->
+        <!-- ผลลัพธ์ลิงก์ห้องสอบ -->
         <div id="linkResultBox" class="link-result-box">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-            <span style="font-size: 24px;">🎉</span>
-            <div>
-              <strong style="font-size: 16px; color: #38bdf8;">สร้างลิงก์ห้องสอบสำเร็จแล้ว!</strong>
-              <div style="font-size: 13px; color: var(--text-secondary);">คัดลอกลิงก์นี้ส่งให้นักเรียนทาง Line, Google Classroom หรือ Facebook เพื่อเริ่มทำข้อสอบได้ทันที</div>
-            </div>
+          <div style="margin-bottom: 12px;">
+            <strong style="font-size: 15px; color: #38bdf8; display: block; margin-bottom: 4px;">สร้างลิงก์ห้องสอบเรียบร้อยแล้ว</strong>
+            <div style="font-size: 13px; color: var(--text-secondary);">คัดลอกลิงก์นี้ส่งให้นักเรียนผ่านช่องทางที่สะดวก เพื่อเข้าทำข้อสอบได้ทันที</div>
           </div>
 
           <div class="link-url-display">
             <input type="text" id="generatedLinkDisplay" class="link-input" readonly>
-            <button id="copyLinkBtn" class="btn btn-primary">📋 คัดลอกลิงก์</button>
-            <a id="testOpenLinkBtn" class="btn btn-secondary" href="#" target="_blank">🔗 ทดลองเปิดหน้าสอบ</a>
+            <button id="copyLinkBtn" class="btn btn-primary">คัดลอกลิงก์</button>
+            <a id="testOpenLinkBtn" class="btn btn-secondary" href="#" target="_blank">เปิดหน้าห้องสอบ</a>
           </div>
 
-          <!-- QR Code สำหรับเปิดบนแท็บเล็ต / iPad -->
-          <div style="display: flex; align-items: center; gap: 24px; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);">
-            <div style="background: white; padding: 10px; border-radius: var(--radius-md); box-shadow: var(--shadow-md);">
-              <img id="examQrImage" src="" alt="Exam QR Code" style="width: 140px; height: 140px; display: block;">
+          <!-- QR Code สำหรับสแกน -->
+          <div style="display: flex; align-items: center; gap: 24px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--bg-card-border);">
+            <div style="background: white; padding: 8px; border-radius: var(--radius-sm); line-height: 0;">
+              <img id="examQrImage" src="" alt="Exam QR Code" style="width: 130px; height: 130px; display: block;">
             </div>
             <div>
-              <strong style="display: block; margin-bottom: 6px;">📱 สแกน QR Code เพื่อเข้าสอบ</strong>
+              <strong style="display: block; margin-bottom: 4px; font-size: 14px;">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
               <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                สามารถนำ QR Code นี้ฉายขึ้นจอโปรเจกเตอร์ หรือส่งให้นักเรียนที่ใช้ iPad / แท็บเล็ต สแกนเข้าทำข้อสอบได้ทันที โดยไม่ต้องลง Extension ใดๆ
+                เหมาะสำหรับการฉายขึ้นจอโปรเจกเตอร์ในห้องเรียน เพื่อให้นักเรียนที่ใช้อุปกรณ์พกพาหรือแท็บเล็ตสแกนเข้าทำข้อสอบได้ทันที
               </p>
             </div>
           </div>
@@ -132,41 +130,29 @@
       <!-- การ์ดสถิติภาพรวม -->
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon stat-blue">👥</div>
-          <div>
-            <div class="stat-value" id="statTotalStudents">0 คน</div>
-            <div class="stat-label">จำนวนผู้เข้าสอบทั้งหมด</div>
-          </div>
+          <div class="stat-value" id="statTotalStudents">0 คน</div>
+          <div class="stat-label">จำนวนผู้เข้าสอบทั้งหมด</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon stat-red">🚨</div>
-          <div>
-            <div class="stat-value" id="statTotalViolations">0 ครั้ง</div>
-            <div class="stat-label">ตรวจพบการทำผิดกฎ / สลับจอ</div>
-          </div>
+          <div class="stat-value" id="statTotalViolations" style="color: #f87171;">0 ครั้ง</div>
+          <div class="stat-label">การแจ้งเตือนพฤติกรรม / สลับหน้าจอ</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon stat-green">✅</div>
-          <div>
-            <div class="stat-value" id="statTotalSubmitted">0 คน</div>
-            <div class="stat-label">ส่งข้อสอบเรียบร้อยแล้ว</div>
-          </div>
+          <div class="stat-value" id="statTotalSubmitted" style="color: #34d399;">0 คน</div>
+          <div class="stat-label">ส่งข้อสอบเรียบร้อยแล้ว</div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <div class="card-title">
-            <span>📡</span>
-            <span>บันทึกเหตุการณ์การสอบแบบ Real-time</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted);">● กำลังเชื่อมต่อ...</span>
-            <button id="refreshLogsBtn" class="btn btn-secondary" style="padding: 6px 14px; font-size: 12px;">🔄 รีเฟรช</button>
-            <button id="testWebhookBtn" class="btn btn-secondary" style="padding: 6px 14px; font-size: 12px;">📡 ทดสอบ Webhook</button>
-            <button id="openSheetBtn" class="btn btn-success" style="padding: 6px 14px; font-size: 12px;">📊 เปิด Google Sheets</button>
+          <div class="card-title">บันทึกเหตุการณ์การสอบแบบ Real-time</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted); margin-right: 6px;">กำลังเชื่อมต่อ...</span>
+            <button id="refreshLogsBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">รีเฟรชข้อมูล</button>
+            <button id="testWebhookBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">ทดสอบ Webhook</button>
+            <button id="openSheetBtn" class="btn btn-success" style="padding: 6px 12px; font-size: 12px;">เปิด Google Sheets</button>
           </div>
         </div>
 
@@ -175,7 +161,7 @@
             type="text" 
             id="searchLogInput" 
             class="form-control" 
-            placeholder="🔍 ค้นหาด้วยรหัสนักเรียน, วันเวลา หรือเหตุการณ์..."
+            placeholder="ค้นหาด้วยรหัสนักเรียน หรือเหตุการณ์..."
           >
         </div>
 
@@ -183,9 +169,9 @@
           <table class="log-table">
             <thead>
               <tr>
-                <th style="width: 140px;">วัน-เวลา</th>
-                <th style="width: 140px;">รหัสนักเรียน</th>
-                <th>พฤติกรรม / เหตุการณ์ที่ตรวจพบ</th>
+                <th style="width: 150px;">วัน-เวลา</th>
+                <th style="width: 140px;">รหัสประจำตัว</th>
+                <th>รายละเอียดเหตุการณ์</th>
                 <th style="width: 120px;">สถานะ</th>
               </tr>
             </thead>
@@ -201,24 +187,20 @@
       </div>
     </section>
 
-    <!-- 3. หน้าประวัติห้องสอบที่เคยสร้าง -->
+    <!-- 3. ประวัติห้องสอบ -->
     <section id="historySection" class="view-section">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">
-            <span>📁</span>
-            <span>ประวัติห้องสอบที่เคยสร้างไว้ (บันทึกลงในเครื่อง)</span>
-          </div>
+          <div class="card-title">ประวัติห้องสอบที่บันทึกไว้ในเครื่อง</div>
         </div>
         <div id="historyRoomsList">
-          <!-- รายการห้องสอบจะถูกสร้างด้วย JS -->
+          <!-- รายการจะถูกแทรกโดย admin.js -->
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- โหลดสคริปต์ -->
   <script src="js/config.js"></script>
   <script src="js/admin.js"></script>
 </body>
