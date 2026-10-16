@@ -139,14 +139,14 @@ function renderRoomHistory() {
     }
 
     container.innerHTML = history.map((room) => `
-      <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-        <div style="overflow: hidden;">
-          <strong style="display: block; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${room.title}</strong>
-          <span style="font-size: 12px; color: var(--text-muted);">${room.createdAt}</span>
+      <div style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow-sm); flex-wrap: wrap;">
+        <div style="overflow: hidden; min-width: 200px; flex: 1;">
+          <strong style="display: block; font-size: 14.5px; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(room.title)}</strong>
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">สร้างเมื่อ: ${escapeHtml(room.createdAt)}</span>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" style="padding: 5px 12px; font-size: 12px;" onclick="copySpecificUrl('${room.fullUrl}')">คัดลอก</button>
-          <a class="btn btn-primary" style="padding: 5px 12px; font-size: 12px;" href="${room.fullUrl}" target="_blank">เปิดดู</a>
+          <button class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;" onclick="copySpecificUrl('${escapeHtml(room.fullUrl)}')">คัดลอก</button>
+          <a class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;" href="${escapeHtml(room.fullUrl)}" target="_blank">เปิดดู</a>
         </div>
       </div>
     `).join("");
@@ -369,7 +369,7 @@ function renderScreensGrid(query) {
       statusText = `ส่งข้อสอบแล้ว`;
     } else {
       cardClass += " is-active-normal";
-      statusBadge = `<span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3);">กำลังสอบ</span>`;
+      statusBadge = `<span class="badge badge-primary">กำลังสอบ</span>`;
       statusText = `กำลังทำข้อสอบ`;
     }
 
@@ -415,7 +415,7 @@ function renderScreensGrid(query) {
 
         <!-- Card Footer -->
         <div class="screen-card-footer">
-          <span style="font-size: 11.5px; color: var(--text-muted);">
+          <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">
             บันทึก ${s.logs.length} รายการ
           </span>
           <span class="screen-action-btn">
@@ -504,13 +504,13 @@ function updateModalContent(student) {
     } else if (student.hasAlert) {
       statusValEl.innerHTML = `<span class="badge badge-danger">พบการแจ้งเตือน (${student.violationCount} ครั้ง)</span>`;
     } else {
-      statusValEl.innerHTML = `<span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3);">กำลังสอบปกติ</span>`;
+      statusValEl.innerHTML = `<span class="badge badge-primary">กำลังสอบปกติ</span>`;
     }
   }
 
   if (violationValEl) {
     violationValEl.textContent = `${student.violationCount} ครั้ง`;
-    violationValEl.style.color = student.violationCount > 0 ? "#f87171" : "#34d399";
+    violationValEl.style.color = student.violationCount > 0 ? "#dc2626" : "#059669";
   }
 
   if (startTimeValEl) startTimeValEl.textContent = student.startTime || "-";
@@ -632,10 +632,31 @@ async function testWebhookPing() {
     testBtn.disabled = false;
     testBtn.textContent = "ทดสอบ Webhook";
   }
+// Mobile Hamburger Navigation
+function setupMobileNavigation() {
+  const hamburgerBtn = document.getElementById("navHamburgerBtn");
+  const navLinksMenu = document.getElementById("navLinksMenu");
+  if (!hamburgerBtn || !navLinksMenu) return;
+
+  hamburgerBtn.addEventListener("click", () => {
+    const isOpen = navLinksMenu.classList.toggle("open");
+    hamburgerBtn.classList.toggle("active", isOpen);
+    hamburgerBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+
+  // ปิดเมนู Drawer อัตโนมัติเมื่อกดเลือกแท็บ
+  navLinksMenu.querySelectorAll(".nav-tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      navLinksMenu.classList.remove("open");
+      hamburgerBtn.classList.remove("active");
+      hamburgerBtn.setAttribute("aria-expanded", "false");
+    });
+  });
 }
 
 // DOM Ready
 document.addEventListener("DOMContentLoaded", () => {
+  setupMobileNavigation();
   setupTabNavigation();
   renderRoomHistory();
 

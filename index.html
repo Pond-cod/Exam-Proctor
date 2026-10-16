@@ -11,22 +11,31 @@
 
   <!-- แถบเมนูด้านบน -->
   <nav class="navbar">
-    <a href="index.html" class="brand">
-      <div class="brand-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="brand-title">Exam Proctor Studio</div>
-        <div class="brand-subtitle">ระบบบริหารจัดการห้องสอบออนไลน์</div>
-      </div>
-    </a>
+    <div class="navbar-container">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">Exam Proctor Studio</div>
+          <div class="brand-subtitle">ระบบบริหารจัดการห้องสอบออนไลน์</div>
+        </div>
+      </a>
 
-    <div class="nav-links">
-      <button class="nav-tab-btn active" data-target="creatorSection">สร้างห้องสอบ</button>
-      <button class="nav-tab-btn" data-target="monitorSection">หน้าจอคุมสอบสด</button>
-      <button class="nav-tab-btn" data-target="historySection">ประวัติห้องสอบ</button>
+      <!-- ปุ่ม Hamburger สำหรับหน้าจอมือถือ -->
+      <button class="nav-hamburger" id="navHamburgerBtn" type="button" aria-label="เปิดเมนู" aria-expanded="false">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <div class="nav-links" id="navLinksMenu">
+        <button class="nav-tab-btn active" data-target="creatorSection">สร้างห้องสอบ</button>
+        <button class="nav-tab-btn" data-target="monitorSection">หน้าจอคุมสอบสด</button>
+        <button class="nav-tab-btn" data-target="historySection">ประวัติห้องสอบ</button>
+      </div>
     </div>
   </nav>
 
@@ -98,24 +107,24 @@
 
         <!-- ผลลัพธ์ลิงก์ห้องสอบ -->
         <div id="linkResultBox" class="link-result-box">
-          <div style="margin-bottom: 12px;">
-            <strong style="font-size: 15px; color: #38bdf8; display: block; margin-bottom: 4px;">สร้างลิงก์ห้องสอบเรียบร้อยแล้ว</strong>
-            <div style="font-size: 13px; color: var(--text-secondary);">คัดลอกลิงก์นี้ส่งให้นักเรียนผ่านช่องทางที่สะดวก เพื่อเข้าทำข้อสอบได้ทันที</div>
-          </div>
+          <div class="link-result-title">สร้างลิงก์ห้องสอบเรียบร้อยแล้ว</div>
+          <div class="link-result-subtitle">คัดลอกลิงก์นี้ส่งให้นักเรียนผ่านช่องทางที่สะดวก เพื่อเข้าทำข้อสอบได้ทันที</div>
 
           <div class="link-url-display">
             <input type="text" id="generatedLinkDisplay" class="link-input" readonly>
-            <button id="copyLinkBtn" class="btn btn-primary">คัดลอกลิงก์</button>
-            <a id="testOpenLinkBtn" class="btn btn-secondary" href="#" target="_blank">เปิดหน้าห้องสอบ</a>
+            <div class="link-action-buttons">
+              <button id="copyLinkBtn" class="btn btn-primary">คัดลอกลิงก์</button>
+              <a id="testOpenLinkBtn" class="btn btn-secondary" href="#" target="_blank">เปิดหน้าห้องสอบ</a>
+            </div>
           </div>
 
           <!-- QR Code สำหรับสแกน -->
-          <div style="display: flex; align-items: center; gap: 24px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--bg-card-border);">
-            <div style="background: white; padding: 8px; border-radius: var(--radius-sm); line-height: 0;">
-              <img id="examQrImage" src="" alt="Exam QR Code" style="width: 130px; height: 130px; display: block;">
+          <div class="qr-code-box">
+            <div class="qr-image-wrapper">
+              <img id="examQrImage" src="" alt="Exam QR Code">
             </div>
             <div>
-              <strong style="display: block; margin-bottom: 4px; font-size: 14px;">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
+              <strong style="display: block; margin-bottom: 4px; font-size: 14.5px; color: var(--text-primary);">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
               <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
                 เหมาะสำหรับการฉายขึ้นจอโปรเจกเตอร์ในห้องเรียน เพื่อให้นักเรียนที่ใช้อุปกรณ์พกพาหรือแท็บเล็ตสแกนเข้าทำข้อสอบได้ทันที
               </p>
@@ -135,17 +144,17 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-value" id="statActiveStudents" style="color: #60a5fa;">0 คน</div>
+          <div class="stat-value" id="statActiveStudents" style="color: #0284c7;">0 คน</div>
           <div class="stat-label">กำลังสอบอยู่ (Active)</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-value" id="statTotalViolations" style="color: #f87171;">0 ครั้ง</div>
+          <div class="stat-value" id="statTotalViolations" style="color: #dc2626;">0 ครั้ง</div>
           <div class="stat-label">ตรวจพบการแจ้งเตือน / สลับจอ</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-value" id="statTotalSubmitted" style="color: #34d399;">0 คน</div>
+          <div class="stat-value" id="statTotalSubmitted" style="color: #059669;">0 คน</div>
           <div class="stat-label">ส่งข้อสอบเรียบร้อยแล้ว</div>
         </div>
       </div>
@@ -153,18 +162,18 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #38bdf8;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
               <line x1="8" y1="21" x2="16" y2="21"></line>
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
             หน้าจอคุมสอบสด (Real-time Monitor)
           </div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted); margin-right: 6px;">กำลังเชื่อมต่อ...</span>
-            <button id="refreshLogsBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">รีเฟรชข้อมูล</button>
-            <button id="testWebhookBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">ทดสอบ Webhook</button>
-            <button id="openSheetBtn" class="btn btn-success" style="padding: 6px 12px; font-size: 12px;">เปิด Google Sheets</button>
+          <div class="card-actions-group">
+            <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">กำลังเชื่อมต่อ...</span>
+            <button id="refreshLogsBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">รีเฟรช</button>
+            <button id="testWebhookBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">ทดสอบ Webhook</button>
+            <button id="openSheetBtn" class="btn btn-success" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">เปิด Google Sheets</button>
           </div>
         </div>
 
