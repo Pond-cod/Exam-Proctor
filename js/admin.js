@@ -159,6 +159,22 @@ window.copySpecificUrl = function(url) {
   });
 };
 
+let currentViewMode = "grid"; // "grid" | "table"
+let currentFilter = "all"; // "all" | "alert" | "active" | "submitted"
+let studentsData = {};
+let activeModalStudentId = null;
+
+// Escape HTML helper
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // 3. Real-time Admin Monitor Logs Fetcher
 function fetchMonitorLogs() {
   const webhookUrl = (document.getElementById("examWebhookInput").value || "").trim() || DEFAULT_WEBHOOK_URL;
@@ -191,36 +207,233 @@ function fetchMonitorLogs() {
 
 function renderMonitorLogs() {
   const query = (document.getElementById("searchLogInput") ? document.getElementById("searchLogInput").value : "").trim().toLowerCase();
-  const tableBody = document.getElementById("monitorTableBody");
   const totalStudentsEl = document.getElementById("statTotalStudents");
+  const activeStudentsEl = document.getElementById("statActiveStudents");
   const totalViolationsEl = document.getElementById("statTotalViolations");
   const totalSubmittedEl = document.getElementById("statTotalSubmitted");
 
-  const studentSet = new Set();
-  const submittedSet = new Set();
-  let currentTotalViolations = 0;
+  const badgeAll = document.getElementById("badgeFilterAll");
+  const badgeAlert = document.getElementById("badgeFilterAlert");
+  const badgeActive = document.getElementById("badgeFilterActive");
+  const badgeSubmitted = document.getElementById("badgeFilterSubmitted");
+
+  // จัดกลุ่มข้อมูลตามรหัสนักเรียน (studentId)
+  studentsData = {};
+  let totalViolationsCount = 0;
 
   allLogs.forEach((item) => {
-    if (item.studentId) studentSet.add(item.studentId);
+    const sId = (item.studentId || "ไม่ระบุรหัส").trim();
+    if (!studentsData[sId]) {
+      studentsData[sId] = {
+        studentId: sId,
+        logs: [],
+        violationCount: 0,
+        isStarted: false,
+        isSubmitted: false,
+        startTime: null,
+        lastEventTime: null,
+        lastEventText: "",
+        hasAlert: false
+      };
+    }
+
+    const s = studentsData[sId];
+    s.logs.push(item);
+
     const text = item.violation || "";
     const isStart = text.includes("เริ่มเข้าทำข้อสอบ");
-    const isSubmitted = text.includes("ส่งข้อสอบเรียบร้อย");
+    const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
+    const itemTime = item.time || item.timestamp || "";
 
-    if (isSubmitted) {
-      submittedSet.add(item.studentId);
-    } else if (!isStart) {
-      currentTotalViolations++;
+    if (isStart) {
+      s.isStarted = true;
+      if (!s.startTime) s.startTime = itemTime;
     }
+
+    if (isEnd) {
+      s.isSubmitted = true;
+    } else if (!isStart) {
+      s.violationCount++;
+      totalViolationsCount++;
+    }
+
+    s.lastEventTime = itemTime;
+    s.lastEventText = text;
   });
 
-  if (totalStudentsEl) totalStudentsEl.textContent = `${studentSet.size} คน`;
-  if (totalViolationsEl) totalViolationsEl.textContent = `${currentTotalViolations} ครั้ง`;
-  if (totalSubmittedEl) totalSubmittedEl.textContent = `${submittedSet.size} คน`;
+  // ประมวลผลสถานะเตือน Alert สำหรับแต่ละจอ
+  const studentList = Object.values(studentsData);
+  studentList.forEach((s) => {
+    // จอที่มีการแจ้งเตือน = มีพฤติกรรมผิดกฎ และยังไม่ได้ส่งข้อสอบเสร็จสมบูรณ์
+    s.hasAlert = s.violationCount > 0 && !s.isSubmitted;
+  });
 
-  if (currentTotalViolations > previousViolationCount && previousViolationCount > 0) {
+  const totalStudents = studentList.length;
+  const submittedStudents = studentList.filter((s) => s.isSubmitted).length;
+  const activeStudents = studentList.filter((s) => !s.isSubmitted).length;
+  const alertStudents = studentList.filter((s) => s.hasAlert).length;
+
+  if (totalStudentsEl) totalStudentsEl.textContent = `${totalStudents} คน`;
+  if (activeStudentsEl) activeStudentsEl.textContent = `${activeStudents} คน`;
+  if (totalViolationsEl) totalViolationsEl.textContent = `${totalViolationsCount} ครั้ง`;
+  if (totalSubmittedEl) totalSubmittedEl.textContent = `${submittedStudents} คน`;
+
+  if (badgeAll) badgeAll.textContent = totalStudents;
+  if (badgeAlert) badgeAlert.textContent = alertStudents;
+  if (badgeActive) badgeActive.textContent = activeStudents;
+  if (badgeSubmitted) badgeSubmitted.textContent = submittedStudents;
+
+  // เล่นเสียงเตือนเมื่อพบเหตุการณ์ผิดปกติใหม่
+  if (totalViolationsCount > previousViolationCount && previousViolationCount > 0) {
     playAdminChime();
   }
-  previousViolationCount = currentTotalViolations;
+  previousViolationCount = totalViolationsCount;
+
+  // เรนเดอร์ทั้ง 2 มุมมอง (Screens Grid และ Table)
+  renderScreensGrid(query);
+  renderTableLogs(query);
+
+  // หากเปิด Modal ค้างไว้ ให้อัปเดตข้อมูลข้างในแบบ Real-time ด้วย
+  if (activeModalStudentId && studentsData[activeModalStudentId]) {
+    updateModalContent(studentsData[activeModalStudentId]);
+  }
+}
+
+// เรนเดอร์มุมมองแยกดูของแต่ละจอ (Screens Grid)
+function renderScreensGrid(query) {
+  const gridContainer = document.getElementById("studentScreensGrid");
+  if (!gridContainer) return;
+
+  const allStudents = Object.values(studentsData);
+
+  // กรองตามคำค้นหา
+  let filtered = allStudents.filter((s) => {
+    if (!query) return true;
+    const matchId = s.studentId.toLowerCase().includes(query);
+    const matchLog = s.logs.some((l) => (l.violation || "").toLowerCase().includes(query));
+    return matchId || matchLog;
+  });
+
+  // กรองตามแท็บสถานะ
+  if (currentFilter === "alert") {
+    filtered = filtered.filter((s) => s.hasAlert);
+  } else if (currentFilter === "active") {
+    filtered = filtered.filter((s) => !s.isSubmitted);
+  } else if (currentFilter === "submitted") {
+    filtered = filtered.filter((s) => s.isSubmitted);
+  }
+
+  if (filtered.length === 0) {
+    let emptyMsg = "ยังไม่มีข้อมูลจอภาพผู้สอบ";
+    if (query) emptyMsg = `ไม่พบข้อมูลจอภาพที่ตรงกับ "${escapeHtml(query)}"`;
+    else if (currentFilter === "alert") emptyMsg = "ไม่มีจอภาพที่พบการแจ้งเตือนในขณะนี้";
+    else if (currentFilter === "submitted") emptyMsg = "ยังไม่มีผู้สอบส่งข้อสอบ";
+
+    gridContainer.innerHTML = `
+      <div class="screens-empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <p>${emptyMsg}</p>
+      </div>
+    `;
+    return;
+  }
+
+  // เรียงลำดับ: จอที่กำลังสั่น/แจ้งเตือน (hasAlert) ขึ้นมาก่อน เพื่อให้ผู้คุมสอบมองเห็นทันที
+  filtered.sort((a, b) => {
+    if (a.hasAlert && !b.hasAlert) return -1;
+    if (!a.hasAlert && b.hasAlert) return 1;
+    return b.logs.length - a.logs.length;
+  });
+
+  gridContainer.innerHTML = filtered.map((s) => {
+    let cardClass = "student-screen-card";
+    let statusBadge = "";
+    let statusText = "🟢 ปกติ";
+
+    if (s.hasAlert) {
+      cardClass += " has-alert";
+      statusBadge = `
+        <span class="badge badge-danger">
+          <span class="radar-beacon" style="margin-right: 4px;"></span>
+          เตือน ${s.violationCount} ครั้ง
+        </span>
+      `;
+      statusText = `⚠️ ผิดปกติ ${s.violationCount} ครั้ง`;
+    } else if (s.isSubmitted) {
+      cardClass += " is-submitted";
+      statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
+      statusText = `ส่งข้อสอบแล้ว`;
+    } else {
+      cardClass += " is-active-normal";
+      statusBadge = `<span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3);">กำลังสอบ</span>`;
+      statusText = `กำลังทำข้อสอบ`;
+    }
+
+    const lastEventShort = s.lastEventText ? escapeHtml(s.lastEventText) : "กำลังทำข้อสอบอย่างต่อเนื่อง";
+    const updateTime = s.lastEventTime || "-";
+
+    return `
+      <div class="${cardClass}" onclick="openStudentDetail('${escapeHtml(s.studentId)}')">
+        <!-- Card Header -->
+        <div class="screen-card-header">
+          <div class="screen-card-identity">
+            <div class="screen-device-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <div class="screen-station-text">
+              <span class="screen-station-label">จอผู้สอบ</span>
+              <span class="screen-station-id">รหัส ${escapeHtml(s.studentId)}</span>
+            </div>
+          </div>
+          <div>
+            ${statusBadge}
+          </div>
+        </div>
+
+        <!-- Screen Mockup Bezel (จำลองหน้าจอสด) -->
+        <div class="screen-mockup-frame">
+          <div class="screen-mockup-top">
+            <div class="screen-window-dots"><span></span><span></span><span></span></div>
+            <span class="screen-mockup-tag">Exam Screen</span>
+          </div>
+          <div class="screen-last-event">
+            ${lastEventShort}
+          </div>
+          <div class="screen-mockup-bottom">
+            <span>ล่าสุด: ${updateTime}</span>
+            <span>${statusText}</span>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="screen-card-footer">
+          <span style="font-size: 11.5px; color: var(--text-muted);">
+            บันทึก ${s.logs.length} รายการ
+          </span>
+          <span class="screen-action-btn">
+            ดูรายละเอียดจอ
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// เรนเดอร์มุมมองตารางประวัติ (Table View)
+function renderTableLogs(query) {
+  const tableBody = document.getElementById("monitorTableBody");
+  if (!tableBody) return;
 
   const filtered = allLogs.filter((item) => {
     if (!query) return true;
@@ -249,13 +462,142 @@ function renderMonitorLogs() {
 
     return `
       <tr class="${rowClass}">
-        <td>${item.time || item.timestamp || "-"}</td>
-        <td><strong>${item.studentId || "ไม่ระบุ"}</strong></td>
-        <td>${text}</td>
+        <td>${escapeHtml(item.time || item.timestamp || "-")}</td>
+        <td><strong>${escapeHtml(item.studentId || "ไม่ระบุ")}</strong></td>
+        <td>${escapeHtml(text)}</td>
         <td>${badge}</td>
       </tr>
     `;
   }).join("");
+}
+
+// 4. Student Screen Detail Modal Functions (กดเข้าไปดูรายละเอียดของจอนั้นๆ)
+window.openStudentDetail = function(studentId) {
+  const student = studentsData[studentId];
+  if (!student) return;
+
+  activeModalStudentId = studentId;
+  updateModalContent(student);
+
+  const modal = document.getElementById("studentDetailModal");
+  if (modal) {
+    modal.classList.add("active");
+  }
+};
+
+function updateModalContent(student) {
+  const titleEl = document.getElementById("modalStudentTitle");
+  const subtitleEl = document.getElementById("modalStudentSubtitle");
+  const statusValEl = document.getElementById("modalStatusVal");
+  const violationValEl = document.getElementById("modalViolationVal");
+  const startTimeValEl = document.getElementById("modalStartTimeVal");
+  const lastTimeValEl = document.getElementById("modalLastTimeVal");
+  const timelineCountEl = document.getElementById("modalTimelineCount");
+  const timelineContainer = document.getElementById("studentTimelineContainer");
+
+  if (titleEl) titleEl.textContent = `รายละเอียดจอผู้สอบ: รหัส ${student.studentId}`;
+  if (subtitleEl) subtitleEl.textContent = `เริ่มสอบ: ${student.startTime || "-"} • บันทึกทั้งหมด ${student.logs.length} รายการ`;
+
+  if (statusValEl) {
+    if (student.isSubmitted) {
+      statusValEl.innerHTML = `<span class="badge badge-success">ส่งข้อสอบเรียบร้อย</span>`;
+    } else if (student.hasAlert) {
+      statusValEl.innerHTML = `<span class="badge badge-danger">พบการแจ้งเตือน (${student.violationCount} ครั้ง)</span>`;
+    } else {
+      statusValEl.innerHTML = `<span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3);">กำลังสอบปกติ</span>`;
+    }
+  }
+
+  if (violationValEl) {
+    violationValEl.textContent = `${student.violationCount} ครั้ง`;
+    violationValEl.style.color = student.violationCount > 0 ? "#f87171" : "#34d399";
+  }
+
+  if (startTimeValEl) startTimeValEl.textContent = student.startTime || "-";
+  if (lastTimeValEl) lastTimeValEl.textContent = student.lastEventTime || "-";
+  if (timelineCountEl) timelineCountEl.textContent = `${student.logs.length} รายการ`;
+
+  if (timelineContainer) {
+    // เรียงจากเหตุการณ์ล่าสุดลงไปแรกสุด
+    const reversedLogs = [...student.logs].reverse();
+
+    timelineContainer.innerHTML = reversedLogs.map((log) => {
+      const text = log.violation || "";
+      const isStart = text.includes("เริ่มเข้าทำข้อสอบ");
+      const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
+      const isViolation = !isStart && !isEnd;
+
+      let markerClass = "timeline-marker";
+      let bubbleClass = "timeline-bubble";
+      let typeBadge = "";
+
+      if (isStart) {
+        markerClass += " marker-success";
+        typeBadge = `<span class="badge badge-success" style="font-size: 11px;">เริ่มสอบ</span>`;
+      } else if (isEnd) {
+        markerClass += " marker-success";
+        typeBadge = `<span class="badge badge-success" style="font-size: 11px;">ส่งข้อสอบ</span>`;
+      } else {
+        markerClass += " marker-alert";
+        bubbleClass += " alert-bubble";
+        typeBadge = `<span class="badge badge-danger" style="font-size: 11px;">แจ้งเตือนพฤติกรรม</span>`;
+      }
+
+      return `
+        <div class="timeline-entry">
+          <div class="${markerClass}">
+            <div class="timeline-marker-dot"></div>
+          </div>
+          <div class="${bubbleClass}">
+            <div class="timeline-meta">
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                ${escapeHtml(log.time || log.timestamp || "-")}
+              </span>
+              ${typeBadge}
+            </div>
+            <div class="timeline-message">
+              ${escapeHtml(text)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+}
+
+function closeStudentDetail() {
+  activeModalStudentId = null;
+  const modal = document.getElementById("studentDetailModal");
+  if (modal) {
+    modal.classList.remove("active");
+  }
+}
+
+// คัดลอกประวัติเหตุการณ์ของนักเรียนคนนี้
+function copyStudentHistory() {
+  if (!activeModalStudentId || !studentsData[activeModalStudentId]) return;
+  const s = studentsData[activeModalStudentId];
+
+  let textReport = `=====================================\n`;
+  textReport += `รายงานประวัติการสอบ: รหัสนักเรียน ${s.studentId}\n`;
+  textReport += `สถานะ: ${s.isSubmitted ? "ส่งข้อสอบเรียบร้อย" : (s.violationCount > 0 ? "พบการแจ้งเตือน" : "กำลังสอบปกติ")}\n`;
+  textReport += `การแจ้งเตือนพฤติกรรมทั้งหมด: ${s.violationCount} ครั้ง\n`;
+  textReport += `เวลาเริ่มสอบ: ${s.startTime || "-"}\n`;
+  textReport += `เวลาล่าสุด: ${s.lastEventTime || "-"}\n`;
+  textReport += `=====================================\n\n`;
+  textReport += `ลำดับเหตุการณ์ทั้งหมด:\n`;
+
+  s.logs.forEach((item, idx) => {
+    textReport += `${idx + 1}. [${item.time || item.timestamp || "-"}] ${item.violation || ""}\n`;
+  });
+
+  navigator.clipboard.writeText(textReport).then(() => {
+    alert(`คัดลอกประวัติเหตุการณ์ของรหัส ${s.studentId} เรียบร้อยแล้ว`);
+  });
 }
 
 // ทดสอบส่งสัญญาณ Webhook Ping
@@ -339,11 +681,80 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const searchLogInput = document.getElementById("searchLogInput");
   if (searchLogInput) {
-    searchLogInput.addEventListener("input", renderMonitorLogs);
+    searchLogInput.addEventListener("input", () => {
+      renderMonitorLogs();
+    });
   }
 
   const refreshLogsBtn = document.getElementById("refreshLogsBtn");
   if (refreshLogsBtn) {
     refreshLogsBtn.addEventListener("click", fetchMonitorLogs);
   }
+
+  // 1. ปุ่มสลับมุมมอง จอภาพ VS ตาราง
+  const toggleGridBtn = document.getElementById("toggleGridViewBtn");
+  const toggleTableBtn = document.getElementById("toggleTableViewBtn");
+  const screensGridContainer = document.getElementById("screensGridContainer");
+  const tableViewContainer = document.getElementById("tableViewContainer");
+
+  if (toggleGridBtn && toggleTableBtn) {
+    toggleGridBtn.addEventListener("click", () => {
+      toggleGridBtn.classList.add("active");
+      toggleTableBtn.classList.remove("active");
+      currentViewMode = "grid";
+      if (screensGridContainer) screensGridContainer.style.display = "block";
+      if (tableViewContainer) tableViewContainer.style.display = "none";
+    });
+
+    toggleTableBtn.addEventListener("click", () => {
+      toggleTableBtn.classList.add("active");
+      toggleGridBtn.classList.remove("active");
+      currentViewMode = "table";
+      if (screensGridContainer) screensGridContainer.style.display = "none";
+      if (tableViewContainer) tableViewContainer.style.display = "block";
+    });
+  }
+
+  // 2. ตัวกรองสถานะ Filter Pills
+  const filterPills = document.querySelectorAll(".filter-pill");
+  filterPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      filterPills.forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentFilter = pill.getAttribute("data-filter") || "all";
+      renderMonitorLogs();
+    });
+  });
+
+  // 3. Modal ควบคุม
+  const closeDetailBtn = document.getElementById("closeDetailModalBtn");
+  if (closeDetailBtn) {
+    closeDetailBtn.addEventListener("click", closeStudentDetail);
+  }
+
+  const modalDismissBtn = document.getElementById("modalDismissBtn");
+  if (modalDismissBtn) {
+    modalDismissBtn.addEventListener("click", closeStudentDetail);
+  }
+
+  const modalCopyHistoryBtn = document.getElementById("modalCopyHistoryBtn");
+  if (modalCopyHistoryBtn) {
+    modalCopyHistoryBtn.addEventListener("click", copyStudentHistory);
+  }
+
+  const studentDetailModal = document.getElementById("studentDetailModal");
+  if (studentDetailModal) {
+    studentDetailModal.addEventListener("click", (e) => {
+      if (e.target === studentDetailModal) {
+        closeStudentDetail();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeStudentDetail();
+    }
+  });
 });
+

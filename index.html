@@ -127,16 +127,21 @@
 
     <!-- 2. หน้าจอคุมสอบสด (Real-time Monitor) -->
     <section id="monitorSection" class="view-section">
-      <!-- การ์ดสถิติภาพรวม -->
+      <!-- การ์ดสถิติภาพรวม 4 มิติ -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value" id="statTotalStudents">0 คน</div>
-          <div class="stat-label">จำนวนผู้เข้าสอบทั้งหมด</div>
+          <div class="stat-label">ผู้เข้าสอบทั้งหมด</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value" id="statActiveStudents" style="color: #60a5fa;">0 คน</div>
+          <div class="stat-label">กำลังสอบอยู่ (Active)</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-value" id="statTotalViolations" style="color: #f87171;">0 ครั้ง</div>
-          <div class="stat-label">การแจ้งเตือนพฤติกรรม / สลับหน้าจอ</div>
+          <div class="stat-label">ตรวจพบการแจ้งเตือน / สลับจอ</div>
         </div>
 
         <div class="stat-card">
@@ -147,8 +152,15 @@
 
       <div class="card">
         <div class="card-header">
-          <div class="card-title">บันทึกเหตุการณ์การสอบแบบ Real-time</div>
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #38bdf8;">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            หน้าจอคุมสอบสด (Real-time Monitor)
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted); margin-right: 6px;">กำลังเชื่อมต่อ...</span>
             <button id="refreshLogsBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">รีเฟรชข้อมูล</button>
             <button id="testWebhookBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">ทดสอบ Webhook</button>
@@ -156,33 +168,93 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 16px;">
+        <!-- แถบควบคุมและสลับมุมมอง -->
+        <div class="monitor-toolbar">
+          <!-- สลับมุมมอง: จอภาพ VS ตาราง -->
+          <div class="monitor-view-toggle">
+            <button id="toggleGridViewBtn" class="view-toggle-btn active" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              มุมมองจอภาพผู้สอบ
+            </button>
+            <button id="toggleTableViewBtn" class="view-toggle-btn" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+              มุมมองตารางประวัติ
+            </button>
+          </div>
+
+          <!-- ตัวกรองสถานะ -->
+          <div class="filter-pills-row">
+            <button class="filter-pill active" data-filter="all">
+              ทั้งหมด <span class="filter-count-badge" id="badgeFilterAll">0</span>
+            </button>
+            <button class="filter-pill" data-filter="alert">
+              <span class="radar-beacon" style="width: 6px; height: 6px;"></span>
+              พบแจ้งเตือน <span class="filter-count-badge" id="badgeFilterAlert">0</span>
+            </button>
+            <button class="filter-pill" data-filter="active">
+              กำลังสอบ <span class="filter-count-badge" id="badgeFilterActive">0</span>
+            </button>
+            <button class="filter-pill" data-filter="submitted">
+              ส่งแล้ว <span class="filter-count-badge" id="badgeFilterSubmitted">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
           <input 
             type="text" 
             id="searchLogInput" 
             class="form-control" 
-            placeholder="ค้นหาด้วยรหัสนักเรียน หรือเหตุการณ์..."
+            placeholder="ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
           >
         </div>
 
-        <div class="table-responsive">
-          <table class="log-table">
-            <thead>
-              <tr>
-                <th style="width: 150px;">วัน-เวลา</th>
-                <th style="width: 140px;">รหัสประจำตัว</th>
-                <th>รายละเอียดเหตุการณ์</th>
-                <th style="width: 120px;">สถานะ</th>
-              </tr>
-            </thead>
-            <tbody id="monitorTableBody">
-              <tr>
-                <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                  กำลังโหลดข้อมูลจาก Google Sheets...
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- 1. มุมมองจอภาพผู้สอบรายบุคคล (Screens Grid) -->
+        <div id="screensGridContainer">
+          <div id="studentScreensGrid" class="screens-grid">
+            <div class="screens-empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <p>กำลังโหลดข้อมูลจอภาพผู้สอบ...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. มุมมองตารางประวัติ (Table View) -->
+        <div id="tableViewContainer" style="display: none;">
+          <div class="table-responsive">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th style="width: 150px;">วัน-เวลา</th>
+                  <th style="width: 140px;">รหัสประจำตัว</th>
+                  <th>รายละเอียดเหตุการณ์</th>
+                  <th style="width: 120px;">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody id="monitorTableBody">
+                <tr>
+                  <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    กำลังโหลดข้อมูลจาก Google Sheets...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -200,6 +272,63 @@
     </section>
 
   </main>
+
+  <!-- Modal รายละเอียดจอภาพผู้สอบ (Student Screen Detail Modal) -->
+  <div id="studentDetailModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <div class="modal-header-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <div>
+            <div class="modal-title-text" id="modalStudentTitle">รายละเอียดจอผู้สอบ</div>
+            <div class="modal-subtitle-text" id="modalStudentSubtitle">บันทึกเหตุการณ์และประวัติพฤติกรรมการสอบ</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="closeDetailModalBtn" title="ปิดหน้าต่าง">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-stats-strip">
+          <div class="modal-stat-box">
+            <span class="modal-stat-label">สถานะปัจจุบัน</span>
+            <div class="modal-stat-val" id="modalStatusVal">-</div>
+          </div>
+          <div class="modal-stat-box">
+            <span class="modal-stat-label">การแจ้งเตือน</span>
+            <div class="modal-stat-val" id="modalViolationVal" style="color: #f87171;">0 ครั้ง</div>
+          </div>
+          <div class="modal-stat-box">
+            <span class="modal-stat-label">เวลาเริ่มสอบ</span>
+            <div class="modal-stat-val" id="modalStartTimeVal">-</div>
+          </div>
+          <div class="modal-stat-box">
+            <span class="modal-stat-label">เหตุการณ์ล่าสุด</span>
+            <div class="modal-stat-val" id="modalLastTimeVal">-</div>
+          </div>
+        </div>
+
+        <div class="timeline-title">
+          <span>ประวัติเหตุการณ์ตามลำดับเวลา (Timeline)</span>
+          <span id="modalTimelineCount" style="font-size: 11.5px; color: var(--text-muted); font-weight: 400;">0 รายการ</span>
+        </div>
+
+        <div class="student-timeline" id="studentTimelineContainer">
+          <!-- Timeline items inserted by admin.js -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modalCopyHistoryBtn" style="padding: 8px 16px; font-size: 13px;">คัดลอกประวัติเหตุการณ์</button>
+        <button class="btn btn-primary" id="modalDismissBtn" style="padding: 8px 18px; font-size: 13px;">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
 
   <script src="js/config.js"></script>
   <script src="js/admin.js"></script>
