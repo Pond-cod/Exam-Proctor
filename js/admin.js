@@ -632,6 +632,8 @@ async function testWebhookPing() {
     testBtn.disabled = false;
     testBtn.textContent = "ทดสอบ Webhook";
   }
+}
+
 // Mobile Hamburger Navigation
 function setupMobileNavigation() {
   const hamburgerBtn = document.getElementById("navHamburgerBtn");
