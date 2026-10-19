@@ -453,11 +453,16 @@ function renderStudentCardHtml(s, isCompletedView) {
   return `
     <div class="${cardClass}" data-student-id="${escapeHtml(s.studentId)}">
       <div class="screen-card-header">
-        <div class="screen-student-info">
-          <div class="screen-student-avatar">${escapeHtml(s.studentId.slice(-2) || "ST")}</div>
-          <div>
-            <div class="screen-student-id">${escapeHtml(s.studentId)}</div>
-            <div class="screen-student-time">${datePrefix}เริ่ม: ${startTimeStr}</div>
+        <div class="screen-card-identity">
+          <div class="screen-device-icon" style="font-size: 18px;">
+            🎓
+          </div>
+          <div class="screen-station-text">
+            <span class="screen-station-label">รหัสประจำตัวนักเรียน</span>
+            <span class="screen-station-id">${escapeHtml(s.studentId)}</span>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+              ${datePrefix}เริ่ม: ${startTimeStr}
+            </div>
           </div>
         </div>
         ${statusBadge}
