@@ -47,6 +47,17 @@ function playWarningBeep() {
   }
 }
 
+// HTML Escape helper
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 let proctorLiveChannel = null;
 try {
   if (typeof BroadcastChannel !== "undefined") {
@@ -77,9 +88,10 @@ function broadcastLocalEvent(payload) {
 
 let lastCloudSendTime = 0;
 let lastCloudViolationText = "";
+let cloudSyncTimer = null;
 
 // Send Webhook Alert to Google Apps Script / Google Sheets & Direct Local Real-time
-async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
+function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   if (!examConfig.webhookUrl) return;
 
   const now = new Date();
@@ -97,39 +109,43 @@ async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   // 1. ส่งสัญญาณตรงแบบ Instant Real-Time ทันที (0ms) สำหรับหน้าจอคุมสอบสด
   broadcastLocalEvent(payload);
 
-  // 2. ป้องกันการ flood Google Apps Script:
-  // สำหรับการแจ้งเตือนพฤติกรรมเดิมซ้ำๆ (เช่น หลุดโฟกัสต่อเนื่อง) ให้ส่งขึ้น Cloud ทุกๆ 3.5 วินาที
-  // แต่ถ้าเป็นเริ่มสอบ, ส่งข้อสอบ, หรือข้อความใหม่ ให้ส่งขึ้น Cloud ทันที
+  const payloadStr = JSON.stringify(payload);
   const isStartOrEnd = violationText.includes("เริ่มเข้าทำข้อสอบ") || violationText.includes("ส่งข้อสอบเรียบร้อย");
   const isNewViolation = violationText !== lastCloudViolationText;
   const nowMs = Date.now();
-  if (!isStartOrEnd && !isNewViolation && (nowMs - lastCloudSendTime < 3500)) {
-    return;
+
+  const dispatchToCloud = () => {
+    lastCloudSendTime = Date.now();
+    lastCloudViolationText = violationText;
+
+    try {
+      fetch(examConfig.webhookUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: payloadStr,
+        keepalive: true
+      }).catch(() => {});
+    } catch (_) {}
+
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(examConfig.webhookUrl, payloadStr);
+      }
+    } catch (_) {}
+  };
+
+  // ถ้าเป็นเริ่มสอบ/ส่งข้อสอบ หรือเกิดการผิดกฎประเภทใหม่ หรือพ้นช่วงหน่วง 3 วินาทีแล้ว ให้ส่ง Cloud ทันที
+  if (isStartOrEnd || isNewViolation || (nowMs - lastCloudSendTime >= 3000)) {
+    if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+    dispatchToCloud();
+  } else {
+    // ถ้าความถี่ติดกันเกินไป ให้ตั้ง Timer ส่งตามไปเสมอ (ป้องกันข้อมูลหล่น 100%)
+    if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(() => {
+      dispatchToCloud();
+    }, 3100);
   }
-  lastCloudSendTime = nowMs;
-  lastCloudViolationText = violationText;
-
-  const payloadStr = JSON.stringify(payload);
-
-  // 3. ส่งขึ้น Cloud Google Sheets Webhook ด้วย fetch (mode: no-cors + keepalive)
-  try {
-    fetch(examConfig.webhookUrl, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: payloadStr,
-      keepalive: true
-    }).catch(() => {});
-  } catch (err) {
-    console.warn("Fetch Webhook failed:", err);
-  }
-
-  // 4. ส่งสำรองด้วย sendBeacon
-  try {
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(examConfig.webhookUrl, payloadStr);
-    }
-  } catch (_) {}
 }
 
 // Debounce Violation Alerts & Trigger Modal Warning at Student Screen
@@ -142,33 +158,47 @@ function logViolation(detail, isSeverityHigh = false) {
   lastAlertTime = now;
 
   violationCount++;
-  playWarningBeep();
 
-  // 1. อัปเดตและแสดง Modal แจ้งเตือนชัดเจนที่หน้าจอผู้สอบ
-  const modal = document.getElementById("violationModal");
-  if (modal) {
-    const reasonEl = document.getElementById("violationReason");
-    if (reasonEl) reasonEl.textContent = detail;
-    const countBadge = document.getElementById("violationCountBadge");
-    if (countBadge) countBadge.textContent = `เตือนครั้งที่ ${violationCount}`;
-    modal.classList.add("active");
+  // 1. ส่งข้อมูล Real-Time ไปยังหน้าจอคุมสอบสด และ Google Sheets ทันที (สำคัญที่สุด ทำงานก่อนเสมอ)
+  try {
+    sendAlertToWebhook(detail, isSeverityHigh);
+  } catch (err) {
+    console.error("sendAlertToWebhook error:", err);
   }
 
-  // 2. แสดง Toast ด่วน
-  showToastAlert(`ตรวจพบเหตุการณ์: ${detail} (เตือนครั้งที่ ${violationCount})`);
+  // 2. เล่นเสียงเตือน
+  try {
+    playWarningBeep();
+  } catch (_) {}
 
-  // 3. ส่งข้อมูล Real-Time ไปยังหน้าจอคุมสอบสด และ Google Sheets ทันที
-  sendAlertToWebhook(detail, isSeverityHigh);
+  // 3. อัปเดตและแสดง Modal แจ้งเตือนชัดเจนที่หน้าจอผู้สอบ
+  try {
+    const modal = document.getElementById("violationModal");
+    if (modal) {
+      const reasonEl = document.getElementById("violationReason");
+      if (reasonEl) reasonEl.textContent = detail;
+      const countBadge = document.getElementById("violationCountBadge");
+      if (countBadge) countBadge.textContent = `เตือนครั้งที่ ${violationCount}`;
+      modal.classList.add("active");
+    }
+  } catch (_) {}
 
-  // 4. อัปเดตตัวเลขแจ้งเตือนบนแถบด้านบน
-  const vCountEl = document.getElementById("headerViolationCount");
-  if (vCountEl) {
-    vCountEl.textContent = `แจ้งเตือน: ${violationCount} ครั้ง`;
-    vCountEl.style.display = "inline-flex";
-    vCountEl.classList.remove("pulse-highlight");
-    void vCountEl.offsetWidth; // Trigger reflow
-    vCountEl.classList.add("pulse-highlight");
-  }
+  // 4. แสดง Toast ด่วน
+  try {
+    showToastAlert(`ตรวจพบเหตุการณ์: ${detail} (เตือนครั้งที่ ${violationCount})`);
+  } catch (_) {}
+
+  // 5. อัปเดตตัวเลขแจ้งเตือนบนแถบด้านบน
+  try {
+    const vCountEl = document.getElementById("headerViolationCount");
+    if (vCountEl) {
+      vCountEl.textContent = `แจ้งเตือน: ${violationCount} ครั้ง`;
+      vCountEl.style.display = "inline-flex";
+      vCountEl.classList.remove("pulse-highlight");
+      void vCountEl.offsetWidth; // Trigger reflow
+      vCountEl.classList.add("pulse-highlight");
+    }
+  } catch (_) {}
 }
 
 // Toast Alert
@@ -500,10 +530,9 @@ async function handleStudentFinished() {
       document.exitFullscreen().catch(() => {});
     }
 
-    // รอให้ webhook ส่งเสร็จก่อนค่อย reload (BUG-14)
+    // รอให้ webhook ส่งเสร็จก่อนค่อย reload
     try {
       sendAlertToWebhook("ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ปลดล็อกระบบ)");
-      await flushViolationsQueue();
     } catch (_) {}
     await showAlert("บันทึกการส่งข้อสอบเรียบร้อยแล้ว ขอบคุณครับ", {
       type: "success",
@@ -536,10 +565,8 @@ async function handleAdminUnlock() {
       document.exitFullscreen().catch(() => {});
     }
 
-    // BUG-14: await ก่อน reload
     try {
       sendAlertToWebhook("ผู้คุมสอบกรอกรหัสผ่านเพื่อปลดล็อกการสอบ");
-      await flushViolationsQueue();
     } catch (_) {}
     await showAlert("ปลดล็อกระบบการสอบเรียบร้อยแล้ว", {
       type: "success",

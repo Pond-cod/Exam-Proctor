@@ -5,6 +5,19 @@ const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbW
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
 
 /**
+ * Helper ป้องกัน XSS และแปลงข้อความสำหรับแสดงผลใน HTML
+ */
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
  * สุ่มรหัสผ่านตัวเลข 6 หลัก (100000 - 999999) เสมอ
  */
 function generateRandomPasscode() {
