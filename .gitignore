@@ -5,3 +5,6 @@ Thumbs.db
 # Temporary & Log files
 *.log
 scratch/
+
+# Google Cloud Backend script (kept local only)
+google-apps-script.js
