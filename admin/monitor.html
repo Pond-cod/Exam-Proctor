@@ -60,96 +60,76 @@
 
     <!-- หน้าจอคุมสอบสด (Real-time Monitor) -->
     <section id="monitorSection" class="view-section active">
-      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์โมเดิร์น พร้อมรายละเอียดเชิงลึก -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-header-row">
-            <span class="stat-badge stat-badge-blue">👥 ผู้เข้าสอบทั้งหมด</span>
-            <div class="stat-icon-circle blue">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
+      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์กะทัดรัด (Compact Stats Strip) -->
+      <div class="stats-grid compact-stats-grid">
+        <div class="stat-card compact-stat-card">
+          <div class="compact-stat-top">
+            <span class="stat-badge stat-badge-blue">👥 ทั้งหมด</span>
+            <span class="compact-stat-num" id="statTotalStudents">0 คน</span>
+          </div>
+          <div class="compact-stat-bottom">
+            <div class="stat-progress-bar compact-bar">
+              <div id="statTotalProgressFill" class="stat-progress-fill" style="width: 0%;"></div>
             </div>
+            <div class="stat-sub-detail" id="statTotalSubDetail">กำลังสอบ 0% • ส่งแล้ว 0%</div>
           </div>
-          <div class="stat-value" id="statTotalStudents">0 คน</div>
-          <div class="stat-progress-bar">
-            <div id="statTotalProgressFill" class="stat-progress-fill" style="width: 0%;"></div>
-          </div>
-          <div class="stat-sub-detail" id="statTotalSubDetail">กำลังสอบ 0% • ส่งแล้ว 0%</div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-card-header-row">
+        <div class="stat-card compact-stat-card">
+          <div class="compact-stat-top">
             <span class="stat-badge stat-badge-emerald">
-              <span class="live-pulse-dot"></span> กำลังสอบสด (Active)
+              <span class="live-pulse-dot"></span> กำลังสอบสด
             </span>
-            <div class="stat-icon-circle emerald">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
+            <span class="compact-stat-num" id="statActiveStudents" style="color: #047857;">0 คน</span>
+          </div>
+          <div class="compact-stat-bottom">
+            <div class="stat-progress-bar compact-bar">
+              <div id="statActiveProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
             </div>
+            <div class="stat-sub-detail" id="statActiveSubDetail">🟢 ติดตามความซื่อสัตย์</div>
           </div>
-          <div class="stat-value" id="statActiveStudents" style="color: #047857;">0 คน</div>
-          <div class="stat-progress-bar">
-            <div id="statActiveProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
-          </div>
-          <div class="stat-sub-detail" id="statActiveSubDetail">🟢 กำลังติดตามความซื่อสัตย์สด</div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-card-header-row">
+        <div class="stat-card compact-stat-card">
+          <div class="compact-stat-top">
             <span class="stat-badge stat-badge-rose">⚠️ แจ้งเตือนสลับจอ</span>
-            <div class="stat-icon-circle rose">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
+            <span class="compact-stat-num" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</span>
+          </div>
+          <div class="compact-stat-bottom">
+            <div class="stat-progress-bar compact-bar">
+              <div id="statViolationsProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);"></div>
             </div>
+            <div class="stat-sub-detail" id="statViolationsSubDetail">ตรวจพบใน 0 คน</div>
           </div>
-          <div class="stat-value" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</div>
-          <div class="stat-progress-bar">
-            <div id="statViolationsProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);"></div>
-          </div>
-          <div class="stat-sub-detail" id="statViolationsSubDetail">ตรวจพบในผู้สอบ 0 คน</div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-card-header-row">
+        <div class="stat-card compact-stat-card">
+          <div class="compact-stat-top">
             <span class="stat-badge stat-badge-violet">🏆 ส่งข้อสอบแล้ว</span>
-            <div class="stat-icon-circle violet">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
+            <span class="compact-stat-num" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</span>
+          </div>
+          <div class="compact-stat-bottom">
+            <div class="stat-progress-bar compact-bar">
+              <div id="statSubmittedProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);"></div>
             </div>
+            <div class="stat-sub-detail" id="statSubmittedSubDetail">ส่งล่าสุด: -</div>
           </div>
-          <div class="stat-value" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</div>
-          <div class="stat-progress-bar">
-            <div id="statSubmittedProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);"></div>
-          </div>
-          <div class="stat-sub-detail" id="statSubmittedSubDetail">ส่งล่าสุด: -</div>
         </div>
       </div>
 
       <!-- แถบรายงานเหตุการณ์ด่วนล่าสุด (Live Incident Ticker Hub) -->
-      <div id="liveIncidentTicker" class="live-incident-ticker normal">
+      <div id="liveIncidentTicker" class="live-incident-ticker normal compact-ticker">
         <div class="ticker-left">
-          <span class="ticker-badge" id="tickerBadge">🟢 สถานะปกติ</span>
+          <span class="ticker-badge" id="tickerBadge">🟢 ปกติ</span>
           <span class="ticker-text" id="tickerMessage">ระบบกำลังติดตามผู้เข้าสอบแบบเรียลไทม์ ผู้สอบทุกคนอยู่ในโหมดเต็มหน้าจออย่างซื่อสัตย์</span>
         </div>
         <div class="ticker-right">
-          <span class="ticker-time" id="tickerTime">ซิงค์ล่าสุด: กำลังเชื่อมต่อ...</span>
+          <span class="ticker-time" id="tickerTime">ซิงค์: กำลังเชื่อมต่อ...</span>
         </div>
       </div>
 
       <!-- แถบสลับหมวดหลัก: ศูนย์คุมสอบสด VS คลังประวัติและรายงานย้อนหลัง -->
-      <div class="monitor-primary-nav">
+      <div class="monitor-primary-nav compact-primary-nav">
         <button id="primaryModeLiveBtn" class="primary-mode-tab active" type="button">
           <span class="pulse-ring-dot"></span>
           <span>🔴 ศูนย์คุมสอบสด (Live Proctoring)</span>
@@ -161,44 +141,40 @@
         </button>
       </div>
 
-      <!-- ส่วนที่ 1: ศูนย์คุมสอบสด (Live Proctoring Center) — เฉพาะสิ่งที่จำเป็นขณะคุมสอบ -->
-      <div id="liveProctorZone" class="monitor-zone-card card">
-        <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
-          <div>
-            <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
-              <span class="live-pulse-dot" style="width: 9px; height: 9px;"></span>
+      <!-- ส่วนที่ 1: ศูนย์คุมสอบสด (Live Proctoring Center) — เน้นหน้าจอภาพผู้สอบสด -->
+      <div id="liveProctorZone" class="monitor-zone-card card prominent-live-card">
+        <div class="card-header compact-header" style="flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="card-title" style="display: flex; align-items: center; gap: 6px; font-size: 15px;">
+              <span class="live-pulse-dot" style="width: 8px; height: 8px;"></span>
               <span>จอภาพผู้สอบสด (Real-time Live Monitors)</span>
             </div>
-            <div class="zone-subtitle-lead">แสดงเฉพาะนักเรียนที่กำลังทำข้อสอบอยู่ในห้องสอบขณะนี้</div>
-          </div>
-
-          <!-- ตัวเลือกกรองห้องสอบสด -->
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <select id="monitorRoomFilterSelect" class="form-control" style="min-width: 210px; max-width: 280px; font-size: 13px;">
+            <!-- ตัวเลือกกรองห้องสอบสด -->
+            <select id="monitorRoomFilterSelect" class="form-control" style="min-width: 180px; max-width: 250px; font-size: 12.5px; height: 32px; padding: 2px 10px;">
               <option value="all">ทุกห้องสอบ (All Rooms)</option>
             </select>
           </div>
 
           <!-- เครื่องมือควบคุมจำเป็นขณะคุมสอบ -->
-          <div class="card-actions-group">
-            <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">กำลังเชื่อมต่อ...</span>
-            <button id="toggleSoundBtn" type="button" class="btn btn-sound-modern" title="เปิด/ปิดเสียงแจ้งเตือนเมื่อพบการสลับหน้าจอ">
+          <div class="card-actions-group" style="gap: 6px;">
+            <span id="syncStatusText" style="font-size: 11px; color: var(--text-muted); margin-right: 2px;">กำลังเชื่อมต่อ...</span>
+            <button id="toggleSoundBtn" type="button" class="btn btn-sound-modern compact-btn" title="เปิด/ปิดเสียงแจ้งเตือนเมื่อพบการสลับหน้าจอ">
               🔔 เสียงเตือน: เปิด
             </button>
-            <button id="refreshLogsBtn" class="btn btn-refresh-modern" title="รีเฟรชข้อมูลล่าสุด">🔄 รีเฟรช</button>
-            <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบสอบใหม่</button>
+            <button id="refreshLogsBtn" class="btn btn-refresh-modern compact-btn" title="รีเฟรชข้อมูลล่าสุด">🔄 รีเฟรช</button>
+            <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn compact-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบใหม่</button>
           </div>
         </div>
 
         <!-- แถบเครื่องมือกรองด่วนสำหรับคุมสด -->
-        <div class="monitor-toolbar" style="margin-bottom: 16px;">
+        <div class="monitor-toolbar compact-toolbar">
           <!-- ตัวกรองสถานะสด -->
           <div class="filter-pills-row" id="monitorFilterPills">
             <button class="filter-pill active" data-filter="all">
               ทั้งหมด <span class="filter-count-badge" id="badgeFilterAll">0</span>
             </button>
             <button class="filter-pill" data-filter="alert">
-              <span class="radar-beacon" style="width: 6px; height: 6px;"></span>
+              <span class="radar-beacon" style="width: 5px; height: 5px;"></span>
               พบแจ้งเตือน <span class="filter-count-badge" id="badgeFilterAlert">0</span>
             </button>
             <button class="filter-pill" data-filter="today">
@@ -206,29 +182,29 @@
             </button>
           </div>
 
-          <div style="flex: 1; min-width: 240px;">
+          <div style="flex: 1; min-width: 200px;">
             <input 
               type="text" 
               id="searchLogInput" 
               class="form-control" 
               placeholder="🔍 ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
-              style="font-size: 13px;"
+              style="font-size: 12.5px; height: 32px; padding: 4px 10px;"
             >
           </div>
         </div>
 
         <!-- กริดจอภาพผู้สอบสด (เฉพาะคนที่กำลังสอบอยู่ตอนนี้) -->
-        <div id="screensGridContainer">
+        <div id="screensGridContainer" class="live-screens-focus-area">
           <div id="studentScreensGrid" class="screens-grid">
-            <div class="screens-empty-state">
+            <div class="screens-empty-state compact-empty-state">
               <div class="monitor-live-badge"><span class="live-dot"></span> ระบบคุมสอบสดพร้อมทำงาน</div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 48px; height: 48px; color: var(--primary); margin: 0 auto 12px; display: block; opacity: 0.85;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 38px; height: 38px; color: var(--primary); margin: 0 auto 8px; display: block; opacity: 0.85;">
                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                 <line x1="8" y1="21" x2="16" y2="21"></line>
                 <line x1="12" y1="17" x2="12" y2="21"></line>
               </svg>
-              <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">ขณะนี้ยังไม่มีผู้เข้าทำข้อสอบ</h3>
-              <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 440px; margin: 0 auto 14px; line-height: 1.6;">
+              <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">ขณะนี้ยังไม่มีผู้เข้าทำข้อสอบ</h3>
+              <p style="font-size: 12.5px; color: var(--text-secondary); max-width: 400px; margin: 0 auto; line-height: 1.5;">
                 เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอสดจะปรากฏขึ้นที่นี่โดยอัตโนมัติพร้อมรายงานการแจ้งเตือนทันที
               </p>
             </div>
