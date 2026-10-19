@@ -3,7 +3,15 @@
  */
 const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
-const DEFAULT_ADMIN_PASSCODE = "1234";
+
+/**
+ * สุ่มรหัสผ่านตัวเลข 6 หลัก (100000 - 999999) เสมอ
+ */
+function generateRandomPasscode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+const DEFAULT_ADMIN_PASSCODE = generateRandomPasscode();
 
 /**
  * ปรับแต่งและแปลง URL ของ Google Forms ให้พร้อมสำหรับการ Embed ใน Iframe

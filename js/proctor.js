@@ -338,7 +338,7 @@ async function handleAdminUnlock() {
   const pass = await showPrompt("กรุณากรอกรหัสผ่านผู้คุมสอบ (Admin Passcode) เพื่อปลดล็อก:", {
     title: "ปลดล็อกโดยผู้คุมสอบ",
     inputType: "password",
-    inputPlaceholder: "กรอกรหัสผ่าน เช่น 1234",
+    inputPlaceholder: "กรอกรหัสผ่าน 6 หลัก เช่น 842109",
     confirmText: "ปลดล็อก",
     cancelText: "ยกเลิก",
     confirmClass: "primary",

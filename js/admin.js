@@ -62,7 +62,14 @@ async function generateExamLink() {
   const title = (document.getElementById("examTitleInput").value || "").trim() || "แบบทดสอบออนไลน์";
   const rawFormUrl = (document.getElementById("examFormUrlInput").value || "").trim();
   const webhookUrl = (document.getElementById("examWebhookInput").value || "").trim() || DEFAULT_WEBHOOK_URL;
-  const passcode = (document.getElementById("examPasscodeInput").value || "").trim() || DEFAULT_ADMIN_PASSCODE;
+  
+  // รหัสผ่านผู้คุมสอบ: สุ่มตัวเลข 6 หลักเสมอ (หากเว้นว่างหรือไม่ครบ 6 หลัก ให้สุ่ม 6 หลักใหม่ทันที)
+  let passcode = (document.getElementById("examPasscodeInput").value || "").trim();
+  if (!passcode || !/^\d{6}$/.test(passcode)) {
+    passcode = generateRandomPasscode();
+    const passInputEl = document.getElementById("examPasscodeInput");
+    if (passInputEl) passInputEl.value = passcode;
+  }
 
   if (!rawFormUrl) {
     await showAlert("กรุณาระบุลิงก์ Google Forms ก่อนสร้างห้องสอบ", {
@@ -106,9 +113,25 @@ async function generateExamLink() {
     const resultBox = document.getElementById("linkResultBox");
     const linkDisplay = document.getElementById("generatedLinkDisplay");
     const testOpenBtn = document.getElementById("testOpenLinkBtn");
+    const passcodeDisplay = document.getElementById("generatedPasscodeDisplay");
+    const copyPasscodeBtn = document.getElementById("copyPasscodeBtn");
 
     linkDisplay.value = fullExamUrl;
     testOpenBtn.href = fullExamUrl;
+    
+    // แสดงรหัสผ่านผู้คุมสอบ 6 หลักในกล่องผลลัพธ์
+    if (passcodeDisplay) {
+      passcodeDisplay.textContent = passcode;
+    }
+    if (copyPasscodeBtn) {
+      copyPasscodeBtn.onclick = () => {
+        navigator.clipboard.writeText(passcode).then(() => {
+          const orig = copyPasscodeBtn.textContent;
+          copyPasscodeBtn.textContent = "คัดลอกรหัสแล้ว!";
+          setTimeout(() => { copyPasscodeBtn.textContent = orig; }, 2000);
+        });
+      };
+    }
 
     // UX-05: สร้าง QR Code แบบ Client-side
     const qrWrapper = document.getElementById("examQrContainer") || document.querySelector(".qr-image-wrapper");
@@ -127,6 +150,14 @@ async function generateExamLink() {
 
     // บันทึกประวัติลง LocalStorage
     saveRoomToHistory(roomConfig, fullExamUrl);
+
+    // สุ่มรหัสผ่าน 6 หลักใหม่เตรียมไว้ในช่องกรอกสำหรับการสร้างห้องสอบใหม่ครั้งถัดไปเสมอ
+    setTimeout(() => {
+      const passInput = document.getElementById("examPasscodeInput");
+      if (passInput) {
+        passInput.value = generateRandomPasscode();
+      }
+    }, 1200);
   } finally {
     setTimeout(() => {
       if (generateBtn) {
@@ -146,6 +177,7 @@ function saveRoomToHistory(roomConfig, fullUrl) {
     history.unshift({
       title: roomConfig.title,
       formUrl: roomConfig.formUrl,
+      adminPasscode: roomConfig.adminPasscode,
       createdAt: new Date().toLocaleString("th-TH"),
       fullUrl: fullUrl
     });
@@ -172,7 +204,10 @@ function renderRoomHistory() {
       <div style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow-sm); flex-wrap: wrap;">
         <div style="overflow: hidden; min-width: 200px; flex: 1;">
           <strong style="display: block; font-size: 14.5px; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(room.title)}</strong>
-          <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">สร้างเมื่อ: ${escapeHtml(room.createdAt)}</span>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">สร้างเมื่อ: ${escapeHtml(room.createdAt)}</span>
+            ${room.adminPasscode ? `<span class="badge badge-primary" style="font-family: monospace; letter-spacing: 0.05em; font-size: 11.5px;">รหัสคุมสอบ: ${escapeHtml(room.adminPasscode)}</span>` : ""}
+          </div>
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="btn btn-secondary history-copy-btn" data-url="${escapeHtml(room.fullUrl)}" style="min-height: 38px; padding: 6px 14px; font-size: 13px;">คัดลอก</button>
@@ -768,8 +803,21 @@ document.addEventListener("DOMContentLoaded", () => {
     webhookInput.value = DEFAULT_WEBHOOK_URL;
   }
   const passInput = document.getElementById("examPasscodeInput");
-  if (passInput && !passInput.value) {
-    passInput.value = DEFAULT_ADMIN_PASSCODE;
+  if (passInput) {
+    // กำหนดให้เป็นตัวเลข 6 หลักแบบสุ่มเสมอเมื่อโหลดหน้า
+    passInput.value = generateRandomPasscode();
+  }
+
+  // ปุ่มคลิกเพื่อสุ่มรหัสผ่าน 6 หลักใหม่
+  const randomPassBtn = document.getElementById("randomPasscodeBtn");
+  if (randomPassBtn) {
+    randomPassBtn.addEventListener("click", () => {
+      const pInput = document.getElementById("examPasscodeInput");
+      if (pInput) {
+        pInput.value = generateRandomPasscode();
+        pInput.focus();
+      }
+    });
   }
 
   const generateBtn = document.getElementById("generateLinkBtn");
