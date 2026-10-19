@@ -20,7 +20,8 @@ async function loadSystemSettings() {
 
   // ดึงค่าจาก Cloud (SystemConfig)
   try {
-    const url = new URL(DEFAULT_WEBHOOK_URL);
+    const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+    const url = new URL(webhookUrl);
     url.searchParams.set("action", "getSystemConfig");
     const res = await fetch(url.toString());
     if (res.ok) {

@@ -13,7 +13,9 @@ let allUsers = [];
 
 function applyRoleUI() {
   const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
-  const isAdmin = user ? (user.role === USER_ROLES.ADMIN) : (localStorage.getItem("examProctorRole") === USER_ROLES.ADMIN);
+  const isAdmin = typeof isCurrentUserAdmin === "function" 
+    ? isCurrentUserAdmin() 
+    : (user ? String(user.role).toUpperCase() === "ADMIN" : String(localStorage.getItem("examProctorRole")).toUpperCase() === "ADMIN");
   const badge = document.getElementById("navRoleBadge");
   const userNameEl = document.getElementById("navUserNameDisplay");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -91,7 +93,8 @@ function setStoredRooms(rooms) {
 
 function syncRoomToCloud(action, roomData) {
   const webhookInput = document.getElementById("examWebhookInput");
-  const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || DEFAULT_WEBHOOK_URL;
+  const defaultWh = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+  const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || defaultWh;
   if (!webhookUrl) return;
 
   const payload = {
@@ -111,7 +114,8 @@ function syncRoomToCloud(action, roomData) {
 
 async function fetchCloudRooms(callback) {
   const webhookInput = document.getElementById("examWebhookInput");
-  const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || DEFAULT_WEBHOOK_URL;
+  const defaultWh = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+  const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || defaultWh;
   if (!webhookUrl) return;
 
   try {
@@ -192,7 +196,7 @@ function setStoredUsers(users) {
 }
 
 function syncUserToCloud(action, userData) {
-  const webhookUrl = DEFAULT_WEBHOOK_URL;
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   if (!webhookUrl) return;
 
   const payload = {
@@ -211,7 +215,7 @@ function syncUserToCloud(action, userData) {
 }
 
 async function fetchCloudUsers(callback) {
-  const webhookUrl = DEFAULT_WEBHOOK_URL;
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   if (!webhookUrl) return;
 
   try {

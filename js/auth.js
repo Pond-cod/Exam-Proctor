@@ -33,7 +33,7 @@ function clearCurrentUser() {
   try {
     sessionStorage.removeItem(AUTH_USER_KEY);
     localStorage.removeItem(AUTH_USER_KEY);
-    localStorage.setItem("examProctorRole", USER_ROLES.USER);
+    localStorage.setItem("examProctorRole", USER_ROLES.TEACHER);
   } catch (_) {}
 }
 
@@ -44,7 +44,7 @@ function isLoggedIn() {
 
 function isCurrentUserAdmin() {
   const user = getCurrentUser();
-  return user && user.role === USER_ROLES.ADMIN;
+  return !!(user && String(user.role).toUpperCase() === USER_ROLES.ADMIN);
 }
 
 /**
@@ -61,8 +61,8 @@ function requireAuth(requiredRole = null) {
     return false;
   }
 
-  // 2. ต้องการสิทธิ์ Admin เท่านั้นแต่ผู้ใช้เป็น Teacher
-  if (requiredRole === USER_ROLES.ADMIN && user.role !== USER_ROLES.ADMIN) {
+  // 2. ต้องการสิทธิ์เฉพาะ (เช่น Admin) แต่ผู้ใช้ไม่มีสิทธิ์ที่กำหนด
+  if (requiredRole && String(user.role).toUpperCase() !== String(requiredRole).toUpperCase()) {
     showAlert("คุณไม่มีสิทธิ์เข้าถึงหน้านี้ (เฉพาะผู้ดูแลระบบ Admin เท่านั้น)", {
       type: "warning",
       confirmText: "กลับสู่หน้ารายการห้องสอบ"
@@ -97,7 +97,9 @@ async function handleLogout() {
  */
 async function authenticateUser(credentials) {
   const { username, passcode, role } = credentials;
-  const webhookUrl = DEFAULT_WEBHOOK_URL;
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" 
+    ? getEffectiveWebhookUrl() 
+    : (localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL);
 
   // 1. พยายามตรวจสอบกับ Google Apps Script Webhook ก่อน
   if (webhookUrl) {
@@ -116,13 +118,39 @@ async function authenticateUser(credentials) {
       if (response.ok) {
         const result = await response.json();
         if (result && result.status === "success" && result.user) {
-          return { success: true, user: result.user };
+          const cloudUser = {
+            ...result.user,
+            role: String(result.user.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
+          };
+          return { success: true, user: cloudUser };
         } else if (result && result.status === "error") {
           return { success: false, message: result.message || "รหัสผ่านไม่ถูกต้อง" };
         }
       }
     } catch (netErr) {
-      console.warn("Cloud auth check offline, using local verification fallback:", netErr);
+      console.warn("Cloud auth POST failed, trying GET fallback:", netErr);
+      try {
+        const getUrl = new URL(webhookUrl);
+        getUrl.searchParams.set("action", "verifyLogin");
+        getUrl.searchParams.set("username", username || "");
+        getUrl.searchParams.set("passcode", passcode || "");
+        getUrl.searchParams.set("role", role || "");
+        const getRes = await fetch(getUrl.toString());
+        if (getRes.ok) {
+          const getResult = await getRes.json();
+          if (getResult && getResult.status === "success" && getResult.user) {
+            const cloudUser = {
+              ...getResult.user,
+              role: String(getResult.user.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
+            };
+            return { success: true, user: cloudUser };
+          } else if (getResult && getResult.status === "error") {
+            return { success: false, message: getResult.message || "รหัสผ่านไม่ถูกต้อง" };
+          }
+        }
+      } catch (getErr) {
+        console.warn("Cloud auth GET fallback offline, using local verification fallback:", getErr);
+      }
     }
   }
 
@@ -151,7 +179,7 @@ async function authenticateUser(credentials) {
         userId: "USR-TEACHER",
         username: "teacher",
         displayName: "ครูผู้สอน / ผู้คุมสอบ",
-        role: USER_ROLES.USER
+        role: USER_ROLES.TEACHER
       }
     };
   }
@@ -162,14 +190,21 @@ async function authenticateUser(credentials) {
     const matched = localUsers.find(u => {
       const uMatch = cleanUser && u.username && u.username.toLowerCase() === cleanUser;
       const pMatch = String(u.passcode).trim() === cleanPass;
-      return (uMatch && pMatch) || (!cleanUser && pMatch && u.role === role);
+      const rMatch = !cleanUser && pMatch && String(u.role).toUpperCase() === String(role).toUpperCase();
+      return (uMatch && pMatch) || rMatch;
     });
 
     if (matched) {
-      if (matched.status === "INACTIVE") {
+      if (String(matched.status).toUpperCase() === "INACTIVE") {
         return { success: false, message: "บัญชีผู้ใช้นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" };
       }
-      return { success: true, user: matched };
+      return { 
+        success: true, 
+        user: {
+          ...matched,
+          role: String(matched.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
+        } 
+      };
     }
   } catch (_) {}
 

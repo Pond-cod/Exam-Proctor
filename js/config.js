@@ -5,6 +5,17 @@ const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbW
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
 
 /**
+ * ดึง Webhook URL ปัจจุบัน (รองรับการตั้งค่าผ่านหน้า Settings ในเครื่อง หรือใช้ค่าเริ่มต้น)
+ */
+function getEffectiveWebhookUrl() {
+  try {
+    return localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL;
+  } catch (_) {
+    return DEFAULT_WEBHOOK_URL;
+  }
+}
+
+/**
  * Helper ป้องกัน XSS และแปลงข้อความสำหรับแสดงผลใน HTML
  */
 function escapeHtml(str) {
@@ -27,11 +38,12 @@ function generateRandomPasscode() {
 const DEFAULT_ADMIN_PASSCODE = generateRandomPasscode();
 
 /**
- * นิยาม Role สิทธิ์การใช้งานระบบ
+ * นิยาม Role สิทธิ์การใช้งานระบบ (Uppercase Standardized)
  */
 const USER_ROLES = {
-  ADMIN: "admin", // ผู้ดูแลระบบ (จัดการห้องสอบทั้งหมด, ลบ, แก้ไข, ตั้งค่า Webhook/Google Sheets, รีเซ็ตจอสด)
-  USER: "user"    // ครูผู้คุมสอบ (สร้างห้องสอบใหม่, เปิด/ปิดรับนักเรียน, ดูหน้าจอคุมสอบสด)
+  ADMIN: "ADMIN",     // ผู้ดูแลระบบ (จัดการห้องสอบทั้งหมด, ลบ, แก้ไข, จัดการผู้ใช้, ตั้งค่า Webhook/Google Sheets, รีเซ็ตจอสด)
+  TEACHER: "TEACHER", // ครูผู้คุมสอบ (สร้างห้องสอบใหม่, เปิด/ปิดรับนักเรียน, ดูหน้าจอคุมสอบสด)
+  USER: "TEACHER"     // Alias เพื่อรองรับโค้ดเดิม
 };
 
 /**

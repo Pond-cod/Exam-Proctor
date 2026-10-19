@@ -77,7 +77,7 @@ function renderRoomHistory() {
     return;
   }
 
-  const isAdmin = currentRole === USER_ROLES.ADMIN;
+  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
 
   container.innerHTML = filtered.map((r) => {
     const isOpen = r.status === "OPEN";
@@ -276,7 +276,7 @@ async function toggleRoomStatus(roomId) {
 
 // ลบห้องสอบ — เฉพาะ Role Admin เท่านั้น
 async function deleteRoom(roomId) {
-  if (currentRole !== USER_ROLES.ADMIN) {
+  if (typeof isCurrentUserAdmin === "function" && !isCurrentUserAdmin()) {
     showAlert("คุณต้องมีสิทธิ์ผู้ดูแลระบบ (Admin) เท่านั้นจึงจะสามารถลบห้องสอบได้", {
       type: "warning",
       confirmText: "เข้าใจแล้ว"
@@ -313,7 +313,7 @@ async function deleteRoom(roomId) {
 
 // เปิด Modal แก้ไขข้อมูลห้องสอบ — เฉพาะ Role Admin
 function openEditRoomModal(roomId) {
-  if (currentRole !== USER_ROLES.ADMIN) {
+  if (typeof isCurrentUserAdmin === "function" && !isCurrentUserAdmin()) {
     showAlert("คุณต้องมีสิทธิ์ผู้ดูแลระบบ (Admin) เท่านั้นจึงจะสามารถแก้ไขห้องสอบได้", {
       type: "warning",
       confirmText: "เข้าใจแล้ว"

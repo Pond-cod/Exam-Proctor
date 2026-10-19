@@ -158,7 +158,10 @@ async function fetchPortalAnnouncement() {
   if (!banner || !textEl) return;
 
   try {
-    const url = new URL(DEFAULT_WEBHOOK_URL);
+    const webhookUrl = typeof getEffectiveWebhookUrl === "function" 
+      ? getEffectiveWebhookUrl() 
+      : (localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL);
+    const url = new URL(webhookUrl);
     url.searchParams.set("action", "getSystemConfig");
     const res = await fetch(url.toString());
     if (!res.ok) return;
@@ -175,7 +178,6 @@ async function fetchPortalAnnouncement() {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupMobileNavigation();
-  setupRoleAuth();
   applyRoleUI();
   populatePortalFilters();
 

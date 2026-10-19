@@ -17,8 +17,8 @@ function populateCreatorDropdowns() {
 
 async function generateExamLink() {
   const title = (document.getElementById("examTitleInput").value || "").trim() || "แบบทดสอบออนไลน์";
-  const rawFormUrl = (document.getElementById("examFormUrlInput").value || "").trim();
-  const webhookUrl = (document.getElementById("examWebhookInput").value || "").trim() || DEFAULT_WEBHOOK_URL;
+  const defaultWh = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+  const webhookUrl = (document.getElementById("examWebhookInput") ? document.getElementById("examWebhookInput").value : "").trim() || defaultWh;
   const category = (document.getElementById("examCategorySelect") ? document.getElementById("examCategorySelect").value : "").trim() || "ทั่วไป (General)";
   const gradeLevel = (document.getElementById("examGradeSelect") ? document.getElementById("examGradeSelect").value : "").trim() || "ไม่ระบุ (All / Not Specified)";
   const status = (document.getElementById("examStatusSelect") ? document.getElementById("examStatusSelect").value : "OPEN") || "OPEN";
@@ -179,6 +179,10 @@ async function generateExamLink() {
 
     // บันทึกลง Storage
     let history = getStoredRooms();
+    // ดึงชื่อผู้สร้างจากโปรไฟล์ที่เข้าสู่ระบบอยู่
+    const authUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+    const creatorName = authUser ? (authUser.displayName || authUser.username || "ครูผู้สอน") : "ครูผู้สอน";
+
     const newRoomRecord = {
       roomId: roomId,
       title: title,
@@ -189,7 +193,7 @@ async function generateExamLink() {
       entryCode: entryCode,
       adminPasscode: adminPasscode,
       status: status,
-      createdBy: currentRole === USER_ROLES.ADMIN ? "Admin" : "Teacher",
+      createdBy: creatorName,
       createdAt: new Date().toLocaleString("th-TH")
     };
     history.unshift(newRoomRecord);
@@ -224,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const webhookInput = document.getElementById("examWebhookInput");
   if (webhookInput && !webhookInput.value) {
-    webhookInput.value = DEFAULT_WEBHOOK_URL;
+    webhookInput.value = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   }
 
   const entryInput = document.getElementById("examEntryCodeInput");

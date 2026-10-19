@@ -12,6 +12,7 @@ let examConfig = {
 let studentId = "";
 let isExamActive = false;
 let isExamSubmitted = false;
+let isEntryCodePreVerified = false;
 let violationCount = 0;
 let timerInterval = null;
 let timerStartTime = 0; // BUG-13: ใช้ Date.now() เป็น reference แทน counter
@@ -230,8 +231,6 @@ function updateTimer() {
       String(secs).padStart(2, "0");
   }
 }
-
-let isEntryCodePreVerified = false;
 
 // Initialize & Load Parameters from URL
 function initExamFromUrl() {

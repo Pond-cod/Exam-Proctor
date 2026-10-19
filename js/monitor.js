@@ -200,7 +200,7 @@ function updateMonitorRoomFilterDropdown() {
 }
 
 function fetchMonitorLogs() {
-  const webhookUrl = DEFAULT_WEBHOOK_URL;
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   const syncStatus = document.getElementById("syncStatusText");
 
   fetch(webhookUrl)
@@ -718,7 +718,8 @@ function testWebhookPing() {
   if (btn) btn.disabled = true;
 
   showAlert("กำลังส่งข้อมูลทดสอบ Ping ไปยัง Google Apps Script...", { type: "info" });
-  fetch(DEFAULT_WEBHOOK_URL, {
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+  fetch(webhookUrl, {
     method: "POST",
     mode: "no-cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },

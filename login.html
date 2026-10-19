@@ -179,9 +179,17 @@
   <script src="js/auth.js?v=5.5"></script>
   <script src="js/common.js?v=5.5"></script>
   <script>
-    let selectedRole = USER_ROLES.USER;
+    let selectedRole = USER_ROLES.TEACHER;
 
     document.addEventListener("DOMContentLoaded", () => {
+      // ตรวจสอบว่าเข้าสู่ระบบอยู่แล้วหรือไม่ หากมี Session แล้วให้ข้ามไปหน้าปลายทาง
+      if (typeof isLoggedIn === "function" && isLoggedIn()) {
+        const params = new URLSearchParams(window.location.search);
+        const redirectPage = params.get("redirect") || "rooms.html";
+        window.location.replace(redirectPage);
+        return;
+      }
+
       const tabTeacher = document.getElementById("roleTabTeacher");
       const tabAdmin = document.getElementById("roleTabAdmin");
       const roleHint = document.getElementById("roleHintBadge");
@@ -214,7 +222,7 @@
         passInput.focus();
       }
 
-      tabTeacher.addEventListener("click", () => switchRole(USER_ROLES.USER));
+      tabTeacher.addEventListener("click", () => switchRole(USER_ROLES.TEACHER));
       tabAdmin.addEventListener("click", () => switchRole(USER_ROLES.ADMIN));
 
       // Handle Form Submit

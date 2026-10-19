@@ -274,7 +274,87 @@ function doGet(e) {
       });
     }
 
-    // 2.6 ดึงข้อมูล Logs สำหรับหน้าจอคุมสอบสด (Real-time Monitor)
+    // 2.6 ยืนยันสิทธิ์เข้าสู่ระบบ (Staff Login Verification via GET)
+    if (action === "verifyLogin") {
+      const usernameInput = String(params.username || "").trim().toLowerCase();
+      const passcodeInput = String(params.passcode || "").trim();
+      const requestedRole = String(params.role || "").toUpperCase();
+
+      const usersSheet = getUsersSheet(ss);
+      const lastRow = usersSheet.getLastRow();
+      let authenticatedUser = null;
+
+      if (lastRow > 1) {
+        const rows = usersSheet.getRange(2, 1, lastRow - 1, 9).getValues();
+        for (let i = 0; i < rows.length; i++) {
+          const uId = String(rows[i][0]);
+          const uName = String(rows[i][1]).trim().toLowerCase();
+          const dName = String(rows[i][2]);
+          const uRole = String(rows[i][3]).toUpperCase();
+          const uPass = String(rows[i][4]).trim();
+          const uStatus = String(rows[i][5]).toUpperCase();
+
+          const matchUsername = usernameInput && uName === usernameInput && uPass === passcodeInput;
+          const matchRoleOnly = !usernameInput && requestedRole && uRole === requestedRole && uPass === passcodeInput;
+
+          if (matchUsername || matchRoleOnly) {
+            if (uStatus !== "ACTIVE") {
+              return createJsonResponse({ status: "error", message: "บัญชีผู้ใช้นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" });
+            }
+
+            authenticatedUser = {
+              userId: uId,
+              username: rows[i][1],
+              displayName: dName,
+              role: uRole
+            };
+
+            const rowIndex = i + 2;
+            usersSheet.getRange(rowIndex, 9).setValue(new Date().toISOString());
+            break;
+          }
+        }
+      }
+
+      // Fallback ตรวจสอบกับ SystemConfig
+      if (!authenticatedUser) {
+        const configSheet = getConfigSheet(ss);
+        const cfg = configSheet.getRange(2, 1, 1, 5).getValues()[0];
+        const masterPass = String(cfg[0] || "999888").trim();
+        const teacherPass = String(cfg[3] || "111222").trim();
+
+        if (passcodeInput === masterPass) {
+          authenticatedUser = {
+            userId: "USR-ADMIN",
+            username: "admin",
+            displayName: "ผู้ดูแลระบบหลัก (Master Admin)",
+            role: "ADMIN"
+          };
+        } else if (passcodeInput === teacherPass && requestedRole !== "ADMIN") {
+          authenticatedUser = {
+            userId: "USR-TEACHER",
+            username: "teacher",
+            displayName: "ครูผู้สอน / ผู้คุมสอบ",
+            role: "TEACHER"
+          };
+        }
+      }
+
+      if (authenticatedUser) {
+        return createJsonResponse({
+          status: "success",
+          message: "เข้าสู่ระบบสำเร็จ",
+          user: authenticatedUser
+        });
+      } else {
+        return createJsonResponse({
+          status: "error",
+          message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบใหม่อีกครั้ง"
+        });
+      }
+    }
+
+    // 2.7 ดึงข้อมูล Logs สำหรับหน้าจอคุมสอบสด (Real-time Monitor)
     const logsSheet = getLogsSheet(ss);
     const lastRow = logsSheet.getLastRow();
     if (lastRow <= 1) return createJsonResponse({ status: "success", data: [] });
