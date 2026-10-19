@@ -87,12 +87,22 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background: 
-    radial-gradient(1200px circle at 10% 8%, rgba(14, 165, 233, 0.09), transparent 45%),
-    radial-gradient(1000px circle at 90% 12%, rgba(245, 158, 11, 0.08), transparent 40%),
-    radial-gradient(1100px circle at 50% 85%, rgba(124, 58, 237, 0.07), transparent 45%),
-    #f8fafc;
+  background-color: #f0f7ff;
+  background-image: 
+    /* 1. Top Wide Atmospheric Glow: Royal / Deep Navy Blue */
+    radial-gradient(1400px circle at 50% -60px, rgba(2, 132, 199, 0.22) 0%, rgba(3, 105, 161, 0.14) 38%, transparent 72%),
+    /* 2. Top-Left Vibrant Sky Blue Aurora */
+    radial-gradient(950px circle at -5% 140px, rgba(56, 189, 248, 0.32) 0%, rgba(186, 230, 253, 0.18) 45%, transparent 68%),
+    /* 3. Top-Right Deep Navy/Azure Aura */
+    radial-gradient(950px circle at 105% 180px, rgba(2, 132, 199, 0.28) 0%, rgba(3, 105, 161, 0.16) 42%, transparent 68%),
+    /* 4. Mid-page Soft Cyan & Sky Blue Ambient */
+    radial-gradient(1100px circle at 25% 65%, rgba(186, 230, 253, 0.32) 0%, rgba(224, 242, 254, 0.18) 50%, transparent 80%),
+    /* 5. Center-Bottom Soft Arctic White & Sky Glow */
+    radial-gradient(1200px circle at 75% 85%, rgba(14, 165, 233, 0.18) 0%, rgba(240, 249, 255, 0.5) 50%, transparent 85%),
+    /* 6. Base Diagonal Tone: Ice Sky Blue to Crisp Pure White */
+    linear-gradient(165deg, #e0f2fe 0%, #edf7ff 22%, #f5faff 50%, #ffffff 88%);
   background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
@@ -101,6 +111,22 @@ body {
   min-width: 320px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 520px;
+  background: 
+    radial-gradient(ellipse 90% 60% at 50% -120px, rgba(2, 132, 199, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 15% 0px, rgba(56, 189, 248, 0.26), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 0px, rgba(3, 105, 161, 0.24), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Fluid Media - Never Overflow */
@@ -111,17 +137,17 @@ img, svg, video, canvas, iframe {
 }
 
 /* ==========================================================================
-   Navigation Bar (Glassmorphic & Vibrant)
+   Navigation Bar (Glassmorphic & Vibrant Navy/Sky/White)
    ========================================================================== */
 .navbar {
   background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1.5px solid rgba(226, 232, 240, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1.5px solid rgba(186, 230, 253, 0.85);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(2, 132, 199, 0.03);
+  box-shadow: 0 4px 25px -3px rgba(2, 132, 199, 0.09), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
   width: 100%;
   transition: all 0.25s ease;
 }
@@ -370,20 +396,29 @@ img, svg, video, canvas, iframe {
    Cards (Bright & High-Contrast)
    ========================================================================== */
 .card {
-  background: var(--bg-card);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1.5px solid var(--bg-card-border);
-  border-radius: 20px;
-  padding: 22px 20px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(186, 230, 253, 0.85);
+  border-radius: 22px;
+  padding: 24px 22px;
   margin-bottom: 24px;
-  box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(2, 132, 199, 0.03);
+  box-shadow: 
+    0 12px 36px -6px rgba(2, 132, 199, 0.09),
+    0 4px 12px -2px rgba(15, 23, 42, 0.04),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 1;
 }
 
 .card:hover {
-  border-color: rgba(2, 132, 199, 0.35);
-  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(2, 132, 199, 0.06);
+  border-color: rgba(2, 132, 199, 0.45);
+  box-shadow: 
+    0 18px 42px -6px rgba(2, 132, 199, 0.15),
+    0 6px 16px -3px rgba(15, 23, 42, 0.06),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
 }
 
 @media (min-width: 640px) {
@@ -1792,19 +1827,28 @@ img, svg, video, canvas, iframe {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background-color: var(--bg-main);
+  padding: 20px 16px;
+  background: 
+    radial-gradient(1000px circle at 50% 0%, rgba(2, 132, 199, 0.28) 0%, rgba(3, 105, 161, 0.14) 40%, transparent 70%),
+    radial-gradient(800px circle at 10% 20%, rgba(56, 189, 248, 0.25) 0%, transparent 60%),
+    radial-gradient(800px circle at 90% 20%, rgba(3, 105, 161, 0.22) 0%, transparent 60%),
+    linear-gradient(165deg, #e0f2fe 0%, #edf7ff 30%, #f8fafc 65%, #ffffff 100%);
 }
 
 .portal-box {
   width: 100%;
   max-width: 480px;
-  background: #ffffff;
-  border: 1.5px solid var(--bg-card-border);
-  border-radius: var(--radius-lg);
-  padding: 24px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(186, 230, 253, 0.85);
+  border-radius: 26px;
+  padding: 34px 28px;
   text-align: center;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 
+    0 20px 48px -10px rgba(2, 132, 199, 0.16),
+    0 6px 16px -2px rgba(15, 23, 42, 0.04),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 @media (min-width: 600px) {
