@@ -152,6 +152,27 @@ function populatePortalFilters() {
   }
 }
 
+async function fetchPortalAnnouncement() {
+  const banner = document.getElementById("portalAnnouncementBanner");
+  const textEl = document.getElementById("portalAnnouncementText");
+  if (!banner || !textEl) return;
+
+  try {
+    const url = new URL(DEFAULT_WEBHOOK_URL);
+    url.searchParams.set("action", "getSystemConfig");
+    const res = await fetch(url.toString());
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json && json.status === "success" && json.data) {
+      const ann = String(json.data.portalAnnouncement || "").trim();
+      if (ann) {
+        textEl.textContent = ann;
+        banner.style.display = "block";
+      }
+    }
+  } catch (_) {}
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupMobileNavigation();
   setupRoleAuth();
@@ -160,6 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   allRooms = getStoredRooms();
   renderPortalRooms();
+
+  fetchPortalAnnouncement();
 
   fetchCloudRooms(() => {
     renderPortalRooms();

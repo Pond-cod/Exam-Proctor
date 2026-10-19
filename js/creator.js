@@ -216,8 +216,9 @@ async function generateExamLink() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (typeof requireAuth === "function" && !requireAuth()) return;
+
   setupMobileNavigation();
-  setupRoleAuth();
   applyRoleUI();
   populateCreatorDropdowns();
 

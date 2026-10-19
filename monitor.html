@@ -9,10 +9,10 @@
 </head>
 <body>
 
-  <!-- แถบเมนูด้านบน (Unified Top Navigation) -->
+  <!-- แถบเมนูด้านบนหลังบ้าน (Back-Office Navigation) -->
   <nav class="navbar">
     <div class="navbar-container">
-      <a href="index.html" class="brand">
+      <a href="rooms.html" class="brand">
         <div class="brand-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -31,20 +31,27 @@
         <span class="hamburger-bar"></span>
       </button>
 
-      <!-- เมนูนำทางแบบแยกหน้า (Multi-Page Navigation) -->
+      <!-- เมนูนำทางหลังบ้าน -->
       <div class="nav-links" id="navLinksMenu">
-        <a href="index.html" class="nav-tab-btn">🎓 รวมข้อสอบ</a>
         <a href="create.html" class="nav-tab-btn">➕ สร้างห้องสอบ</a>
         <a href="monitor.html" class="nav-tab-btn active">🖥️ หน้าจอคุมสอบสด</a>
         <a href="rooms.html" class="nav-tab-btn">📁 จัดการห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">👥 จัดการผู้ใช้</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">⚙️ ตั้งค่าระบบ</a>
       </div>
 
-      <!-- สิทธิ์การใช้งานระบบ (Role Switcher) -->
+      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
       <div class="nav-role-box">
-        <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
-        <button id="toggleRoleBtn" type="button" class="btn btn-sm btn-outline-role" title="คลิกเพื่อเข้าสู่ระบบหรือสลับสิทธิ์ Admin">
-          เข้าสู่ระบบ Admin 🔑
+        <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
+          <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
+          <span id="navUserNameDisplay" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"></span>
+        </div>
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
+          🚪 ออกจากระบบ
         </button>
+        <a href="index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
+          🌐 หน้าบ้าน
+        </a>
       </div>
     </div>
   </nav>
@@ -307,8 +314,9 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=5.3"></script>
-  <script src="js/common.js?v=5.3"></script>
-  <script src="js/monitor.js?v=5.3"></script>
+  <script src="js/config.js?v=5.5"></script>
+  <script src="js/auth.js?v=5.5"></script>
+  <script src="js/common.js?v=5.5"></script>
+  <script src="js/monitor.js?v=5.5"></script>
 </body>
 </html>

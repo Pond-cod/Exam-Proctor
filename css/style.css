@@ -2416,3 +2416,17 @@ img, svg, video, canvas, iframe {
   }
 }
 
+.masked-passcode {
+  padding: 3px 8px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.masked-passcode:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+

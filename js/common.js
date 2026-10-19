@@ -1,110 +1,49 @@
 /**
  * Common Engine for Exam Proctor Studio Sub-sites
  * Handles Role Management, Global Room Storage, Navigation, and Cloud Sync
- * Version: v5.2
+ * Version: v5.5
  */
 
 let allRooms = [];
-let currentRole = localStorage.getItem("examProctorRole") || USER_ROLES.USER;
+let allUsers = [];
 
 /* ==========================================================================
-   1. Role System Management (Admin VS User/Teacher)
+   1. Role System Management & Navbar UI
    ========================================================================== */
 
 function applyRoleUI() {
+  const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = user ? (user.role === USER_ROLES.ADMIN) : (localStorage.getItem("examProctorRole") === USER_ROLES.ADMIN);
   const badge = document.getElementById("navRoleBadge");
-  const toggleBtn = document.getElementById("toggleRoleBtn");
-  const isAdmin = currentRole === USER_ROLES.ADMIN;
+  const userNameEl = document.getElementById("navUserNameDisplay");
+  const logoutBtn = document.getElementById("logoutBtn");
 
   if (badge) {
     if (isAdmin) {
       badge.textContent = "ผู้ดูแลระบบ (Admin) 🛡️";
       badge.className = "role-badge role-badge-admin";
     } else {
-      badge.textContent = "ครูผู้สอน / ผู้คุมสอบ";
+      badge.textContent = "ครูผู้สอน / ผู้คุมสอบ 👨‍🏫";
       badge.className = "role-badge role-badge-user";
     }
   }
 
-  if (toggleBtn) {
-    toggleBtn.textContent = isAdmin ? "ออกจาก Admin 🚪" : "เข้าสู่ระบบ Admin 🔑";
-    toggleBtn.title = isAdmin ? "คลิกเพื่อสลับกลับเป็นสิทธิ์ครูผู้สอน" : "คลิกเพื่อเข้าสู่ระบบ Admin ด้วยรหัสผ่าน";
+  if (userNameEl && user) {
+    userNameEl.textContent = user.displayName || user.username || "เจ้าหน้าที่";
+  }
+
+  if (logoutBtn && typeof handleLogout === "function") {
+    logoutBtn.onclick = handleLogout;
   }
 
   // ซ่อน/แสดงองค์ประกอบเฉพาะ Admin
-  document.querySelectorAll(".admin-only-btn, .admin-only-field").forEach((el) => {
+  document.querySelectorAll(".admin-only-btn, .admin-only-field, .admin-only-nav-item").forEach((el) => {
     el.style.display = isAdmin ? "" : "none";
   });
 
   // ถ้าหน้านั้นมีฟังก์ชัน renderRoomHistory ให้เรียกเพื่ออัปเดตปุ่มจัดการตามสิทธิ์
   if (typeof renderRoomHistory === "function") {
     renderRoomHistory();
-  }
-}
-
-function setupRoleAuth() {
-  const toggleBtn = document.getElementById("toggleRoleBtn");
-  const modal = document.getElementById("adminLoginModal");
-  const closeBtn = document.getElementById("closeAdminLoginModalBtn");
-  const cancelBtn = document.getElementById("cancelAdminLoginBtn");
-  const confirmBtn = document.getElementById("confirmAdminLoginBtn");
-  const passInput = document.getElementById("adminLoginPasscodeInput");
-  const errBox = document.getElementById("adminLoginError");
-
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", () => {
-      if (currentRole === USER_ROLES.ADMIN) {
-        currentRole = USER_ROLES.USER;
-        localStorage.setItem("examProctorRole", currentRole);
-        applyRoleUI();
-        showAlert("ออกจากสิทธิ์ผู้ดูแลระบบ (Admin) เรียบร้อยแล้ว", {
-          type: "info",
-          title: "สลับสิทธิ์สำเร็จ",
-          confirmText: "ตกลง"
-        });
-      } else {
-        if (passInput) passInput.value = "";
-        if (errBox) errBox.style.display = "none";
-        if (modal) modal.classList.add("active");
-        setTimeout(() => { if (passInput) passInput.focus(); }, 100);
-      }
-    });
-  }
-
-  const closeModal = () => {
-    if (modal) modal.classList.remove("active");
-  };
-
-  if (closeBtn) closeBtn.addEventListener("click", closeModal);
-  if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
-
-  const doLogin = () => {
-    const val = (passInput ? passInput.value : "").trim();
-    if (val === MASTER_ADMIN_PASSCODE) {
-      currentRole = USER_ROLES.ADMIN;
-      localStorage.setItem("examProctorRole", currentRole);
-      closeModal();
-      applyRoleUI();
-      showAlert("ยินดีต้อนรับสู่โหมดผู้ดูแลระบบ (Admin) คุณสามารถจัดการ ลบ แก้ไขห้องสอบ และตั้งค่าระบบได้", {
-        type: "success",
-        title: "เข้าสู่ระบบ Admin สำเร็จ",
-        confirmText: "เข้าใช้งาน"
-      });
-    } else {
-      if (errBox) errBox.style.display = "block";
-      if (passInput) {
-        passInput.select();
-        passInput.focus();
-      }
-    }
-  };
-
-  if (confirmBtn) confirmBtn.addEventListener("click", doLogin);
-  if (passInput) {
-    passInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") doLogin();
-      if (e.key === "Escape") closeModal();
-    });
   }
 }
 
@@ -204,6 +143,92 @@ async function fetchCloudRooms(callback) {
     }
   } catch (err) {
     console.warn("fetchCloudRooms error:", err);
+  }
+}
+
+/* ==========================================================================
+   4. User Storage & Cloud Synchronization (Users Management)
+   ========================================================================== */
+
+function getStoredUsers() {
+  try {
+    const defaultUsers = [
+      {
+        userId: "USR-ADMIN",
+        username: "admin",
+        displayName: "ผู้ดูแลระบบหลัก (Super Admin)",
+        role: "ADMIN",
+        passcode: "999888",
+        status: "ACTIVE",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        userId: "USR-TEACHER",
+        username: "teacher",
+        displayName: "ครูผู้สอน / ผู้คุมสอบ",
+        role: "TEACHER",
+        passcode: "111222",
+        status: "ACTIVE",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+    const raw = localStorage.getItem("examProctorUsersList");
+    if (!raw) {
+      localStorage.setItem("examProctorUsersList", JSON.stringify(defaultUsers));
+      return defaultUsers;
+    }
+    return JSON.parse(raw);
+  } catch (_) {
+    return [];
+  }
+}
+
+function setStoredUsers(users) {
+  try {
+    localStorage.setItem("examProctorUsersList", JSON.stringify(users));
+  } catch (_) {}
+}
+
+function syncUserToCloud(action, userData) {
+  const webhookUrl = DEFAULT_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  const payload = {
+    action: action,
+    ...userData
+  };
+
+  try {
+    fetch(webhookUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).catch((err) => console.warn("Cloud sync user failed:", err));
+  } catch (_) {}
+}
+
+async function fetchCloudUsers(callback) {
+  const webhookUrl = DEFAULT_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  try {
+    const url = new URL(webhookUrl);
+    url.searchParams.set("action", "getAllUsers");
+    const res = await fetch(url.toString());
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json && json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
+      allUsers = json.data;
+      setStoredUsers(allUsers);
+      if (typeof callback === "function") {
+        callback(allUsers);
+      }
+    }
+  } catch (err) {
+    console.warn("fetchCloudUsers error:", err);
   }
 }
 

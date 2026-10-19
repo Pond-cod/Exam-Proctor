@@ -15,14 +15,26 @@
 
 ---
 
-### 📂 โครงสร้างเมนูแยกหน้า (Multi-Site Architecture v5.3):
-- [`index.html`](index.html): **🎓 รวมข้อสอบ (Student Exam Portal)** หน้าสำหรับนักเรียนใช้ค้นหาและเข้าสอบด้วย Student ID + รหัสเข้าสอบ 6 หลัก โดยไม่ต้อง Login
-- [`create.html`](create.html): **➕ สร้างห้องสอบ (Room Creator)** หน้าสำหรับคุณครู/Admin สร้างห้องสอบ ครอบ Google Forms พร้อมระบบสุ่มรหัส 2 รูปแบบ (Entry Code & Passcode) และสร้าง QR Code
-- [`monitor.html`](monitor.html): **🖥️ หน้าจอคุมสอบสด (Real-time Live Monitor)** หน้าจอติดตามผู้สอบสดแบบเรียลไทม์ พร้อมตัวกรองห้องสอบ ระบบเตือนภัย และแยกประวัติผู้ส่งข้อสอบแล้ว
-- [`rooms.html`](rooms.html): **📁 จัดการห้องสอบ (Rooms Management)** หน้ารวมประวัติและจัดการห้องสอบ สลับสถานะเปิด/ปิดรับนักเรียน คัดลอกลิงก์ ฉาย QR Code และแก้ไข/ลบห้องสอบ
-- [`exam.html`](exam.html): **🔒 ระบบคุมสอบเต็มหน้าจอ (Proctor Engine)** หน้าจอทำข้อสอบของนักเรียน ครอบ Google Forms เต็มจอ ตรวจจับสลับแท็บ/ย่อจอ พร้อมรหัสฉุกเฉินปลดล็อก
-- [`js/common.js`](js/common.js): ระบบจัดการสิทธิ์ Role (Admin/Teacher), Shared Storage และ Cloud Synchronization
-- [`js/portal.js`](js/portal.js), [`js/creator.js`](js/creator.js), [`js/monitor.js`](js/monitor.js), [`js/rooms.js`](js/rooms.js): เครื่องยนต์ขับเคลื่อนแต่ละหน้าอย่างเป็นอิสระและเป็นระเบียบ
+### 📂 โครงสร้างระบบแยกหน้าบ้าน-หลังบ้าน (Front-End & Back-Office Architecture v5.5):
+
+#### 🌐 หน้าบ้านสำหรับนักเรียน (Student Portal - ไม่ต้อง Login):
+- [`index.html`](index.html): **🎓 ศูนย์รวมข้อสอบออนไลน์** สำหรับนักเรียนค้นหาและเข้าสอบด้วย Student ID + รหัสเข้าห้องสอบ 6 หลัก โดยไม่มีแถบเมนูหลังบ้านของครูปะปน พร้อมปุ่มทางเข้า "🔐 สำหรับครู / เจ้าหน้าที่"
+- [`exam.html`](exam.html): **🔒 ระบบคุมสอบเต็มหน้าจอ (Proctor Engine)** ครอบ Google Forms เต็มจอ ตรวจจับการสลับแท็บ/ย่อหน้าจอ พร้อมรหัสฉุกเฉินปลดล็อก (Emergency Passcode)
+
+#### 🔐 ประตูเข้าสู่ระบบ (Staff Login Hub):
+- [`login.html`](login.html): **เข้าสู่ระบบบุคลากร** รองรับทั้งเลือกแท็บครูผู้สอน/ผู้คุมสอบ (Teacher) และผู้ดูแลระบบ (Admin) หรือใส่ Username ตรวจสอบสิทธิ์กับตาราง `Users`
+
+#### 🏢 หลังบ้านสำหรับบุคลากร (Back-Office Studio - มีระบบ Auth Guard):
+- [`create.html`](create.html): **➕ สร้างห้องสอบใหม่** กำหนดวิชา ระดับชั้น Google Forms URL พร้อมสุ่มรหัสผ่าน 2 รูปแบบ และสร้าง QR Code
+- [`monitor.html`](monitor.html): **🖥️ หน้าจอคุมสอบสด (Live Proctor Monitor)** ติดตามผู้สอบสดแบบเรียลไทม์ กรองเฉพาะห้องสอบ แจ้งเตือนทุจริตสด และดู Timeline
+- [`rooms.html`](rooms.html): **📁 จัดการห้องสอบ (Rooms Management)** สลับเปิด/ปิดรับนักเรียน (`OPEN`/`CLOSED`), คัดลอกลิงก์, ฉาย QR Code, แก้ไข/ลบห้องสอบ
+- [`users.html`](users.html): **👥 ระบบจัดการผู้ใช้งาน (User Management - เฉพาะ Admin)** เพิ่ม, แก้ไข, ลบ บัญชีผู้ใช้, กำหนด Role (Teacher/Admin), รหัสผ่าน และสถานะ Active/Inactive
+- [`settings.html`](settings.html): **⚙️ ตั้งค่าระบบกลาง (System Settings - เฉพาะ Admin)** แก้ไขชื่อระบบ, ข้อความประกาศหน้าแรก, Master Passcode, และทดสอบ Webhook
+
+#### 🧩 โมดูลสคริปต์ส่วนกลาง:
+- [`js/auth.js`](js/auth.js): ระบบจัดการ Session, Login Verification, และ Route Guards (`requireAuth`)
+- [`js/common.js`](js/common.js): ฐานข้อมูลส่วนกลาง, การจัดการ Role UI, การซิงก์คลาวด์ทั้ง Rooms และ Users
+- [`google-apps-script.js`](google-apps-script.js): เครื่องยนต์ฐานข้อมูล Google Sheets 4 ตาราง (`Users`, `SystemConfig`, `ExamRooms`, `ExamLogs`) พร้อม Webhook Engine v5.5
 
 ---
 
