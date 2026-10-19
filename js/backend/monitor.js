@@ -120,7 +120,7 @@ function getStudentElapsedDuration(s) {
   return s.isSubmitted ? `ใช้เวลา ${hours} ชม. ${remMins} นาที` : `สอบมาแล้ว ${hours} ชม. ${remMins} นาที`;
 }
 
-function updateIncidentTicker(alertInfo) {
+function updateLiveIncidentTicker(alertInfo) {
   const ticker = document.getElementById("liveIncidentTicker");
   const badge = document.getElementById("tickerBadge");
   const msg = document.getElementById("tickerMessage");
@@ -128,27 +128,64 @@ function updateIncidentTicker(alertInfo) {
   if (!ticker || !badge || !msg || !timeEl) return;
 
   if (alertInfo && alertInfo.s && alertInfo.log) {
-    ticker.className = "live-incident-ticker danger";
-    badge.textContent = "🚨 แจ้งเตือนสลับหน้าจอ!";
+    ticker.className = "live-incident-ticker danger compact-ticker";
+    badge.textContent = "🚨 แจ้งเตือนสลับหน้าจอสด!";
     const sId = alertInfo.s.studentId;
     const roomInfo = alertInfo.s.roomTitle ? ` (ห้อง: ${alertInfo.s.roomTitle})` : "";
     const eventText = alertInfo.log.violation || "หลุดจากโหมดเต็มจอ";
     const tStr = formatDisplayTime(alertInfo.log.time, alertInfo.log.timestamp);
-    msg.innerHTML = `ตรวจพบความผิดปกติ: <strong>รหัส ${escapeHtml(sId)}</strong> ${escapeHtml(eventText)}${escapeHtml(roomInfo)} (เตือนครั้งที่ ${alertInfo.s.violationCount}) • คลิกดูประวัติ`;
+    msg.innerHTML = `ตรวจพบความผิดปกติสด: <strong>รหัส ${escapeHtml(sId)}</strong> ${escapeHtml(eventText)}${escapeHtml(roomInfo)} (เตือนครั้งที่ ${alertInfo.s.violationCount}) • คลิกดูประวัติ`;
     timeEl.textContent = `เกิดเหตุเมื่อ: ${tStr}`;
     ticker.style.cursor = "pointer";
     ticker.onclick = () => openStudentDetail(alertInfo.s);
   } else {
-    ticker.className = "live-incident-ticker normal";
+    ticker.className = "live-incident-ticker normal compact-ticker";
     badge.textContent = "🟢 สถานะปกติ";
     const activeCount = liveStudents.length;
     msg.textContent = activeCount > 0 
       ? `ระบบกำลังติดตามผู้สอบสด ${activeCount} คนแบบเรียลไทม์ • ทุกคนกำลังทำข้อสอบอย่างซื่อสัตย์` 
       : "ระบบคุมสอบสดพร้อมทำงาน • ยังไม่มีผู้เข้าทำข้อสอบในขณะนี้";
-    timeEl.textContent = `ซิงค์ล่าสุด: ${new Date().toLocaleTimeString("th-TH")}`;
+    timeEl.textContent = `ซิงค์สด: ${new Date().toLocaleTimeString("th-TH")}`;
     ticker.style.cursor = "default";
     ticker.onclick = null;
   }
+}
+
+function updateArchiveSummaryTicker(completedList, violationsCount) {
+  const ticker = document.getElementById("archiveIncidentTicker");
+  const badge = document.getElementById("archiveTickerBadge");
+  const msg = document.getElementById("archiveTickerMessage");
+  const timeEl = document.getElementById("archiveTickerTime");
+  if (!ticker || !badge || !msg || !timeEl) return;
+
+  const total = completedList.length;
+  const alertStudents = completedList.filter(s => s.hasAlert || s.violationCount > 0);
+  const latestStudent = completedList[0];
+  const latestTimeStr = latestStudent && latestStudent.submitTime ? formatDisplayTime(latestStudent.submitTime) : null;
+
+  if (alertStudents.length > 0) {
+    ticker.className = "live-incident-ticker archive-ticker has-alert compact-ticker";
+    badge.textContent = "⚠️ พบบันทึกสลับจอ";
+    msg.innerHTML = `คลังประวัติบันทึกการส่งข้อสอบ <strong>${total} คน</strong> • พบบันทึกสลับจอสะสม <strong>${violationsCount} ครั้ง</strong> (ใน ${alertStudents.length} คน) • ประวัติถูกเก็บอย่างปลอดภัย`;
+  } else if (total > 0) {
+    ticker.className = "live-incident-ticker archive-ticker normal compact-ticker";
+    badge.textContent = "✅ ประวัติสมบูรณ์";
+    msg.innerHTML = `คลังประวัติบันทึกการส่งข้อสอบ <strong>${total} คน</strong> เรียบร้อยแล้ว • ไม่พบการทำผิดกฎการสอบ • ตรวจสอบประวัติย้อนหลังได้`;
+  } else {
+    ticker.className = "live-incident-ticker archive-ticker normal compact-ticker";
+    badge.textContent = "📁 คลังประวัติ";
+    msg.textContent = "ยังไม่มีประวัติการส่งข้อสอบที่บันทึกไว้ในคลัง";
+  }
+
+  if (latestTimeStr) {
+    timeEl.textContent = `ส่งล่าสุด: ${latestTimeStr}`;
+  } else {
+    timeEl.textContent = `อัปเดต: ${new Date().toLocaleTimeString("th-TH")}`;
+  }
+}
+
+function updateIncidentTicker(alertInfo) {
+  updateLiveIncidentTicker(alertInfo);
 }
 
 
@@ -592,25 +629,26 @@ function renderMonitorLogs() {
     return tB - tA;
   });
 
+  // --- 1. สถิติและตัวชี้วัดสำหรับ 🔴 ศูนย์คุมสอบสด (Live Proctoring Center) ---
+  const liveRecentSubmitted = completedStudents.filter(s => !s.isOldDate && !s.isBeforeCutoff);
+  const totalLiveSession = liveStudents.length + liveRecentSubmitted.length;
   const totalActive = liveStudents.length;
-  const totalCompleted = completedStudents.length;
-  const totalCombined = allList.length;
+  const liveViolationsCount = liveStudents.reduce((sum, s) => sum + (s.violationCount || 0), 0) + 
+                              liveRecentSubmitted.reduce((sum, s) => sum + (s.violationCount || 0), 0);
+  const unacknowledgedLiveCount = liveStudents.filter(s => s.hasActiveAlert).length;
+  const activePercent = totalLiveSession > 0 ? Math.round((totalActive / totalLiveSession) * 100) : 0;
+  const liveCompletedPercent = totalLiveSession > 0 ? Math.round((liveRecentSubmitted.length / totalLiveSession) * 100) : 0;
 
-  if (totalStudentsEl) totalStudentsEl.textContent = `${totalCombined} คน`;
+  if (totalStudentsEl) totalStudentsEl.textContent = `${totalLiveSession} คน`;
   if (activeStudentsEl) activeStudentsEl.textContent = `${totalActive} คน`;
-  if (totalViolationsEl) totalViolationsEl.textContent = `${totalViolationsCount} ครั้ง`;
-  if (totalSubmittedEl) totalSubmittedEl.textContent = `${totalCompleted} คน`;
+  if (totalViolationsEl) totalViolationsEl.textContent = `${liveViolationsCount} ครั้ง`;
+  if (totalSubmittedEl) totalSubmittedEl.textContent = `${liveRecentSubmitted.length} คน`;
 
-  // Smart Metrics Hub: Progress bars & Sub-details
-  const activePercent = totalCombined > 0 ? Math.round((totalActive / totalCombined) * 100) : 0;
-  const completedPercent = totalCombined > 0 ? Math.round((totalCompleted / totalCombined) * 100) : 0;
-  const alertStudentsCount = allList.filter(s => s.hasAlert).length;
-  const alertPercent = totalCombined > 0 ? Math.round((alertStudentsCount / totalCombined) * 100) : 0;
-
+  // Smart Metrics Hub: Live Progress bars & Sub-details
   const totalProgressFill = document.getElementById("statTotalProgressFill");
   const totalSubDetail = document.getElementById("statTotalSubDetail");
-  if (totalProgressFill) totalProgressFill.style.width = totalCombined > 0 ? "100%" : "0%";
-  if (totalSubDetail) totalSubDetail.textContent = `กำลังสอบ ${activePercent}% • ส่งแล้ว ${completedPercent}%`;
+  if (totalProgressFill) totalProgressFill.style.width = totalLiveSession > 0 ? "100%" : "0%";
+  if (totalSubDetail) totalSubDetail.textContent = `กำลังสอบ ${activePercent}% • ส่งแล้ว ${liveCompletedPercent}%`;
 
   const activeProgressFill = document.getElementById("statActiveProgressFill");
   const activeSubDetail = document.getElementById("statActiveSubDetail");
@@ -619,40 +657,88 @@ function renderMonitorLogs() {
 
   const violationsProgressFill = document.getElementById("statViolationsProgressFill");
   const violationsSubDetail = document.getElementById("statViolationsSubDetail");
-  if (violationsProgressFill) violationsProgressFill.style.width = `${alertPercent}%`;
+  const liveAlertStudentsCount = liveStudents.filter(s => s.hasAlert).length + liveRecentSubmitted.filter(s => s.hasAlert).length;
+  const liveAlertPercent = totalLiveSession > 0 ? Math.round((liveAlertStudentsCount / totalLiveSession) * 100) : 0;
+  if (violationsProgressFill) violationsProgressFill.style.width = `${liveAlertPercent}%`;
   if (violationsSubDetail) {
-    if (unacknowledgedStudentsCount > 0) {
-      violationsSubDetail.innerHTML = `🚨 ยังไม่ได้ตรวจ ${unacknowledgedStudentsCount} คน • รวมเตือน ${alertStudentsCount} คน`;
-    } else if (alertStudentsCount > 0) {
-      violationsSubDetail.innerHTML = `🟢 ตรวจแล้วครบทั้ง ${alertStudentsCount} คน`;
+    if (unacknowledgedLiveCount > 0) {
+      violationsSubDetail.innerHTML = `🚨 ยังไม่ได้ตรวจ ${unacknowledgedLiveCount} คน • เตือนสด ${liveViolationsCount} ครั้ง`;
+    } else if (liveViolationsCount > 0) {
+      violationsSubDetail.innerHTML = `🟢 ตรวจแล้วครบทุกเหตุการณ์`;
     } else {
-      violationsSubDetail.textContent = `✅ ไม่พบการกระทำผิด`;
+      violationsSubDetail.textContent = `✅ ไม่พบการกระทำผิดสด`;
     }
   }
 
   const submittedProgressFill = document.getElementById("statSubmittedProgressFill");
   const submittedSubDetail = document.getElementById("statSubmittedSubDetail");
-  if (submittedProgressFill) submittedProgressFill.style.width = `${completedPercent}%`;
-  const latestSubmittedStudent = completedStudents[0];
-  const latestSubTimeStr = latestSubmittedStudent && latestSubmittedStudent.submitTime ? formatDisplayTime(latestSubmittedStudent.submitTime) : "-";
-  if (submittedSubDetail) submittedSubDetail.textContent = `ส่งล่าสุด: ${latestSubTimeStr}`;
+  if (submittedProgressFill) submittedProgressFill.style.width = `${liveCompletedPercent}%`;
+  const latestLiveStudent = liveRecentSubmitted[0];
+  const latestLiveTimeStr = latestLiveStudent && latestLiveStudent.submitTime ? formatDisplayTime(latestLiveStudent.submitTime) : "-";
+  if (submittedSubDetail) submittedSubDetail.textContent = `ส่งล่าสุด: ${latestLiveTimeStr}`;
+
+  // --- 2. สถิติและตัวชี้วัดสำหรับ 📁 คลังประวัติและรายงานย้อนหลัง (Exam Archives) ---
+  const totalArchiveCount = completedStudents.length;
+  const archiveViolationsCount = completedStudents.reduce((sum, s) => sum + (s.violationCount || 0), 0);
+  const archiveAlertStudentsCount = completedStudents.filter(s => s.hasAlert || s.violationCount > 0).length;
+  const archiveRoomsSet = new Set();
+  completedStudents.forEach(s => {
+    if (s.roomId) archiveRoomsSet.add(s.roomId);
+    else if (s.roomTitle) archiveRoomsSet.add(s.roomTitle);
+  });
+
+  const statArchiveTotalEl = document.getElementById("statArchiveTotal");
+  const statArchiveTotalSubDetail = document.getElementById("statArchiveTotalSubDetail");
+  if (statArchiveTotalEl) statArchiveTotalEl.textContent = `${totalArchiveCount} คน`;
+  if (statArchiveTotalSubDetail) statArchiveTotalSubDetail.textContent = totalArchiveCount > 0 ? "บันทึกประวัติครบถ้วนในคลัง" : "ยังไม่มีประวัติการส่ง";
+
+  const statArchiveRoomsEl = document.getElementById("statArchiveRooms");
+  const statArchiveRoomsSubDetail = document.getElementById("statArchiveRoomsSubDetail");
+  const roomsCount = archiveRoomsSet.size > 0 ? archiveRoomsSet.size : accessibleRooms.length;
+  if (statArchiveRoomsEl) statArchiveRoomsEl.textContent = `${roomsCount} ห้อง`;
+  if (statArchiveRoomsSubDetail) statArchiveRoomsSubDetail.textContent = isAdmin ? "ทุกห้องสอบในระบบ" : `ห้องสอบที่คุณสร้าง (${accessibleRooms.length} ห้อง)`;
+
+  const statArchiveViolationsEl = document.getElementById("statArchiveViolations");
+  const statArchiveViolationsSubDetail = document.getElementById("statArchiveViolationsSubDetail");
+  const statArchiveViolationsProgressFill = document.getElementById("statArchiveViolationsProgressFill");
+  if (statArchiveViolationsEl) statArchiveViolationsEl.textContent = `${archiveViolationsCount} ครั้ง`;
+  if (statArchiveViolationsSubDetail) {
+    statArchiveViolationsSubDetail.textContent = archiveAlertStudentsCount > 0 ? `บันทึกใน ${archiveAlertStudentsCount} คน` : "ไม่พบประวัติผิดกฎ";
+  }
+  if (statArchiveViolationsProgressFill) {
+    const archiveAlertPercent = totalArchiveCount > 0 ? Math.round((archiveAlertStudentsCount / totalArchiveCount) * 100) : 0;
+    statArchiveViolationsProgressFill.style.width = `${archiveAlertPercent}%`;
+  }
+
+  const statArchiveLatestEl = document.getElementById("statArchiveLatest");
+  const statArchiveLatestSubDetail = document.getElementById("statArchiveLatestSubDetail");
+  const latestArchiveStudent = completedStudents[0];
+  const latestArchiveSubTimeStr = latestArchiveStudent && latestArchiveStudent.submitTime ? formatDisplayTime(latestArchiveStudent.submitTime) : "-";
+  if (statArchiveLatestEl) statArchiveLatestEl.textContent = latestArchiveSubTimeStr;
+  if (statArchiveLatestSubDetail) {
+    const meta = latestArchiveStudent ? getStudentDateMeta(latestArchiveStudent) : null;
+    statArchiveLatestSubDetail.textContent = meta ? meta.titleShort : "ยังไม่มีข้อมูล";
+  }
+
+  // อัปเดตแถบประกาศคลังประวัติ
+  updateArchiveSummaryTicker(completedStudents, archiveViolationsCount);
 
   // Primary Mode Badges
   const primaryLiveCountPill = document.getElementById("primaryLiveCountPill");
   const primaryArchiveCountPill = document.getElementById("primaryArchiveCountPill");
   if (primaryLiveCountPill) primaryLiveCountPill.textContent = totalActive;
-  if (primaryArchiveCountPill) primaryArchiveCountPill.textContent = totalCompleted;
+  if (primaryArchiveCountPill) primaryArchiveCountPill.textContent = totalArchiveCount;
 
   if (countLiveBadge) countLiveBadge.textContent = totalActive;
-  if (countCompletedBadge) countCompletedBadge.textContent = totalCompleted;
-  if (completedHeaderCount) completedHeaderCount.textContent = totalCompleted;
+  if (countCompletedBadge) countCompletedBadge.textContent = totalArchiveCount;
+  if (completedHeaderCount) completedHeaderCount.textContent = totalArchiveCount;
 
   const clearCutoffBtn = document.getElementById("clearCutoffBtn");
   if (clearCutoffBtn) {
     clearCutoffBtn.style.display = sessionCutoffTime > 0 ? "inline-flex" : "none";
   }
 
-  // ซิงค์สถานะ Active ของ Stat Cards ทั้ง 4 ใบให้ตรงกับหมวดที่เลือกอยู่
+  // ซิงค์สถานะ Active ของ Stat Cards สดทั้ง 4 ใบ
   const cardMap = {
     all: "statCardAll",
     live: "statCardActive",
@@ -666,9 +752,23 @@ function renderMonitorLogs() {
     }
   });
 
+  // ซิงค์สถานะ Active ของ Stat Cards คลังประวัติ
+  const archiveCardMap = {
+    all: "statArchiveTotalCard",
+    rooms: "statArchiveRoomsCard",
+    alert: "statArchiveViolationsCard",
+    latest: "statArchiveLatestCard"
+  };
+  Object.keys(archiveCardMap).forEach(key => {
+    const el = document.getElementById(archiveCardMap[key]);
+    if (el) {
+      el.classList.toggle("active", key === selectedArchiveCategory && currentPrimaryMode === "archive");
+    }
+  });
+
   updateFilterBadges();
 
-  // Find latest active unacknowledged incident among active live students for the Ticker (Requirement 3)
+  // Find latest active unacknowledged incident among active live students for the Live Ticker
   let latestAlertStudent = null;
   let latestAlertTimeMs = 0;
   liveStudents.forEach(s => {
@@ -687,12 +787,12 @@ function renderMonitorLogs() {
       }
     }
   });
-  updateIncidentTicker(latestAlertStudent);
+  updateLiveIncidentTicker(latestAlertStudent);
 
-  if (totalViolationsCount > previousViolationCount && previousViolationCount > 0) {
+  if (liveViolationsCount > previousViolationCount && previousViolationCount > 0) {
     playAdminChime();
   }
-  previousViolationCount = totalViolationsCount;
+  previousViolationCount = liveViolationsCount;
 
   renderLiveScreensGrid(query);
   renderCompletedScreensGrid(query);
@@ -901,6 +1001,34 @@ function selectMonitorCategory(category) {
   const query = (document.getElementById("searchLogInput") ? document.getElementById("searchLogInput").value : "").trim().toLowerCase();
   renderSelectedCategoryGrid(query);
   updateFilterBadges();
+}
+
+let selectedArchiveCategory = "all";
+
+function selectArchiveCategory(category) {
+  selectedArchiveCategory = category;
+
+  if (currentPrimaryMode !== "archive") {
+    switchPrimaryMonitorMode("archive");
+  }
+
+  const archiveCardMap = {
+    all: "statArchiveTotalCard",
+    rooms: "statArchiveRoomsCard",
+    alert: "statArchiveViolationsCard",
+    latest: "statArchiveLatestCard"
+  };
+
+  Object.keys(archiveCardMap).forEach(key => {
+    const el = document.getElementById(archiveCardMap[key]);
+    if (el) {
+      el.classList.toggle("active", key === category);
+    }
+  });
+
+  const query = (document.getElementById("searchLogInput") ? document.getElementById("searchLogInput").value : "").trim().toLowerCase();
+  renderCompletedScreensGrid(query);
+  renderTableLogs(query);
 }
 
 function renderLiveScreensGrid(query) {
@@ -1137,8 +1265,8 @@ function renderCompletedScreensGrid(query) {
   if (query) {
     filtered = filtered.filter(s => s.studentId.toLowerCase().includes(query) || (s.lastEventText && s.lastEventText.toLowerCase().includes(query)));
   }
-  if (currentFilter === "alert") {
-    filtered = filtered.filter(s => s.hasAlert);
+  if (selectedArchiveCategory === "alert" || currentFilter === "alert") {
+    filtered = filtered.filter(s => s.hasAlert || s.violationCount > 0);
   } else if (currentFilter === "today") {
     filtered = filtered.filter(s => !s.isOldDate);
   }
@@ -1447,6 +1575,7 @@ function switchPrimaryMonitorMode(mode) {
       currentMonitorTab = "completed";
     }
     switchToMonitorTab(currentMonitorTab);
+    selectArchiveCategory(selectedArchiveCategory || "all");
   }
   updateFilterBadges();
 }
@@ -1534,7 +1663,7 @@ document.addEventListener("DOMContentLoaded", () => {
     searchLogInput.addEventListener("input", renderMonitorLogs);
   }
 
-  // ตัวเลือกประเภทจาก Stat Cards ทั้ง 4 ด้านบน (คลิกเพื่อแสดงตามประเภท)
+  // ตัวเลือกประเภทจาก Stat Cards ฝั่งสดทั้ง 4 ด้านบน (คลิกเพื่อแสดงตามประเภท)
   const statCardAll = document.getElementById("statCardAll");
   if (statCardAll) {
     statCardAll.addEventListener("click", () => selectMonitorCategory("all"));
@@ -1557,6 +1686,31 @@ document.addEventListener("DOMContentLoaded", () => {
   if (statCardSubmitted) {
     statCardSubmitted.addEventListener("click", () => selectMonitorCategory("completed"));
     statCardSubmitted.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectMonitorCategory("completed"); });
+  }
+
+  // ตัวเลือกประเภทจาก Stat Cards ฝั่งคลังประวัติ (คลิกเพื่อแสดงตามประเภท)
+  const statArchiveTotalCard = document.getElementById("statArchiveTotalCard");
+  if (statArchiveTotalCard) {
+    statArchiveTotalCard.addEventListener("click", () => selectArchiveCategory("all"));
+    statArchiveTotalCard.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectArchiveCategory("all"); });
+  }
+
+  const statArchiveRoomsCard = document.getElementById("statArchiveRoomsCard");
+  if (statArchiveRoomsCard) {
+    statArchiveRoomsCard.addEventListener("click", () => selectArchiveCategory("rooms"));
+    statArchiveRoomsCard.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectArchiveCategory("rooms"); });
+  }
+
+  const statArchiveViolationsCard = document.getElementById("statArchiveViolationsCard");
+  if (statArchiveViolationsCard) {
+    statArchiveViolationsCard.addEventListener("click", () => selectArchiveCategory("alert"));
+    statArchiveViolationsCard.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectArchiveCategory("alert"); });
+  }
+
+  const statArchiveLatestCard = document.getElementById("statArchiveLatestCard");
+  if (statArchiveLatestCard) {
+    statArchiveLatestCard.addEventListener("click", () => selectArchiveCategory("latest"));
+    statArchiveLatestCard.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectArchiveCategory("latest"); });
   }
 
   // แถบ Filter Pills ใน Toolbar ย่อย

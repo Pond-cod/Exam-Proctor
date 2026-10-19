@@ -3161,6 +3161,94 @@ img, svg, video, canvas, iframe {
   color: var(--text-muted);
 }
 
+/* Archive Announcement & Ticker Variations */
+.live-incident-ticker.archive-ticker.normal {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.95) 100%);
+  border-color: #cbd5e1;
+  color: #334155;
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.05);
+}
+
+.live-incident-ticker.archive-ticker.has-alert {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fde68a;
+  color: #92400e;
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.08);
+}
+
+.live-incident-ticker.archive-ticker .archive-badge {
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.live-incident-ticker.archive-ticker.has-alert .archive-badge {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+/* Zone Transitions & Wrapper */
+.monitor-zone-wrapper {
+  animation: fadeInZone 0.22s ease-out;
+}
+
+@keyframes fadeInZone {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Archive Stat Cards Active States */
+#statArchiveTotalCard.active {
+  border-color: #0284c7 !important;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(2, 132, 199, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.3), 0 6px 16px rgba(2, 132, 199, 0.15) !important;
+}
+
+#statArchiveRoomsCard.active {
+  border-color: #4f46e5 !important;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(79, 70, 229, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(79, 70, 229, 0.3), 0 6px 16px rgba(79, 70, 229, 0.15) !important;
+}
+
+#statArchiveViolationsCard.active {
+  border-color: #d97706 !important;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(217, 119, 6, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(217, 119, 6, 0.3), 0 6px 16px rgba(217, 119, 6, 0.15) !important;
+}
+
+#statArchiveLatestCard.active {
+  border-color: #7c3aed !important;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(124, 58, 237, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(124, 58, 237, 0.3), 0 6px 16px rgba(124, 58, 237, 0.15) !important;
+}
+
+#statArchiveTotalCard.active .stat-card-active-pill {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+#statArchiveRoomsCard.active .stat-card-active-pill {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+#statArchiveViolationsCard.active .stat-card-active-pill {
+  background: #d97706;
+  color: #ffffff;
+}
+
+#statArchiveLatestCard.active .stat-card-active-pill {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
 /* Compact Primary Mode Switcher (🔴 Live Monitor VS 📁 Archive) */
 .monitor-primary-nav {
   display: flex;

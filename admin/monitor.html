@@ -60,173 +60,254 @@
 
     <!-- หน้าจอคุมสอบสด (Real-time Monitor) -->
     <section id="monitorSection" class="view-section active">
-      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์กะทัดรัด (Compact Stats Strip) -->
-      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์กะทัดรัด (Compact Stats Strip) - คลิกเลือกประเภทเพื่อแสดงผู้เข้าสอบได้ -->
-      <div class="stats-grid compact-stats-grid">
-        <div class="stat-card compact-stat-card" id="statCardAll" data-category="all" title="คลิกเพื่อแสดงผู้เข้าสอบทั้งหมด" role="button" tabindex="0">
-          <div class="compact-stat-top">
-            <span class="stat-badge stat-badge-blue">
-              👥 ทั้งหมด
-              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
-            </span>
-            <span class="compact-stat-num" id="statTotalStudents">0 คน</span>
-          </div>
-          <div class="compact-stat-bottom">
-            <div class="stat-progress-bar compact-bar">
-              <div id="statTotalProgressFill" class="stat-progress-fill" style="width: 0%;"></div>
-            </div>
-            <div class="stat-sub-detail" id="statTotalSubDetail">กำลังสอบ 0% • ส่งแล้ว 0%</div>
-          </div>
-        </div>
-
-        <div class="stat-card compact-stat-card active" id="statCardActive" data-category="live" title="คลิกเพื่อแสดงเฉพาะผู้ที่กำลังสอบสด" role="button" tabindex="0">
-          <div class="compact-stat-top">
-            <span class="stat-badge stat-badge-emerald">
-              <span class="live-pulse-dot"></span> กำลังสอบสด
-              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
-            </span>
-            <span class="compact-stat-num" id="statActiveStudents" style="color: #047857;">0 คน</span>
-          </div>
-          <div class="compact-stat-bottom">
-            <div class="stat-progress-bar compact-bar">
-              <div id="statActiveProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
-            </div>
-            <div class="stat-sub-detail" id="statActiveSubDetail">🟢 ติดตามความซื่อสัตย์</div>
-          </div>
-        </div>
-
-        <div class="stat-card compact-stat-card" id="statCardViolations" data-category="alert" title="คลิกเพื่อแสดงเฉพาะผู้เข้าสอบที่พบการแจ้งเตือนสลับจอ" role="button" tabindex="0">
-          <div class="compact-stat-top">
-            <span class="stat-badge stat-badge-rose">
-              ⚠️ แจ้งเตือนสลับจอ
-              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
-            </span>
-            <span class="compact-stat-num" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</span>
-          </div>
-          <div class="compact-stat-bottom">
-            <div class="stat-progress-bar compact-bar">
-              <div id="statViolationsProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);"></div>
-            </div>
-            <div class="stat-sub-detail" id="statViolationsSubDetail">ตรวจพบใน 0 คน</div>
-          </div>
-        </div>
-
-        <div class="stat-card compact-stat-card" id="statCardSubmitted" data-category="completed" title="คลิกเพื่อแสดงเฉพาะผู้ที่ส่งข้อสอบแล้ว" role="button" tabindex="0">
-          <div class="compact-stat-top">
-            <span class="stat-badge stat-badge-violet">
-              🏆 ส่งข้อสอบแล้ว
-              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
-            </span>
-            <span class="compact-stat-num" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</span>
-          </div>
-          <div class="compact-stat-bottom">
-            <div class="stat-progress-bar compact-bar">
-              <div id="statSubmittedProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);"></div>
-            </div>
-            <div class="stat-sub-detail" id="statSubmittedSubDetail">ส่งล่าสุด: -</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- แถบรายงานเหตุการณ์ด่วนล่าสุด (Live Incident Ticker Hub) -->
-      <div id="liveIncidentTicker" class="live-incident-ticker normal compact-ticker">
-        <div class="ticker-left">
-          <span class="ticker-badge" id="tickerBadge">🟢 ปกติ</span>
-          <span class="ticker-text" id="tickerMessage">ระบบกำลังติดตามผู้เข้าสอบแบบเรียลไทม์ ผู้สอบทุกคนอยู่ในโหมดเต็มหน้าจออย่างซื่อสัตย์</span>
-        </div>
-        <div class="ticker-right">
-          <span class="ticker-time" id="tickerTime">ซิงค์: กำลังเชื่อมต่อ...</span>
-        </div>
-      </div>
-
-      <!-- แถบสลับหมวดหลัก: ศูนย์คุมสอบสด VS คลังประวัติและรายงานย้อนหลัง -->
+      <!-- แถบสลับหมวดหลัก Master Navigation (1. ศูนย์คุมสอบสด VS 2. คลังประวัติและรายงานย้อนหลัง) -->
       <div class="monitor-primary-nav compact-primary-nav">
         <button id="primaryModeLiveBtn" class="primary-mode-tab active" type="button">
           <span class="pulse-ring-dot"></span>
-          <span>🔴 ศูนย์คุมสอบสด (Live Proctoring)</span>
+          <span>🔴 1. ศูนย์คุมสอบสด (Live Proctoring)</span>
           <span class="primary-count-pill" id="primaryLiveCountPill">0</span>
         </button>
         <button id="primaryModeArchiveBtn" class="primary-mode-tab" type="button">
-          <span>📁 คลังประวัติ & รายงานย้อนหลัง</span>
+          <span>📁 2. คลังประวัติ & รายงานย้อนหลัง</span>
           <span class="primary-count-pill secondary" id="primaryArchiveCountPill">0</span>
         </button>
       </div>
 
-      <!-- ส่วนที่ 1: ศูนย์คุมสอบสด (Live Proctoring Center) — เน้นหน้าจอภาพผู้สอบสด -->
-      <div id="liveProctorZone" class="monitor-zone-card card prominent-live-card">
-        <div class="card-header compact-header" style="flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <div class="card-title" style="display: flex; align-items: center; gap: 6px; font-size: 15px;">
-              <span id="monitorZoneIcon" class="live-pulse-dot" style="width: 8px; height: 8px;"></span>
-              <span id="monitorZoneTitleText">จอภาพผู้สอบสด (Real-time Live Monitors)</span>
-              <span id="monitorCategoryCountBadge" class="badge badge-primary" style="font-size: 11px; padding: 2px 7px;">0 คน</span>
+      <!-- ส่วนที่ 1: ศูนย์คุมสอบสด (Live Proctoring Center) — เฉพาะข้อมูลสด -->
+      <div id="liveProctorZone" class="monitor-zone-wrapper">
+        <!-- แถบประกาศ & การแจ้งเตือนด้านบน สำหรับศูนย์คุมสอบสด (Live Incident Ticker) -->
+        <div id="liveIncidentTicker" class="live-incident-ticker normal compact-ticker">
+          <div class="ticker-left">
+            <span class="ticker-badge" id="tickerBadge">🟢 ปกติ</span>
+            <span class="ticker-text" id="tickerMessage">ระบบกำลังติดตามผู้เข้าสอบแบบเรียลไทม์ ผู้สอบทุกคนอยู่ในโหมดเต็มหน้าจออย่างซื่อสัตย์</span>
+          </div>
+          <div class="ticker-right">
+            <span class="ticker-time" id="tickerTime">ซิงค์สด: กำลังเชื่อมต่อ...</span>
+          </div>
+        </div>
+
+        <!-- การ์ดสถิติสด 4 มิติ สไตล์กะทัดรัด (Live Stats Strip) -->
+        <div class="stats-grid compact-stats-grid" id="liveStatsGrid">
+          <div class="stat-card compact-stat-card" id="statCardAll" data-category="all" title="คลิกเพื่อแสดงผู้เข้าสอบทั้งหมดในรอบนี้" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-blue">
+                👥 ทั้งหมดรอบสด
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statTotalStudents">0 คน</span>
             </div>
-            <!-- ตัวเลือกกรองห้องสอบสด -->
-            <select id="monitorRoomFilterSelect" class="form-control" style="min-width: 180px; max-width: 250px; font-size: 12.5px; height: 32px; padding: 2px 10px;">
-              <option value="all">ทุกห้องสอบ (All Rooms)</option>
-            </select>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statTotalProgressFill" class="stat-progress-fill" style="width: 0%;"></div>
+              </div>
+              <div class="stat-sub-detail" id="statTotalSubDetail">กำลังสอบ 0% • ส่งแล้ว 0%</div>
+            </div>
           </div>
 
-          <!-- เครื่องมือควบคุมจำเป็นขณะคุมสอบ -->
-          <div class="card-actions-group" style="gap: 6px;">
-            <span id="syncStatusText" style="font-size: 11px; color: var(--text-muted); margin-right: 2px;">กำลังเชื่อมต่อ...</span>
-            <button id="toggleSoundBtn" type="button" class="btn btn-sound-modern compact-btn" title="เปิด/ปิดเสียงแจ้งเตือนเมื่อพบการสลับหน้าจอ">
-              🔔 เสียงเตือน: เปิด
-            </button>
-            <button id="refreshLogsBtn" class="btn btn-refresh-modern compact-btn" title="รีเฟรชข้อมูลล่าสุด">🔄 รีเฟรช</button>
-            <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn compact-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบใหม่</button>
+          <div class="stat-card compact-stat-card active" id="statCardActive" data-category="live" title="คลิกเพื่อแสดงเฉพาะผู้ที่กำลังสอบสด" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-emerald">
+                <span class="live-pulse-dot"></span> กำลังสอบสด
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statActiveStudents" style="color: #047857;">0 คน</span>
+            </div>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statActiveProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+              </div>
+              <div class="stat-sub-detail" id="statActiveSubDetail">🟢 รอผู้เข้าทำข้อสอบ</div>
+            </div>
+          </div>
+
+          <div class="stat-card compact-stat-card" id="statCardViolations" data-category="alert" title="คลิกเพื่อแสดงเฉพาะผู้เข้าสอบสดที่พบการแจ้งเตือนสลับจอ" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-rose">
+                ⚠️ แจ้งเตือนสลับจอสด
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</span>
+            </div>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statViolationsProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);"></div>
+              </div>
+              <div class="stat-sub-detail" id="statViolationsSubDetail">ตรวจพบใน 0 คน</div>
+            </div>
+          </div>
+
+          <div class="stat-card compact-stat-card" id="statCardSubmitted" data-category="completed" title="คลิกเพื่อแสดงเฉพาะผู้ที่ส่งข้อสอบแล้วในรอบนี้" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-violet">
+                🏆 ส่งแล้วรอบสด
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</span>
+            </div>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statSubmittedProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);"></div>
+              </div>
+              <div class="stat-sub-detail" id="statSubmittedSubDetail">ส่งล่าสุด: -</div>
+            </div>
           </div>
         </div>
 
-        <!-- แถบเครื่องมือกรองด่วนสำหรับคุมสด -->
-        <div class="monitor-toolbar compact-toolbar">
-          <!-- ตัวกรองสถานะสด -->
-          <div class="filter-pills-row" id="monitorFilterPills">
-            <button class="filter-pill active" data-filter="all">
-              ทั้งหมด <span class="filter-count-badge" id="badgeFilterAll">0</span>
-            </button>
-            <button class="filter-pill" data-filter="alert">
-              <span class="radar-beacon" style="width: 5px; height: 5px;"></span>
-              พบแจ้งเตือน <span class="filter-count-badge" id="badgeFilterAlert">0</span>
-            </button>
-            <button class="filter-pill" data-filter="today">
-              เฉพาะวันนี้ <span class="filter-count-badge" id="badgeFilterToday">0</span>
-            </button>
+        <!-- หน้าจอภาพผู้สอบสด (Real-time Live Monitors Card) -->
+        <div class="monitor-zone-card card prominent-live-card">
+          <div class="card-header compact-header" style="flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <div class="card-title" style="display: flex; align-items: center; gap: 6px; font-size: 15px;">
+                <span id="monitorZoneIcon" class="live-pulse-dot" style="width: 8px; height: 8px;"></span>
+                <span id="monitorZoneTitleText">จอภาพผู้สอบสด (Real-time Live Monitors)</span>
+                <span id="monitorCategoryCountBadge" class="badge badge-primary" style="font-size: 11px; padding: 2px 7px;">0 คน</span>
+              </div>
+              <!-- ตัวเลือกกรองห้องสอบสด -->
+              <select id="monitorRoomFilterSelect" class="form-control" style="min-width: 180px; max-width: 250px; font-size: 12.5px; height: 32px; padding: 2px 10px;">
+                <option value="all">ทุกห้องสอบ (All Rooms)</option>
+              </select>
+            </div>
+
+            <!-- เครื่องมือควบคุมจำเป็นขณะคุมสอบ -->
+            <div class="card-actions-group" style="gap: 6px;">
+              <span id="syncStatusText" style="font-size: 11px; color: var(--text-muted); margin-right: 2px;">กำลังเชื่อมต่อ...</span>
+              <button id="toggleSoundBtn" type="button" class="btn btn-sound-modern compact-btn" title="เปิด/ปิดเสียงแจ้งเตือนเมื่อพบการสลับหน้าจอ">
+                🔔 เสียงเตือน: เปิด
+              </button>
+              <button id="refreshLogsBtn" class="btn btn-refresh-modern compact-btn" title="รีเฟรชข้อมูลล่าสุด">🔄 รีเฟรช</button>
+              <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn compact-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบใหม่</button>
+            </div>
           </div>
 
-          <div style="flex: 1; min-width: 200px;">
-            <input 
-              type="text" 
-              id="searchLogInput" 
-              class="form-control" 
-              placeholder="🔍 ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
-              style="font-size: 12.5px; height: 32px; padding: 4px 10px;"
-            >
-          </div>
-        </div>
+          <!-- แถบเครื่องมือกรองด่วนสำหรับคุมสด -->
+          <div class="monitor-toolbar compact-toolbar">
+            <!-- ตัวกรองสถานะสด -->
+            <div class="filter-pills-row" id="monitorFilterPills">
+              <button class="filter-pill active" data-filter="all">
+                ทั้งหมด <span class="filter-count-badge" id="badgeFilterAll">0</span>
+              </button>
+              <button class="filter-pill" data-filter="alert">
+                <span class="radar-beacon" style="width: 5px; height: 5px;"></span>
+                พบแจ้งเตือน <span class="filter-count-badge" id="badgeFilterAlert">0</span>
+              </button>
+              <button class="filter-pill" data-filter="today">
+                เฉพาะวันนี้ <span class="filter-count-badge" id="badgeFilterToday">0</span>
+              </button>
+            </div>
 
-        <!-- กริดจอภาพผู้สอบสด (เฉพาะคนที่กำลังสอบอยู่ตอนนี้) -->
-        <div id="screensGridContainer" class="live-screens-focus-area">
-          <div id="studentScreensGrid" class="screens-grid">
-            <div class="screens-empty-state compact-empty-state">
-              <div class="monitor-live-badge"><span class="live-dot"></span> ระบบคุมสอบสดพร้อมทำงาน</div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 38px; height: 38px; color: var(--primary); margin: 0 auto 8px; display: block; opacity: 0.85;">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-              <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">ขณะนี้ยังไม่มีผู้เข้าทำข้อสอบ</h3>
-              <p style="font-size: 12.5px; color: var(--text-secondary); max-width: 400px; margin: 0 auto; line-height: 1.5;">
-                เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอสดจะปรากฏขึ้นที่นี่โดยอัตโนมัติพร้อมรายงานการแจ้งเตือนทันที
-              </p>
+            <div style="flex: 1; min-width: 200px;">
+              <input 
+                type="text" 
+                id="searchLogInput" 
+                class="form-control" 
+                placeholder="🔍 ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
+                style="font-size: 12.5px; height: 32px; padding: 4px 10px;"
+              >
+            </div>
+          </div>
+
+          <!-- กริดจอภาพผู้สอบสด (เฉพาะคนที่กำลังสอบอยู่ตอนนี้) -->
+          <div id="screensGridContainer" class="live-screens-focus-area">
+            <div id="studentScreensGrid" class="screens-grid">
+              <div class="screens-empty-state compact-empty-state">
+                <div class="monitor-live-badge"><span class="live-dot"></span> ระบบคุมสอบสดพร้อมทำงาน</div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 38px; height: 38px; color: var(--primary); margin: 0 auto 8px; display: block; opacity: 0.85;">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">ขณะนี้ยังไม่มีผู้เข้าทำข้อสอบ</h3>
+                <p style="font-size: 12.5px; color: var(--text-secondary); max-width: 400px; margin: 0 auto; line-height: 1.5;">
+                  เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอสดจะปรากฏขึ้นที่นี่โดยอัตโนมัติพร้อมรายงานการแจ้งเตือนทันที
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- ส่วนที่ 2: คลังประวัติและรายงานย้อนหลัง (Archive & Intelligence Hub) -->
-      <div id="archiveZone" class="monitor-zone-card card" style="display: none;">
-        <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+      <div id="archiveZone" class="monitor-zone-wrapper" style="display: none;">
+        <!-- แถบประกาศ & การแจ้งเตือนด้านบน สำหรับคลังประวัติ (Archive Summary & Alert Hub) -->
+        <div id="archiveIncidentTicker" class="live-incident-ticker archive-ticker normal compact-ticker">
+          <div class="ticker-left">
+            <span class="ticker-badge archive-badge" id="archiveTickerBadge">📁 คลังประวัติ</span>
+            <span class="ticker-text" id="archiveTickerMessage">รวบรวมประวัติผู้ส่งข้อสอบและรายงานพฤติกรรมย้อนหลังทั้งหมด</span>
+          </div>
+          <div class="ticker-right">
+            <span class="ticker-time" id="archiveTickerTime">อัปเดต: กำลังโหลด...</span>
+          </div>
+        </div>
+
+        <!-- การ์ดสถิติคลังประวัติ 4 มิติ สไตล์กะทัดรัด (Archive Stats Strip) -->
+        <div class="stats-grid compact-stats-grid" id="archiveStatsGrid">
+          <div class="stat-card compact-stat-card active" id="statArchiveTotalCard" data-archive-filter="all" title="คลิกเพื่อแสดงประวัติทั้งหมด" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-blue">
+                📁 ส่งข้อสอบสะสม
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statArchiveTotal">0 คน</span>
+            </div>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statArchiveTotalProgressFill" class="stat-progress-fill" style="width: 100%;"></div>
+              </div>
+              <div class="stat-sub-detail" id="statArchiveTotalSubDetail">บันทึกครบถ้วนในคลัง</div>
+            </div>
+          </div>
+
+          <div class="stat-card compact-stat-card" id="statArchiveRoomsCard" data-archive-filter="rooms" title="จำนวนห้องสอบที่มีบันทึก" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-indigo" style="background: #e0e7ff; color: #4338ca;">
+                🏫 ห้องสอบในคลัง
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statArchiveRooms" style="color: #4338ca;">0 ห้อง</span>
+            </div>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statArchiveRoomsProgressFill" class="stat-progress-fill" style="width: 100%; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);"></div>
+              </div>
+              <div class="stat-sub-detail" id="statArchiveRoomsSubDetail">ตามสิทธิ์ผู้ใช้งาน</div>
+            </div>
+          </div>
+
+          <div class="stat-card compact-stat-card" id="statArchiveViolationsCard" data-archive-filter="alert" title="คลิกเพื่อแสดงเฉพาะผู้สอบที่มีประวัติการแจ้งเตือนสลับจอ" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-amber" style="background: #fef3c7; color: #b45309;">
+                ⚠️ บันทึกเตือนสะสม
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statArchiveViolations" style="color: #b45309;">0 ครั้ง</span>
+            </div>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statArchiveViolationsProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"></div>
+              </div>
+              <div class="stat-sub-detail" id="statArchiveViolationsSubDetail">ตรวจพบใน 0 คน</div>
+            </div>
+          </div>
+
+          <div class="stat-card compact-stat-card" id="statArchiveLatestCard" data-archive-filter="latest" title="ส่งข้อสอบล่าสุด" role="button" tabindex="0">
+            <div class="compact-stat-top">
+              <span class="stat-badge stat-badge-violet">
+                🕒 บันทึกส่งล่าสุด
+                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+              </span>
+              <span class="compact-stat-num" id="statArchiveLatest" style="color: #6d28d9; font-size: 16px;">-</span>
+            </div>
+            <div class="compact-stat-bottom">
+              <div class="stat-progress-bar compact-bar">
+                <div id="statArchiveLatestProgressFill" class="stat-progress-fill" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);"></div>
+              </div>
+              <div class="stat-sub-detail" id="statArchiveLatestSubDetail">วันที่ล่าสุด: -</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="monitor-zone-card card">
+          <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
             <div class="card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <span>📁 คลังประวัติและการส่งข้อสอบ (Exam Archives & Audit Logs)</span>
@@ -295,6 +376,7 @@
             </table>
           </div>
         </div>
+      </div>
       </div>
     </section>
 
