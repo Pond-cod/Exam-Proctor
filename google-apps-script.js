@@ -62,7 +62,12 @@ function doPost(e) {
 
     const timeFormatted = data.time || Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
     const studentId = data.studentId || "ไม่ระบุชื่อ";
-    const violation = data.violation || "ไม่มีรายละเอียด";
+    let violation = data.violation || "ไม่มีรายละเอียด";
+    if (data.violationCount && typeof data.violationCount === "number" && data.violationCount > 1) {
+      if (!violation.includes("ครั้งที่") && !violation.includes("เตือน")) {
+        violation += " (เตือนสะสม " + data.violationCount + " ครั้ง)";
+      }
+    }
     const severity = data.isSeverityHigh ? "🚨 วิกฤต" : "⚠️ ทั่วไป";
     const timestamp = data.timestamp || new Date().toISOString();
 
