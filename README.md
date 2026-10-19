@@ -15,13 +15,14 @@
 
 ---
 
-### 📂 ไฟล์สำคัญของ Web App Edition:
-- [`index.html`](index.html): **Exam Proctor Studio** หน้าสำหรับคุณครูใช้สร้างลิงก์ห้องสอบและหน้าจอ Admin Monitor
-- [`exam.html`](exam.html): **Student Portal & Wrapper** หน้าสำหรับนักเรียนใช้เข้าสอบ ครอบ Google Forms เต็มจอ
-- [`css/style.css`](css/style.css): ดีไซน์พรีเมียม Responsive Glassmorphism
-- [`js/config.js`](js/config.js): ค่าคอนฟิกเริ่มต้น และตัวแปลง URL Google Forms
-- [`js/admin.js`](js/admin.js): โค้ดสร้างลิงก์ห้องสอบ QR Code และมอนิเตอร์สด
-- [`js/proctor.js`](js/proctor.js): เครื่องยนต์คุมสอบ ตรวจจับการโกง และแจ้งเตือน
+### 📂 โครงสร้างเมนูแยกหน้า (Multi-Site Architecture v5.3):
+- [`index.html`](index.html): **🎓 รวมข้อสอบ (Student Exam Portal)** หน้าสำหรับนักเรียนใช้ค้นหาและเข้าสอบด้วย Student ID + รหัสเข้าสอบ 6 หลัก โดยไม่ต้อง Login
+- [`create.html`](create.html): **➕ สร้างห้องสอบ (Room Creator)** หน้าสำหรับคุณครู/Admin สร้างห้องสอบ ครอบ Google Forms พร้อมระบบสุ่มรหัส 2 รูปแบบ (Entry Code & Passcode) และสร้าง QR Code
+- [`monitor.html`](monitor.html): **🖥️ หน้าจอคุมสอบสด (Real-time Live Monitor)** หน้าจอติดตามผู้สอบสดแบบเรียลไทม์ พร้อมตัวกรองห้องสอบ ระบบเตือนภัย และแยกประวัติผู้ส่งข้อสอบแล้ว
+- [`rooms.html`](rooms.html): **📁 จัดการห้องสอบ (Rooms Management)** หน้ารวมประวัติและจัดการห้องสอบ สลับสถานะเปิด/ปิดรับนักเรียน คัดลอกลิงก์ ฉาย QR Code และแก้ไข/ลบห้องสอบ
+- [`exam.html`](exam.html): **🔒 ระบบคุมสอบเต็มหน้าจอ (Proctor Engine)** หน้าจอทำข้อสอบของนักเรียน ครอบ Google Forms เต็มจอ ตรวจจับสลับแท็บ/ย่อจอ พร้อมรหัสฉุกเฉินปลดล็อก
+- [`js/common.js`](js/common.js): ระบบจัดการสิทธิ์ Role (Admin/Teacher), Shared Storage และ Cloud Synchronization
+- [`js/portal.js`](js/portal.js), [`js/creator.js`](js/creator.js), [`js/monitor.js`](js/monitor.js), [`js/rooms.js`](js/rooms.js): เครื่องยนต์ขับเคลื่อนแต่ละหน้าอย่างเป็นอิสระและเป็นระเบียบ
 
 ---
 

@@ -232,6 +232,7 @@ img, svg, video, canvas, iframe {
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.18s ease;
   width: 100%;
