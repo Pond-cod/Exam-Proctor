@@ -209,17 +209,22 @@
 
         <!-- 2. มุมมองประวัติผู้ส่งข้อสอบแล้ว (Completed / Archive Grid) -->
         <div id="completedGridContainer" style="display: none;">
-          <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
             <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
               📁 ประวัติผู้สอบที่ส่งข้อสอบเรียบร้อยแล้ว (<span id="completedHeaderCount">0</span> คน)
             </div>
-            <div style="font-size: 12.5px; color: var(--text-muted); display: flex; align-items: center; gap: 10px;">
-              <span>บันทึกผลการสอบและประวัติความซื่อสัตย์ย้อนหลัง</span>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label for="completedDateFilterSelect" style="font-size: 12.5px; color: var(--text-secondary); font-weight: 600; white-space: nowrap;">📅 วันที่ส่งข้อสอบ:</label>
+                <select id="completedDateFilterSelect" class="form-control" style="font-size: 12.5px; min-width: 190px; padding: 4px 10px; height: 34px;">
+                  <option value="all">ทุกวันที่ (แยกกลุ่มตามวัน)</option>
+                </select>
+              </div>
               <button id="clearCutoffBtn" type="button" class="btn btn-secondary" style="display: none; padding: 2px 10px; font-size: 11.5px; min-height: 28px;" title="รีเซ็ตตัวตัดรอบและแสดงประวัติทั้งหมด">ล้างตัวตัดรอบ (แสดงทั้งหมด)</button>
             </div>
           </div>
-          <div id="completedScreensGrid" class="screens-grid">
-            <!-- การ์ดผู้สอบที่ส่งข้อสอบแล้วจะแสดงที่นี่ -->
+          <div id="completedScreensGrid">
+            <!-- การ์ดผู้สอบที่ส่งข้อสอบแล้วจะแสดงที่นี่ โดยแยกกลุ่มตามวันที่ -->
           </div>
         </div>
 
@@ -353,9 +358,9 @@
     </div>
   </div>
 
-  <script src="../js/shared/config.js?v=5.7"></script>
-  <script src="../js/backend/auth.js?v=5.7"></script>
-  <script src="../js/shared/common.js?v=5.7"></script>
-  <script src="../js/backend/monitor.js?v=5.7"></script>
+  <script src="../js/shared/config.js?v=5.9"></script>
+  <script src="../js/backend/auth.js?v=5.9"></script>
+  <script src="../js/shared/common.js?v=5.9"></script>
+  <script src="../js/backend/monitor.js?v=5.9"></script>
 </body>
 </html>

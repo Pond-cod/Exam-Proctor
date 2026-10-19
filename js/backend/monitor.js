@@ -9,6 +9,7 @@ let previousViolationCount = 0;
 let monitorInterval = null;
 let currentMonitorTab = "live"; // "live" | "completed" | "table"
 let currentFilter = "all"; // "all" | "alert" | "today"
+let completedDateFilter = "all"; // "all" | "YYYY-MM-DD"
 let studentsData = {};
 let liveStudents = [];
 let completedStudents = [];
@@ -185,7 +186,13 @@ function updateMonitorRoomFilterDropdown() {
   if (!sel) return;
 
   const currentVal = sel.value || "all";
-  const rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
+  let rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  if (currentUser && currentUser.role !== USER_ROLES.ADMIN) {
+    if (typeof isRoomOwnedByUser === "function") {
+      rooms = rooms.filter(r => isRoomOwnedByUser(r, currentUser));
+    }
+  }
 
   let html = `<option value="all">ทุกห้องสอบ (All Rooms)</option>`;
   rooms.forEach((r) => {
@@ -288,6 +295,8 @@ function renderMonitorLogs() {
     if (!studentsData[sId]) {
       studentsData[sId] = {
         studentId: sId,
+        roomId: item.roomId || "",
+        roomTitle: item.roomTitle || item.formTitle || "",
         logs: [],
         violationCount: 0,
         isStarted: false,
@@ -302,8 +311,14 @@ function renderMonitorLogs() {
         isOldDate: false,
         isBeforeCutoff: false
       };
-    } else if (isTestEntry) {
-      studentsData[sId].isTestPing = true;
+    } else {
+      if (item.roomId && !studentsData[sId].roomId) studentsData[sId].roomId = item.roomId;
+      if ((item.roomTitle || item.formTitle) && !studentsData[sId].roomTitle) {
+        studentsData[sId].roomTitle = item.roomTitle || item.formTitle;
+      }
+      if (isTestEntry) {
+        studentsData[sId].isTestPing = true;
+      }
     }
 
     const s = studentsData[sId];
@@ -433,6 +448,7 @@ function renderStudentCardHtml(s, isCompletedView) {
 
   const startTimeStr = formatDisplayTime(s.startTime);
   const lastTimeStr = formatDisplayTime(s.lastEventTime, s.lastEventIso);
+  const datePrefix = isCompletedView && s.dateMeta && s.dateMeta.titleShort ? `📅 ${escapeHtml(s.dateMeta.titleShort)} • ` : "";
 
   return `
     <div class="${cardClass}" data-student-id="${escapeHtml(s.studentId)}">
@@ -441,7 +457,7 @@ function renderStudentCardHtml(s, isCompletedView) {
           <div class="screen-student-avatar">${escapeHtml(s.studentId.slice(-2) || "ST")}</div>
           <div>
             <div class="screen-student-id">${escapeHtml(s.studentId)}</div>
-            <div class="screen-student-time">เริ่ม: ${startTimeStr}</div>
+            <div class="screen-student-time">${datePrefix}เริ่ม: ${startTimeStr}</div>
           </div>
         </div>
         ${statusBadge}
@@ -461,6 +477,7 @@ function renderStudentCardHtml(s, isCompletedView) {
                 <div style="font-size: 26px;">📝</div>
                 <div style="font-size: 13px; font-weight: 700; color: #059669; margin-top: 4px;">ส่งข้อสอบสำเร็จ</div>
                 <div style="font-size: 11px; color: var(--text-muted);">${formatDisplayTime(s.submitTime)}</div>
+                ${s.roomTitle ? `<div style="font-size: 11px; color: #047857; margin-top: 3px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 200px;" title="${escapeHtml(s.roomTitle)}">วิชา: ${escapeHtml(s.roomTitle)}</div>` : ""}
               </div>
             ` : (s.hasAlert ? `
               <div class="screen-status-center alert">
@@ -525,6 +542,87 @@ function renderLiveScreensGrid(query) {
   bindStudentCardClicks(container);
 }
 
+function getStudentDateMeta(s) {
+  let ts = 0;
+  // 1. หาจาก log การส่งข้อสอบ
+  if (Array.isArray(s.logs)) {
+    for (let i = s.logs.length - 1; i >= 0; i--) {
+      const l = s.logs[i];
+      const v = String(l.violation || "");
+      if (v.includes("ส่งข้อสอบเรียบร้อย")) {
+        const t = parseLogTimestampMs(l);
+        if (t) { ts = t; break; }
+      }
+    }
+    // 2. ถ้าไม่มี ให้ใช้ log ล่าสุด
+    if (!ts && s.logs.length > 0) {
+      ts = parseLogTimestampMs(s.logs[s.logs.length - 1]) || 0;
+    }
+    // 3. fallback log แรก
+    if (!ts && s.logs.length > 0) {
+      ts = parseLogTimestampMs(s.logs[0]) || 0;
+    }
+  }
+  if (!ts) ts = Date.now();
+
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const dateKey = `${y}-${m}-${day}`;
+
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+
+  let relativePrefix = "";
+  if (dateKey === todayKey) relativePrefix = "วันนี้ • ";
+  else if (dateKey === yesterdayKey) relativePrefix = "เมื่อวานนี้ • ";
+
+  const thaiFull = d.toLocaleDateString("th-TH", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+
+  const thaiShort = d.toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+
+  return {
+    ts,
+    dateKey,
+    relativePrefix,
+    titleFull: `${relativePrefix}${thaiFull}`,
+    titleShort: `${relativePrefix}${thaiShort}`
+  };
+}
+
+function populateCompletedDateDropdown(dateGroupsMap) {
+  const select = document.getElementById("completedDateFilterSelect");
+  if (!select) return;
+
+  const currentVal = completedDateFilter || "all";
+  const allGroups = Array.from(dateGroupsMap.values()).sort((a, b) => b.ts - a.ts);
+
+  let optionsHtml = `<option value="all">ทุกวันที่ (แสดงแยกตามวัน)</option>`;
+  allGroups.forEach((grp) => {
+    optionsHtml += `<option value="${escapeHtml(grp.dateKey)}">${escapeHtml(grp.titleShort)} (${grp.students.length} คน)</option>`;
+  });
+
+  select.innerHTML = optionsHtml;
+  if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+    select.value = currentVal;
+  } else {
+    select.value = "all";
+    completedDateFilter = "all";
+  }
+}
+
 function renderCompletedScreensGrid(query) {
   const container = document.getElementById("completedScreensGrid");
   if (!container) return;
@@ -539,16 +637,80 @@ function renderCompletedScreensGrid(query) {
     filtered = filtered.filter(s => !s.isOldDate);
   }
 
+  // 1. จัดกลุ่มตามวันที่ (Group by Date)
+  const dateGroupsMap = new Map();
+  filtered.forEach((s) => {
+    const meta = getStudentDateMeta(s);
+    s.dateMeta = meta;
+
+    if (!dateGroupsMap.has(meta.dateKey)) {
+      dateGroupsMap.set(meta.dateKey, {
+        dateKey: meta.dateKey,
+        ts: meta.ts,
+        titleFull: meta.titleFull,
+        titleShort: meta.titleShort,
+        students: [],
+        totalViolations: 0
+      });
+    }
+    const grp = dateGroupsMap.get(meta.dateKey);
+    grp.students.push(s);
+    grp.totalViolations += (s.violationCount || 0);
+  });
+
+  // อัปเดตตัวเลือกใน Date Filter Dropdown
+  populateCompletedDateDropdown(dateGroupsMap);
+
   if (filtered.length === 0) {
     container.innerHTML = `
       <div class="screens-empty-state">
-        <p style="font-size: 14px; color: var(--text-muted);">ยังไม่มีประวัติผู้สอบที่ส่งข้อสอบในรอบนี้</p>
+        <p style="font-size: 14px; color: var(--text-muted);">ยังไม่มีประวัติผู้สอบที่ส่งข้อสอบในเงื่อนไขนี้</p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = filtered.map(s => renderStudentCardHtml(s, true)).join("");
+  // 2. กรองตาม completedDateFilter ถ้าเลือกเฉพาะวัน
+  let sortedGroups = Array.from(dateGroupsMap.values()).sort((a, b) => b.ts - a.ts);
+  if (completedDateFilter && completedDateFilter !== "all") {
+    sortedGroups = sortedGroups.filter(g => g.dateKey === completedDateFilter);
+  }
+
+  if (sortedGroups.length === 0) {
+    container.innerHTML = `
+      <div class="screens-empty-state">
+        <p style="font-size: 14px; color: var(--text-muted);">ไม่พบประวัติผู้สอบในวันที่เลือก</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 3. เรนเดอร์แยก Section แต่ละวัน
+  container.innerHTML = sortedGroups.map((grp) => {
+    return `
+      <div class="completed-date-section" data-date-key="${escapeHtml(grp.dateKey)}">
+        <div class="completed-date-header">
+          <div class="completed-date-title-box">
+            <span class="completed-date-icon">📅</span>
+            <span class="completed-date-title">${escapeHtml(grp.titleFull)}</span>
+            <span class="badge badge-neutral" style="font-weight: 700; font-size: 12px;">👥 ส่งแล้ว ${grp.students.length} คน</span>
+            ${grp.totalViolations > 0 
+              ? `<span class="badge badge-danger" style="font-size: 11.5px;">⚠️ แจ้งเตือนรวม ${grp.totalViolations} ครั้ง</span>` 
+              : `<span class="badge badge-success" style="font-size: 11.5px;">✅ การสอบปกติ</span>`}
+          </div>
+          <div class="completed-date-actions">
+            <span style="font-size: 12px; color: var(--text-muted);">
+              ${grp.students[0] && grp.students[0].submitTime ? `ส่งล่าสุด: ${formatDisplayTime(grp.students[0].submitTime)}` : ""}
+            </span>
+          </div>
+        </div>
+        <div class="screens-grid">
+          ${grp.students.map(s => renderStudentCardHtml(s, true)).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+
   bindStudentCardClicks(container);
 }
 
@@ -780,6 +942,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const toggleCompletedBtn = document.getElementById("toggleCompletedViewBtn");
   if (toggleCompletedBtn) toggleCompletedBtn.addEventListener("click", () => switchToMonitorTab("completed"));
+
+  const completedDateFilterSelect = document.getElementById("completedDateFilterSelect");
+  if (completedDateFilterSelect) {
+    completedDateFilterSelect.addEventListener("change", (e) => {
+      completedDateFilter = e.target.value;
+      const query = (document.getElementById("searchLogInput") ? document.getElementById("searchLogInput").value : "").trim().toLowerCase();
+      renderCompletedScreensGrid(query);
+    });
+  }
 
   const toggleTableBtn = document.getElementById("toggleTableViewBtn");
   if (toggleTableBtn) toggleTableBtn.addEventListener("click", () => switchToMonitorTab("table"));
