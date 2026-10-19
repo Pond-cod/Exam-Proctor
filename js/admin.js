@@ -308,6 +308,29 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+// แปลงและจัดรูปแบบเวลาให้อ่านง่าย สวยงาม และแก้ปัญหาปี 1899 จาก Google Sheets
+function formatDisplayTime(timeStr, isoTimestamp) {
+  if (isoTimestamp) {
+    try {
+      const d = new Date(isoTimestamp);
+      if (!isNaN(d.getTime()) && d.getFullYear() > 2020) {
+        return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      }
+    } catch (_) {}
+  }
+  if (!timeStr) return "-";
+  const s = String(timeStr);
+  if (s.includes("1899-12-30T")) {
+    try {
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      }
+    } catch (_) {}
+  }
+  return s;
+}
+
 // 3. Real-time Admin Monitor Logs Fetcher
 function fetchMonitorLogs() {
   const webhookInput = document.getElementById("examWebhookInput");
@@ -366,7 +389,14 @@ function renderMonitorLogs() {
   studentsData = {};
   let totalViolationsCount = 0;
 
-  allLogs.forEach((item) => {
+  // เรียงลำดับ logs ตามเวลาจากเก่าไปใหม่ เพื่อประมวลผล Timeline และแยกแยะเซสชันการสอบ
+  const sortedLogs = [...allLogs].sort((a, b) => {
+    const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return tA - tB;
+  });
+
+  sortedLogs.forEach((item) => {
     const sId = String(item.studentId !== undefined && item.studentId !== null ? item.studentId : "ไม่ระบุรหัส").trim();
     if (!studentsData[sId]) {
       studentsData[sId] = {
@@ -377,6 +407,7 @@ function renderMonitorLogs() {
         isSubmitted: false,
         startTime: null,
         lastEventTime: null,
+        lastEventIso: null,
         lastEventText: "",
         hasAlert: false
       };
@@ -388,29 +419,33 @@ function renderMonitorLogs() {
     const text = String(item.violation || "");
     const isStart = text.includes("เริ่มเข้าทำข้อสอบ");
     const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
-    const itemTime = String(item.time || item.timestamp || "");
+    const itemTime = String(item.time || "");
+    const itemIso = String(item.timestamp || "");
 
     if (isStart) {
       s.isStarted = true;
-      if (!s.startTime) s.startTime = itemTime;
-    }
-
-    if (isEnd) {
+      // หากนักเรียนเริ่มสอบใหม่หลังจากเคยส่งข้อสอบไปแล้ว -> รีเซ็ตเป็นเซสชันใหม่ทันที
+      s.isSubmitted = false;
+      s.violationCount = 0;
+      s.startTime = itemTime || itemIso;
+    } else if (isEnd) {
       s.isSubmitted = true;
-    } else if (!isStart) {
+    } else {
+      // พฤติกรรมละเมิดกฎ
       s.violationCount++;
       totalViolationsCount++;
     }
 
     s.lastEventTime = itemTime;
+    s.lastEventIso = itemIso;
     s.lastEventText = text;
   });
 
   // ประมวลผลสถานะเตือน Alert สำหรับแต่ละจอ
   const studentList = Object.values(studentsData);
   studentList.forEach((s) => {
-    // จอที่มีการแจ้งเตือน = มีพฤติกรรมผิดกฎ และยังไม่ได้ส่งข้อสอบเสร็จสมบูรณ์
-    s.hasAlert = s.violationCount > 0 && !s.isSubmitted;
+    // จอที่มีการแจ้งเตือน = ตรวจพบพฤติกรรมผิดกฎ ไม่ว่าจะกำลังสอบหรือส่งข้อสอบแล้ว ผู้คุมสอบต้องเห็นการแจ้งเตือนเสมอ!
+    s.hasAlert = s.violationCount > 0;
   });
 
   const totalStudents = studentList.length;
@@ -509,7 +544,7 @@ function renderScreensGrid(query) {
     let statusBadge = "";
     let statusText = "🟢 ปกติ";
 
-    if (s.hasAlert) {
+    if (!s.isSubmitted && s.hasAlert) {
       cardClass += " has-alert";
       statusBadge = `
         <span class="badge badge-danger">
@@ -518,10 +553,19 @@ function renderScreensGrid(query) {
         </span>
       `;
       statusText = `⚠️ ผิดปกติ ${s.violationCount} ครั้ง`;
+    } else if (s.isSubmitted && s.hasAlert) {
+      cardClass += " has-alert-submitted";
+      statusBadge = `
+        <span class="badge badge-warning" style="background: #f59e0b; color: #ffffff; border-color: #d97706; font-weight: 700;">
+          <span class="radar-beacon" style="margin-right: 4px; background: #ffffff;"></span>
+          ส่งแล้ว (ผิด ${s.violationCount} ครั้ง)
+        </span>
+      `;
+      statusText = `⚠️ ส่งแล้ว (ผิดกฎ ${s.violationCount} ครั้ง)`;
     } else if (s.isSubmitted) {
       cardClass += " is-submitted";
       statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
-      statusText = `ส่งข้อสอบแล้ว`;
+      statusText = `ส่งข้อสอบแล้ว (ปกติ)`;
     } else {
       cardClass += " is-active-normal";
       statusBadge = `<span class="badge badge-primary">กำลังสอบ</span>`;
@@ -529,7 +573,7 @@ function renderScreensGrid(query) {
     }
 
     const lastEventShort = s.lastEventText ? escapeHtml(s.lastEventText) : "กำลังทำข้อสอบอย่างต่อเนื่อง";
-    const updateTime = s.lastEventTime || "-";
+    const updateTime = formatDisplayTime(s.lastEventTime, s.lastEventIso);
 
     // BUG-03: ใช้ data-student-id attribute แทน inline onclick เพื่อป้องกัน XSS
     return `
@@ -622,14 +666,17 @@ function renderTableLogs(query) {
     const text = item.violation || "";
     const isStart = text.includes("เริ่มเข้าทำข้อสอบ");
     const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
+    const isViolation = !isStart && !isEnd;
     const rowClass = (isStart || isEnd) ? "success-row" : "violation-row";
-    const badge = (isStart || isEnd)
-      ? `<span class="badge badge-success">${isStart ? "เริ่มสอบ" : "ส่งข้อสอบแล้ว"}</span>`
-      : `<span class="badge badge-danger">แจ้งเตือน</span>`;
+    const badge = isStart
+      ? `<span class="badge badge-primary">เริ่มสอบ</span>`
+      : (isEnd
+        ? `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`
+        : `<span class="badge badge-danger">แจ้งเตือน</span>`);
 
     return `
       <tr class="${rowClass}">
-        <td>${escapeHtml(item.time || item.timestamp || "-")}</td>
+        <td>${escapeHtml(formatDisplayTime(item.time, item.timestamp))}</td>
         <td><strong>${escapeHtml(item.studentId || "ไม่ระบุ")}</strong></td>
         <td>${escapeHtml(text)}</td>
         <td>${badge}</td>
@@ -663,11 +710,13 @@ function updateModalContent(student) {
   const timelineContainer = document.getElementById("studentTimelineContainer");
 
   if (titleEl) titleEl.textContent = `รายละเอียดจอผู้สอบ: รหัส ${student.studentId}`;
-  if (subtitleEl) subtitleEl.textContent = `เริ่มสอบ: ${student.startTime || "-"} • บันทึกทั้งหมด ${student.logs.length} รายการ`;
+  if (subtitleEl) subtitleEl.textContent = `เริ่มสอบ: ${formatDisplayTime(student.startTime, null)} • บันทึกทั้งหมด ${student.logs.length} รายการ`;
 
   if (statusValEl) {
-    if (student.isSubmitted) {
-      statusValEl.innerHTML = `<span class="badge badge-success">ส่งข้อสอบเรียบร้อย</span>`;
+    if (student.isSubmitted && student.violationCount > 0) {
+      statusValEl.innerHTML = `<span class="badge badge-warning" style="background: #f59e0b; color: #ffffff; border-color: #d97706; font-weight: 700;">ส่งข้อสอบแล้ว (พบผิดปกติ ${student.violationCount} ครั้ง)</span>`;
+    } else if (student.isSubmitted) {
+      statusValEl.innerHTML = `<span class="badge badge-success">ส่งข้อสอบเรียบร้อย (ปกติ)</span>`;
     } else if (student.hasAlert) {
       statusValEl.innerHTML = `<span class="badge badge-danger">พบการแจ้งเตือน (${student.violationCount} ครั้ง)</span>`;
     } else {
@@ -680,8 +729,8 @@ function updateModalContent(student) {
     violationValEl.style.color = student.violationCount > 0 ? "#dc2626" : "#059669";
   }
 
-  if (startTimeValEl) startTimeValEl.textContent = student.startTime || "-";
-  if (lastTimeValEl) lastTimeValEl.textContent = student.lastEventTime || "-";
+  if (startTimeValEl) startTimeValEl.textContent = formatDisplayTime(student.startTime, null);
+  if (lastTimeValEl) lastTimeValEl.textContent = formatDisplayTime(student.lastEventTime, student.lastEventIso);
   if (timelineCountEl) timelineCountEl.textContent = `${student.logs.length} รายการ`;
 
   if (timelineContainer) {
@@ -700,7 +749,7 @@ function updateModalContent(student) {
 
       if (isStart) {
         markerClass += " marker-success";
-        typeBadge = `<span class="badge badge-success" style="font-size: 11px;">เริ่มสอบ</span>`;
+        typeBadge = `<span class="badge badge-primary" style="font-size: 11px;">เริ่มสอบ</span>`;
       } else if (isEnd) {
         markerClass += " marker-success";
         typeBadge = `<span class="badge badge-success" style="font-size: 11px;">ส่งข้อสอบ</span>`;
@@ -722,7 +771,7 @@ function updateModalContent(student) {
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                ${escapeHtml(log.time || log.timestamp || "-")}
+                ${escapeHtml(formatDisplayTime(log.time, log.timestamp))}
               </span>
               ${typeBadge}
             </div>
@@ -909,7 +958,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const refreshLogsBtn = document.getElementById("refreshLogsBtn");
   if (refreshLogsBtn) {
-    refreshLogsBtn.addEventListener("click", fetchMonitorLogs);
+    refreshLogsBtn.addEventListener("click", () => {
+      refreshLogsBtn.disabled = true;
+      const origText = refreshLogsBtn.textContent;
+      refreshLogsBtn.textContent = "กำลังซิงค์...";
+      fetchMonitorLogs();
+      setTimeout(() => {
+        refreshLogsBtn.disabled = false;
+        refreshLogsBtn.textContent = origText;
+      }, 600);
+    });
   }
 
   // 1. ปุ่มสลับมุมมอง จอภาพ VS ตาราง
@@ -977,5 +1035,11 @@ document.addEventListener("DOMContentLoaded", () => {
       closeStudentDetail();
     }
   });
+
+  // เริ่มต้นดึงข้อมูล Real-time Monitor ทันทีและ Polling ต่อเนื่องทุก 4 วินาที
+  fetchMonitorLogs();
+  if (!monitorInterval) {
+    monitorInterval = setInterval(fetchMonitorLogs, 4000);
+  }
 });
 

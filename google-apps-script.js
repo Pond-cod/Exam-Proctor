@@ -108,13 +108,29 @@ function doGet(e) {
     const values = sheet.getRange(startRow, 1, numRows, 5).getValues();
 
     const logs = values
-      .map((row) => ({
-        time: row[0],
-        studentId: row[1],
-        violation: row[2],
-        severity: row[3],
-        timestamp: row[4]
-      }))
+      .map((row) => {
+        let timeStr = "";
+        if (row[0] instanceof Date) {
+          timeStr = Utilities.formatDate(row[0], "GMT+7", "HH:mm:ss");
+        } else {
+          timeStr = String(row[0] || "");
+        }
+
+        let isoStr = "";
+        if (row[4] instanceof Date) {
+          isoStr = row[4].toISOString();
+        } else {
+          isoStr = String(row[4] || "");
+        }
+
+        return {
+          time: timeStr,
+          studentId: row[1],
+          violation: row[2],
+          severity: row[3],
+          timestamp: isoStr
+        };
+      })
       // Sort ตาม ISO timestamp จากเก่าไปใหม่ (เพื่อให้ admin.js เรียง timeline ถูกต้อง)
       .sort((a, b) => {
         const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;

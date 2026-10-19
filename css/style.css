@@ -1121,7 +1121,7 @@ img, svg, video, canvas, iframe {
   100% { transform: scale(2.3); opacity: 0; }
 }
 
-/* Submitted State */
+/* Submitted State (Normal - No Violations) */
 .student-screen-card.is-submitted {
   border-color: #86efac;
   background: #f0fdf4;
@@ -1136,6 +1136,29 @@ img, svg, video, canvas, iframe {
   background: #ecfdf5;
   border-color: #a7f3d0;
   color: #059669;
+}
+
+/* Submitted State with Violations (ส่งข้อสอบแล้วแต่มีประวัติทำผิดกฎ) */
+.student-screen-card.has-alert-submitted {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+}
+
+.student-screen-card.has-alert-submitted:hover {
+  border-color: #d97706;
+  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.25);
+}
+
+.student-screen-card.has-alert-submitted .screen-device-icon {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #d97706;
+}
+
+.student-screen-card.has-alert-submitted .screen-mockup-frame {
+  background: #ffffff;
+  border-color: #fde68a;
 }
 
 /* In-Progress Normal State */
@@ -1732,29 +1755,59 @@ img, svg, video, canvas, iframe {
   line-height: 1.6;
 }
 
-/* Toast Alert */
+/* Toast Alert (High-Contrast Vivid Notification) */
 .toast-alert {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  max-width: calc(100vw - 40px);
-  background: #ffffff;
-  border-left: 5px solid var(--danger);
-  color: var(--text-primary);
-  padding: 12px 18px;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
+  bottom: 24px;
+  right: 24px;
+  max-width: calc(100vw - 48px);
+  background: #0f172a;
+  color: #ffffff;
+  border-left: 6px solid #ef4444;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   display: none;
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   z-index: 10000001;
-  border-top: 1px solid var(--bg-card-border);
-  border-right: 1px solid var(--bg-card-border);
-  border-bottom: 1px solid var(--bg-card-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: center;
+  gap: 8px;
+  animation: slideInToast 0.25s ease-out;
 }
 
 .toast-alert.active {
-  display: block;
+  display: flex;
+}
+
+@keyframes slideInToast {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Violation Header Badge Pulse Animation */
+.pulse-highlight {
+  animation: badgePulse 0.8s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
 }
 
 /* ==========================================================================

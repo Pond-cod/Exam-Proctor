@@ -17,28 +17,67 @@ let timerInterval = null;
 let timerStartTime = 0; // BUG-13: ใช้ Date.now() เป็น reference แทน counter
 let secondsElapsed = 0;
 
-// Audio Beep Warning
+let integrityInterval = null;
+let pendingViolationsQueue = [];
+let isSendingQueue = false;
+
+// Audio Beep Warning (รองรับ Autoplay Policy และ resume AudioContext)
 function playWarningBeep() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.25);
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+    osc.frequency.setValueAtTime(520, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.35);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.3);
-  } catch (e) {}
+    osc.stop(ctx.currentTime + 0.38);
+  } catch (e) {
+    console.warn("Audio warning beep error:", e);
+  }
+}
+
+// Queue-based Webhook Sender (ป้องกันการทำหล่นเมื่อมีการแจ้งเตือนติดกัน)
+async function flushViolationsQueue() {
+  if (isSendingQueue || pendingViolationsQueue.length === 0) return;
+  if (!examConfig.webhookUrl) {
+    pendingViolationsQueue = [];
+    return;
+  }
+
+  isSendingQueue = true;
+  const currentItem = pendingViolationsQueue[0];
+
+  try {
+    const res = await fetch(examConfig.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(currentItem)
+    });
+    // นำรายการที่ส่งสำเร็จออกจากคิว
+    pendingViolationsQueue.shift();
+  } catch (err) {
+    console.warn("Webhook send error, will retry:", err);
+  } finally {
+    isSendingQueue = false;
+    if (pendingViolationsQueue.length > 0) {
+      setTimeout(flushViolationsQueue, 1500);
+    }
+  }
 }
 
 // Send Webhook Alert to Google Apps Script / Google Sheets
-async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
+function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   if (!examConfig.webhookUrl) return;
 
   const now = new Date();
@@ -52,15 +91,8 @@ async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
     formTitle: examConfig.title
   };
 
-  try {
-    await fetch(examConfig.webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {
-    console.warn("Webhook post error:", err);
-  }
+  pendingViolationsQueue.push(payload);
+  flushViolationsQueue();
 }
 
 // Debounce Violation Alerts
@@ -69,18 +101,21 @@ function logViolation(detail, isSeverityHigh = false) {
   if (!isExamActive || isExamSubmitted) return;
 
   const now = Date.now();
-  if (now - lastAlertTime < 2000) return;
+  if (now - lastAlertTime < 1600) return; // Debounce 1.6 วินาที
   lastAlertTime = now;
 
   violationCount++;
   playWarningBeep();
-  showToastAlert(`ตรวจพบเหตุการณ์: ${detail} (ครั้งที่ ${violationCount})`);
+  showToastAlert(`ตรวจพบเหตุการณ์: ${detail} (เตือนครั้งที่ ${violationCount})`);
   sendAlertToWebhook(detail, isSeverityHigh);
 
   const vCountEl = document.getElementById("headerViolationCount");
   if (vCountEl) {
     vCountEl.textContent = `แจ้งเตือน: ${violationCount} ครั้ง`;
     vCountEl.style.display = "inline-flex";
+    vCountEl.classList.remove("pulse-highlight");
+    void vCountEl.offsetWidth; // Trigger reflow
+    vCountEl.classList.add("pulse-highlight");
   }
 }
 
@@ -88,12 +123,12 @@ function logViolation(detail, isSeverityHigh = false) {
 function showToastAlert(msg) {
   const toast = document.getElementById("toastAlert");
   if (!toast) return;
-  toast.textContent = msg;
+  toast.innerHTML = `<span style="font-size: 16px; margin-right: 6px;">⚠️</span> ${escapeHtml(msg)}`;
   toast.classList.add("active");
   clearTimeout(window.toastTimer);
   window.toastTimer = setTimeout(() => {
     toast.classList.remove("active");
-  }, 4000);
+  }, 4500);
 }
 
 // Format Timer — ใช้ Date.now() เป็น reference เพื่อความแม่นยำ (BUG-13)
@@ -153,6 +188,63 @@ function initExamFromUrl() {
     const manualBox = document.getElementById("manualFormBox");
     if (manualBox) manualBox.style.display = "block";
   }
+}
+
+// ตรวจสอบว่าหน้าจอกำลังอยู่ในโหมด Fullscreen จริงหรือไม่ (รองรับทุก Vendor Prefixes)
+function isBrowserFullscreen() {
+  return !!(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement
+  );
+}
+
+// Fullscreen API Helper
+function requestBrowserFullscreen() {
+  const docEl = document.documentElement;
+  try {
+    if (docEl.requestFullscreen) {
+      docEl.requestFullscreen().catch(() => {});
+    } else if (docEl.webkitRequestFullscreen) {
+      docEl.webkitRequestFullscreen();
+    } else if (docEl.msRequestFullscreen) {
+      docEl.msRequestFullscreen();
+    }
+  } catch (_) {}
+}
+
+// Heartbeat ตรวจสอบความซื่อสัตย์ของการสอบอย่างต่อเนื่อง (ทุกๆ 600ms)
+function checkExamIntegrity() {
+  if (!isExamActive || isExamSubmitted) return;
+
+  const modal = document.getElementById("violationModal");
+  const isFs = isBrowserFullscreen();
+
+  // 1. ตรวจจับการหลุดโหมดเต็มจอ (เช่น กด Esc, ย่อหน้าจอ, หรือกดปุ่ม Restore Down ให้เป็นหน้าต่างย่อย)
+  if (!isFs) {
+    if (modal && !modal.classList.contains("active")) {
+      modal.classList.add("active");
+    }
+    logViolation("หลุดออกจากโหมดเต็มหน้าจอ (กด Esc หรือย่อหน้าต่าง)", true);
+  } else {
+    if (modal && modal.classList.contains("active")) {
+      modal.classList.remove("active");
+    }
+  }
+
+  // 2. ตรวจจับการหลุด Focus จากเบราว์เซอร์ (คลิกออกนอกหน้าจอ, สลับโปรแกรม, หรือแบ่งหน้าจอ Split-Screen แบบในภาพ)
+  // หมายเหตุ: เมื่อนักเรียนคลิกตอบคำถามใน iframe ในเบราว์เซอร์ Chromium document.hasFocus() จะเป็น true
+  // แต่หากคลิกไปที่หน้าต่างอื่น หรือแบ่งหน้าจอครึ่งซ้าย-ขวาแล้วไปคลิกฝั่งตรงข้าม document.hasFocus() จะกลายเป็น false ทันที
+  if (!document.hasFocus()) {
+    logViolation("คลิกออกนอกหน้าจอ หรือสลับโปรแกรมอื่นทับ");
+  }
+}
+
+// เริ่มระบบเฝ้าระวัง Heartbeat
+function startIntegrityMonitor() {
+  if (integrityInterval) clearInterval(integrityInterval);
+  integrityInterval = setInterval(checkExamIntegrity, 600);
 }
 
 // Start Exam — UX-02: ใช้ showAlert แทน alert()
@@ -217,27 +309,18 @@ async function startExam() {
   clearInterval(timerInterval);
   timerInterval = setInterval(updateTimer, 1000);
 
+  // เริ่ม Heartbeat ตรวจสอบความถูกต้องของการสอบทันที
+  startIntegrityMonitor();
+
   sendAlertToWebhook(`เริ่มเข้าทำข้อสอบ: ${examConfig.title}`);
 }
 
-// Fullscreen API Helper
-function requestBrowserFullscreen() {
-  const docEl = document.documentElement;
-  if (docEl.requestFullscreen) {
-    docEl.requestFullscreen().catch(() => {});
-  } else if (docEl.webkitRequestFullscreen) {
-    docEl.webkitRequestFullscreen();
-  } else if (docEl.msRequestFullscreen) {
-    docEl.msRequestFullscreen();
-  }
-}
-
-// Anti-Cheat Listeners
+// Anti-Cheat Event Listeners
 function setupAntiCheatListeners() {
-  // 1. ตรวจจับการหลุดจากโหมดเต็มจอ
-  document.addEventListener("fullscreenchange", () => {
+  // 1. ตรวจจับการเปลี่ยนแปลงโหมดเต็มจอ (ทุก Vendor Prefixes)
+  const handleFullscreenEvent = () => {
     if (!isExamActive || isExamSubmitted) return;
-    const isFullscreen = !!document.fullscreenElement;
+    const isFullscreen = isBrowserFullscreen();
     const modal = document.getElementById("violationModal");
     if (!isFullscreen) {
       if (modal) modal.classList.add("active");
@@ -245,56 +328,99 @@ function setupAntiCheatListeners() {
     } else {
       if (modal) modal.classList.remove("active");
     }
-  });
+  };
+
+  document.addEventListener("fullscreenchange", handleFullscreenEvent);
+  document.addEventListener("webkitfullscreenchange", handleFullscreenEvent);
+  document.addEventListener("mozfullscreenchange", handleFullscreenEvent);
+  document.addEventListener("MSFullscreenChange", handleFullscreenEvent);
 
   // 2. ดักจับการสลับแท็บ / ย่อหน้าจอ
   document.addEventListener("visibilitychange", () => {
     if (!isExamActive || isExamSubmitted) return;
     if (document.hidden) {
-      logViolation("สลับแท็บ หรือย่อหน้าต่างข้อสอบ");
+      logViolation("สลับแท็บ หรือย่อหน้าต่างข้อสอบ", true);
     }
   });
 
-  // 3. ดักจับการคลิกออกนอกหน้าจอ / สลับโปรแกรม
+  // 3. ดักจับการปรับขนาดหน้าต่าง หรือหลุดจาก Fullscreen
+  window.addEventListener("resize", () => {
+    if (!isExamActive || isExamSubmitted) return;
+    if (!isBrowserFullscreen()) {
+      const modal = document.getElementById("violationModal");
+      if (modal) modal.classList.add("active");
+      logViolation("ย่อหรือปรับขนาดหน้าต่างข้อสอบ", true);
+    }
+  });
+
+  // 4. ดักจับการคลิกออกนอกหน้าจอ / สลับโปรแกรม
   window.addEventListener("blur", () => {
     if (!isExamActive || isExamSubmitted) return;
     setTimeout(() => {
       if (!document.hasFocus() && isExamActive && !isExamSubmitted) {
         logViolation("คลิกออกนอกหน้าจอ หรือสลับโปรแกรมอื่นทับ");
       }
-    }, 400);
+    }, 250);
   });
 
-  // 4. บล็อกคลิกขวา
+  // 5. ป้องกันการปิดแท็บหรือรีเฟรชโดยไม่ตั้งใจ
+  window.addEventListener("beforeunload", (e) => {
+    if (isExamActive && !isExamSubmitted) {
+      e.preventDefault();
+      e.returnValue = "ระบบกำลังบันทึกการสอบ หากออกจากหน้านี้จะถือว่าสิ้นสุดการสอบ";
+      return e.returnValue;
+    }
+  });
+
+  // 6. บล็อกคลิกขวา
   document.addEventListener("contextmenu", (e) => {
     if (!isExamActive || isExamSubmitted) return;
     e.preventDefault();
     logViolation("พยายามคลิกขวา (Context Menu)");
     return false;
-  });
+  }, true);
 
-  // 5. บล็อกคีย์ลัดโกงข้อสอบ
+  // 7. บล็อกคีย์ลัดโกงข้อสอบทุกรูปแบบ
   document.addEventListener("keydown", (e) => {
     if (!isExamActive || isExamSubmitted) return;
     const isCtrlOrCmd = e.ctrlKey || e.metaKey;
     const key = e.key ? e.key.toLowerCase() : "";
 
+    // ป้องกัน F12 เปิด DevTools
     if (e.key === "F12") {
       e.preventDefault();
       logViolation("กด F12 พยายามเปิด Developer Tools");
       return false;
     }
 
-    if (isCtrlOrCmd && e.shiftKey && (key === "i" || key === "j" || key === "c")) {
+    // ป้องกัน PrintScreen บันทึกภาพ
+    if (e.key === "PrintScreen") {
       e.preventDefault();
-      logViolation("กดคีย์ลัดเปิด Developer Tools");
+      logViolation("พยายามกดปุ่มบันทึกภาพหน้าจอ (PrintScreen)");
       return false;
     }
 
-    if (isCtrlOrCmd && (key === "u" || key === "p" || key === "s" || key === "c")) {
+    // ป้องกัน DevTools ผ่าน Ctrl+Shift+I / J / C
+    if (isCtrlOrCmd && e.shiftKey && (key === "i" || key === "j" || key === "c" || key === "s")) {
+      e.preventDefault();
+      logViolation("กดคีย์ลัดเปิด Developer Tools / บันทึกภาพ");
+      return false;
+    }
+
+    // ป้องกันคีย์ลัดสลับแท็บ / เปิดหน้าต่างใหม่ / คัดลอก / วาง / ซอร์สโค้ด
+    if (isCtrlOrCmd && ["u", "p", "s", "c", "v", "a", "x", "f", "h", "r", "w", "t", "n"].includes(key)) {
       e.preventDefault();
       logViolation(`กดคีย์ลัดที่ไม่ได้รับอนุญาต (Ctrl+${key.toUpperCase()})`);
       return false;
+    }
+
+    // ป้องกัน Alt+Tab หรือ Alt+F4
+    if (e.altKey) {
+      if (key === "tab" || key === "f4") {
+        e.preventDefault();
+        logViolation("พยายามกด Alt เพื่อสลับหรือปิดหน้าต่าง");
+        return false;
+      }
     }
   }, true);
 }
@@ -316,6 +442,7 @@ async function handleStudentFinished() {
     isExamSubmitted = true;
     isExamActive = false;
     clearInterval(timerInterval);
+    if (integrityInterval) clearInterval(integrityInterval);
 
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
@@ -323,7 +450,8 @@ async function handleStudentFinished() {
 
     // รอให้ webhook ส่งเสร็จก่อนค่อย reload (BUG-14)
     try {
-      await sendAlertToWebhook("ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ปลดล็อกระบบ)");
+      sendAlertToWebhook("ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ปลดล็อกระบบ)");
+      await flushViolationsQueue();
     } catch (_) {}
     await showAlert("บันทึกการส่งข้อสอบเรียบร้อยแล้ว ขอบคุณครับ", {
       type: "success",
@@ -350,6 +478,7 @@ async function handleAdminUnlock() {
     isExamSubmitted = true;
     isExamActive = false;
     clearInterval(timerInterval);
+    if (integrityInterval) clearInterval(integrityInterval);
 
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
@@ -357,7 +486,8 @@ async function handleAdminUnlock() {
 
     // BUG-14: await ก่อน reload
     try {
-      await sendAlertToWebhook("ผู้คุมสอบกรอกรหัสผ่านเพื่อปลดล็อกการสอบ");
+      sendAlertToWebhook("ผู้คุมสอบกรอกรหัสผ่านเพื่อปลดล็อกการสอบ");
+      await flushViolationsQueue();
     } catch (_) {}
     await showAlert("ปลดล็อกระบบการสอบเรียบร้อยแล้ว", {
       type: "success",
