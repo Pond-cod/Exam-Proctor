@@ -92,16 +92,29 @@ async function handleLogout() {
 }
 
 /**
- * ตรวจสอบรหัสผ่านกับระบบคลาวด์และ Fallback ในตัว
- * @param {Object} credentials - { username, passcode, role }
+ * ตรวจสอบชื่อผู้ใช้และรหัสผ่าน (Username + Password อย่างน้อย 8 ตัวอักษร)
+ * @param {Object} credentials - { username, passcode }
  */
 async function authenticateUser(credentials) {
-  const { username, passcode, role } = credentials;
+  const username = String(credentials.username || "").trim().toLowerCase();
+  const passcode = String(credentials.passcode || "").trim();
+
+  // 1. ตรวจสอบข้อมูลเบื้องต้น
+  if (!username) {
+    return { success: false, message: "กรุณาระบุชื่อผู้ใช้ (Username)" };
+  }
+  if (!passcode) {
+    return { success: false, message: "กรุณาระบุรหัสผ่าน (Password)" };
+  }
+  if (passcode.length < 8) {
+    return { success: false, message: "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร/หลัก" };
+  }
+
   const webhookUrl = typeof getEffectiveWebhookUrl === "function" 
     ? getEffectiveWebhookUrl() 
     : (localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL);
 
-  // 1. พยายามตรวจสอบกับ Google Apps Script Webhook ก่อน
+  // 2. พยายามตรวจสอบกับ Google Apps Script Webhook ก่อน
   if (webhookUrl) {
     try {
       const response = await fetch(webhookUrl, {
@@ -109,9 +122,8 @@ async function authenticateUser(credentials) {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "verifyLogin",
-          username: username || "",
-          passcode: passcode || "",
-          role: role || ""
+          username: username,
+          passcode: passcode
         })
       });
 
@@ -124,7 +136,7 @@ async function authenticateUser(credentials) {
           };
           return { success: true, user: cloudUser };
         } else if (result && result.status === "error") {
-          return { success: false, message: result.message || "รหัสผ่านไม่ถูกต้อง" };
+          return { success: false, message: result.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
         }
       }
     } catch (netErr) {
@@ -132,9 +144,8 @@ async function authenticateUser(credentials) {
       try {
         const getUrl = new URL(webhookUrl);
         getUrl.searchParams.set("action", "verifyLogin");
-        getUrl.searchParams.set("username", username || "");
-        getUrl.searchParams.set("passcode", passcode || "");
-        getUrl.searchParams.set("role", role || "");
+        getUrl.searchParams.set("username", username);
+        getUrl.searchParams.set("passcode", passcode);
         const getRes = await fetch(getUrl.toString());
         if (getRes.ok) {
           const getResult = await getRes.json();
@@ -145,7 +156,7 @@ async function authenticateUser(credentials) {
             };
             return { success: true, user: cloudUser };
           } else if (getResult && getResult.status === "error") {
-            return { success: false, message: getResult.message || "รหัสผ่านไม่ถูกต้อง" };
+            return { success: false, message: getResult.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
           }
         }
       } catch (getErr) {
@@ -154,50 +165,33 @@ async function authenticateUser(credentials) {
     }
   }
 
-  // 2. Fallback ตรวจสอบกับ Local Passcode มาตรฐาน
-  const cleanPass = String(passcode || "").trim();
-  const cleanUser = String(username || "").trim().toLowerCase();
-
-  // ตรวจสอบสิทธิ์ Master Admin
-  if (cleanPass === MASTER_ADMIN_PASSCODE || (cleanUser === "admin" && cleanPass === MASTER_ADMIN_PASSCODE)) {
-    return {
-      success: true,
-      user: {
-        userId: "USR-ADMIN",
-        username: "admin",
-        displayName: "ผู้ดูแลระบบหลัก (Master Admin)",
-        role: USER_ROLES.ADMIN
-      }
-    };
-  }
-
-  // ตรวจสอบสิทธิ์ Teacher / ครูผู้สอน
-  if (cleanPass === DEFAULT_TEACHER_PASSCODE || (cleanUser === "teacher" && cleanPass === DEFAULT_TEACHER_PASSCODE)) {
-    return {
-      success: true,
-      user: {
-        userId: "USR-TEACHER",
-        username: "teacher",
-        displayName: "ครูผู้สอน / ผู้คุมสอบ",
-        role: USER_ROLES.TEACHER
-      }
-    };
-  }
-
-  // ตรวจสอบกับผู้ใช้งานที่บันทึกไว้ใน localStorage
+  // 3. Fallback ตรวจสอบกับข้อมูลผู้ใช้งานในระบบ (Strict User Database)
   try {
-    const localUsers = JSON.parse(localStorage.getItem("examProctorUsersList") || "[]");
-    const matched = localUsers.find(u => {
-      const uMatch = cleanUser && u.username && u.username.toLowerCase() === cleanUser;
-      const pMatch = String(u.passcode).trim() === cleanPass;
-      const rMatch = !cleanUser && pMatch && String(u.role).toUpperCase() === String(role).toUpperCase();
-      return (uMatch && pMatch) || rMatch;
+    const users = typeof getStoredUsers === "function" 
+      ? getStoredUsers() 
+      : JSON.parse(localStorage.getItem("examProctorUsersList") || "[]");
+
+    const matched = users.find(u => {
+      const uMatch = u.username && u.username.toLowerCase() === username;
+      const pMatch = String(u.passcode).trim() === passcode;
+      return uMatch && pMatch;
     });
 
     if (matched) {
       if (String(matched.status).toUpperCase() === "INACTIVE") {
         return { success: false, message: "บัญชีผู้ใช้นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" };
       }
+
+      // อัปเดตเวลาเข้าสู่ระบบล่าสุด (Last Login)
+      try {
+        matched.lastLogin = new Date().toISOString();
+        if (typeof setStoredUsers === "function") {
+          setStoredUsers(users);
+        } else {
+          localStorage.setItem("examProctorUsersList", JSON.stringify(users));
+        }
+      } catch (_) {}
+
       return { 
         success: true, 
         user: {

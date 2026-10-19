@@ -116,59 +116,60 @@
         <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Exam Proctor Studio Management</p>
       </div>
 
-      <!-- สลับบทบาท (Role Tabs) -->
-      <div class="login-role-tabs" id="roleTabsContainer">
-        <button type="button" class="role-tab-btn active" data-role="USER" id="roleTabTeacher">
-          👨‍🏫 ครูผู้สอน / ผู้คุมสอบ
-        </button>
-        <button type="button" class="role-tab-btn" data-role="ADMIN" id="roleTabAdmin">
-          🛡️ ผู้ดูแลระบบ (Admin)
-        </button>
-      </div>
-
       <form id="staffLoginForm" onsubmit="event.preventDefault();">
         <div class="form-group">
-          <label class="form-label" for="loginUsernameInput">ชื่อผู้ใช้ (Username / รหัสประจำตัว) <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(ไม่บังคับ)</span></label>
+          <label class="form-label" for="loginUsernameInput">ชื่อผู้ใช้ (Username) *</label>
           <input 
             type="text" 
             id="loginUsernameInput" 
             class="form-control" 
-            placeholder="ตัวอย่าง: teacher หรือ admin"
+            placeholder="กรอกชื่อผู้ใช้ เช่น teacher หรือ admin"
             autocomplete="username"
+            required
+            style="font-size: 15px;"
           >
         </div>
 
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="form-label" for="loginPasscodeInput" style="margin-bottom: 0;" id="passcodeLabelText">
-              รหัสผ่าน / PIN (6 หลัก) *
+            <label class="form-label" for="loginPasscodeInput" style="margin-bottom: 0;">
+              รหัสผ่าน (Password) *
             </label>
-            <span id="roleHintBadge" class="badge badge-primary" style="font-size: 11px;">ครูผู้สอน</span>
+            <button type="button" id="togglePasswordBtn" style="background: none; border: none; font-size: 12.5px; color: var(--primary); cursor: pointer; padding: 0; font-weight: 600;">
+              👁️ แสดงรหัสผ่าน
+            </button>
           </div>
           <input 
             type="password" 
             id="loginPasscodeInput" 
             class="form-control" 
-            placeholder="กรอกรหัส 6 หลัก (ครู: 111222, Admin: 999888)"
+            placeholder="กรอกรหัสผ่านอย่างน้อย 8 ตัวอักษร/หลัก"
             autocomplete="current-password"
+            minlength="8"
             required
-            style="font-family: monospace; font-size: 20px; font-weight: 800; letter-spacing: 0.18em; text-align: center;"
+            style="font-size: 16px; letter-spacing: 0.05em;"
           >
+          <div class="form-hint" style="color: var(--text-muted); font-size: 11.5px; margin-top: 5px;">
+            รหัสผ่านสำหรับเข้าใช้งานระบบ ต้องมีความยาวอย่างน้อย 8 ตัวอักษร
+          </div>
         </div>
 
         <div id="loginErrorMessage" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px;">
-          รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง
+          ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง
         </div>
 
-        <button type="submit" id="submitLoginBtn" class="btn btn-primary btn-lg btn-block" style="font-weight: 700;">
+        <button type="submit" id="submitLoginBtn" class="btn btn-primary btn-lg btn-block" style="font-weight: 700; min-height: 46px; font-size: 15px;">
           🚀 เข้าสู่ระบบ
         </button>
       </form>
 
-      <div style="margin-top: 18px; padding: 12px; background: var(--bg-subtle); border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
-        💡 <strong>คำแนะนำเริ่มต้น:</strong><br>
-        • สิทธิ์ครูผู้สอน: รหัสผ่านเริ่มต้นคือ <code>111222</code><br>
-        • สิทธิ์ Admin: รหัสผ่านเริ่มต้นคือ <code>999888</code>
+      <div style="margin-top: 18px; padding: 12px 14px; background: #eff6ff; border-radius: var(--radius-sm); border: 1px solid #bfdbfe; font-size: 12px; color: #1e40af; line-height: 1.6;">
+        <strong>💡 ข้อมูลบัญชีเริ่มต้นของระบบ:</strong><br>
+        • ผู้ดูแลระบบ (Admin): <code>admin</code> / รหัสผ่าน <code>admin1234</code><br>
+        • ครูผู้สอน (Teacher): <code>teacher</code> / รหัสผ่าน <code>teacher1234</code>
+        <div style="margin-top: 4px; font-size: 11px; color: #64748b; border-top: 1px dashed #bfdbfe; padding-top: 4px;">
+          * รหัสผ่านเข้าสู่ระบบ (8 หลักขึ้นไป) แยกขาดจากรหัสผ่านผู้คุมสอบ (6 หลัก) ประจำห้องสอบ
+        </div>
       </div>
 
       <div class="login-back-link">
@@ -179,12 +180,10 @@
     </div>
   </div>
 
-  <script src="../js/shared/config.js?v=5.7"></script>
-  <script src="../js/backend/auth.js?v=5.7"></script>
-  <script src="../js/shared/common.js?v=5.7"></script>
+  <script src="../js/shared/config.js?v=5.8"></script>
+  <script src="../js/backend/auth.js?v=5.8"></script>
+  <script src="../js/shared/common.js?v=5.8"></script>
   <script>
-    let selectedRole = USER_ROLES.TEACHER;
-
     document.addEventListener("DOMContentLoaded", () => {
       // ตรวจสอบว่าเข้าสู่ระบบอยู่แล้วหรือไม่ หากมี Session แล้วให้ข้ามไปหน้าปลายทาง
       if (typeof isLoggedIn === "function" && isLoggedIn()) {
@@ -194,40 +193,28 @@
         return;
       }
 
-      const tabTeacher = document.getElementById("roleTabTeacher");
-      const tabAdmin = document.getElementById("roleTabAdmin");
-      const roleHint = document.getElementById("roleHintBadge");
-      const passLabel = document.getElementById("passcodeLabelText");
       const passInput = document.getElementById("loginPasscodeInput");
       const userInput = document.getElementById("loginUsernameInput");
       const errBox = document.getElementById("loginErrorMessage");
       const form = document.getElementById("staffLoginForm");
       const submitBtn = document.getElementById("submitLoginBtn");
+      const togglePassBtn = document.getElementById("togglePasswordBtn");
 
-      // Switch Role Tabs
-      function switchRole(role) {
-        selectedRole = role;
-        if (role === USER_ROLES.ADMIN) {
-          tabAdmin.classList.add("active");
-          tabTeacher.classList.remove("active");
-          roleHint.textContent = "ผู้ดูแลระบบ (Admin)";
-          roleHint.className = "badge badge-danger";
-          passLabel.textContent = "รหัสผ่าน Master Admin Passcode *";
-          if (!userInput.value) userInput.value = "admin";
-        } else {
-          tabTeacher.classList.add("active");
-          tabAdmin.classList.remove("active");
-          roleHint.textContent = "ครูผู้สอน";
-          roleHint.className = "badge badge-primary";
-          passLabel.textContent = "รหัสผ่านครูผู้สอน (Teacher Passcode) *";
-          if (userInput.value === "admin") userInput.value = "";
-        }
-        errBox.style.display = "none";
-        passInput.focus();
+      // ปุ่มเปิด/ปิดการแสดงรหัสผ่าน
+      if (togglePassBtn && passInput) {
+        togglePassBtn.addEventListener("click", () => {
+          if (passInput.type === "password") {
+            passInput.type = "text";
+            togglePassBtn.textContent = "🙈 ซ่อนรหัสผ่าน";
+          } else {
+            passInput.type = "password";
+            togglePassBtn.textContent = "👁️ แสดงรหัสผ่าน";
+          }
+        });
       }
 
-      tabTeacher.addEventListener("click", () => switchRole(USER_ROLES.TEACHER));
-      tabAdmin.addEventListener("click", () => switchRole(USER_ROLES.ADMIN));
+      // Auto focus ช่อง username
+      if (userInput) userInput.focus();
 
       // Handle Form Submit
       form.addEventListener("submit", async (e) => {
@@ -235,8 +222,22 @@
         const username = userInput.value.trim();
         const passcode = passInput.value.trim();
 
+        if (!username) {
+          errBox.textContent = "กรุณากรอกชื่อผู้ใช้ (Username)";
+          errBox.style.display = "block";
+          userInput.focus();
+          return;
+        }
+
         if (!passcode) {
-          errBox.textContent = "กรุณากรอกรหัสผ่าน";
+          errBox.textContent = "กรุณากรอกรหัสผ่าน (Password)";
+          errBox.style.display = "block";
+          passInput.focus();
+          return;
+        }
+
+        if (passcode.length < 8) {
+          errBox.textContent = "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร/หลัก";
           errBox.style.display = "block";
           passInput.focus();
           return;
@@ -244,14 +245,13 @@
 
         submitBtn.disabled = true;
         const origBtnText = submitBtn.innerHTML;
-        submitBtn.innerHTML = `<span class="btn-spinner"></span> กำลังตรวจสอบสิทธิ์...`;
+        submitBtn.innerHTML = `<span class="btn-spinner"></span> กำลังเข้าสู่ระบบ...`;
         errBox.style.display = "none";
 
         try {
           const authResult = await authenticateUser({
             username: username,
-            passcode: passcode,
-            role: selectedRole
+            passcode: passcode
           });
 
           if (authResult.success && authResult.user) {

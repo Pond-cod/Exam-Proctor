@@ -171,7 +171,7 @@ function openUserModal(userId = null) {
     }
     if (nameInput) nameInput.value = "";
     if (roleSelect) roleSelect.value = "TEACHER";
-    if (passInput) passInput.value = Math.floor(100000 + Math.random() * 900000).toString();
+    if (passInput) passInput.value = Math.floor(10000000 + Math.random() * 90000000).toString();
     if (statusSelect) statusSelect.value = "ACTIVE";
   }
 
@@ -209,8 +209,8 @@ async function handleSaveUser() {
     return;
   }
 
-  if (!passcode || passcode.length < 4) {
-    if (errBox) { errBox.textContent = "กรุณากำหนดรหัสผ่านอย่างน้อย 4 หลัก"; errBox.style.display = "block"; }
+  if (!passcode || passcode.length < 8) {
+    if (errBox) { errBox.textContent = "รหัสผ่านเข้าใช้งานต้องมีความยาวอย่างน้อย 8 ตัวอักษร/หลัก"; errBox.style.display = "block"; }
     if (passInput) passInput.focus();
     return;
   }
@@ -352,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (randomPassBtn) {
     randomPassBtn.addEventListener("click", () => {
       const passInput = document.getElementById("modalPasscodeInput");
-      if (passInput) passInput.value = Math.floor(100000 + Math.random() * 900000).toString();
+      if (passInput) passInput.value = Math.floor(10000000 + Math.random() * 90000000).toString();
     });
   }
 });

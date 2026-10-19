@@ -5,11 +5,43 @@
  * and Admin editing / deletion.
  */
 
+function isRoomOwnedByUser(room, user) {
+  if (!user) return false;
+  if (user.role && String(user.role).toUpperCase() === USER_ROLES.ADMIN) return true;
+
+  const curUser = String(user.username || "").trim().toLowerCase();
+  const curName = String(user.displayName || "").trim().toLowerCase();
+  const curId = String(user.userId || "").trim();
+
+  // 1. เช็ค creatorUsername
+  if (room.creatorUsername && String(room.creatorUsername).trim().toLowerCase() === curUser) {
+    return true;
+  }
+  // 2. เช็ค creatorId
+  if (room.creatorId && curId && String(room.creatorId).trim() === curId) {
+    return true;
+  }
+  // 3. เช็ค createdBy (เช่น "ครูผู้สอน" หรือ "ครูสมชาย")
+  if (room.createdBy) {
+    const cb = String(room.createdBy).trim().toLowerCase();
+    if (cb === curUser || cb === curName || cb.includes(curUser) || cb.includes(curName)) {
+      return true;
+    }
+  }
+  // 4. กรณีไม่มีผู้สร้างระบุไว้ชัดเจน (ห้องเก่า) หากเป็น user เริ่มต้น 'teacher' และห้องไม่ได้ระบุ admin ให้ครูเห็นได้
+  if (!room.creatorUsername && (!room.createdBy || room.createdBy === "User" || room.createdBy === "ครูผู้สอน") && curUser === "teacher") {
+    return true;
+  }
+  return false;
+}
+
 function populateRoomsDropdowns() {
   const catFilter = document.getElementById("historyCategoryFilter");
   const gradeFilter = document.getElementById("historyGradeFilter");
   const editCat = document.getElementById("editRoomCategorySelect");
   const editGrade = document.getElementById("editRoomGradeSelect");
+  const creatorFilterBox = document.getElementById("historyCreatorFilterBox");
+  const creatorFilter = document.getElementById("historyCreatorFilter");
 
   if (catFilter) {
     catFilter.innerHTML = `<option value="all">ทุกหมวดหมู่ / กลุ่มสาระ</option>` +
@@ -28,31 +60,69 @@ function populateRoomsDropdowns() {
   if (editGrade) {
     editGrade.innerHTML = GRADE_LEVELS.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
   }
+
+  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
+  if (creatorFilterBox && creatorFilter) {
+    if (isAdmin) {
+      creatorFilterBox.style.display = "block";
+      const rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
+      const creatorSet = new Set();
+      rooms.forEach(r => {
+        const name = r.createdBy || r.creatorUsername;
+        if (name) creatorSet.add(name);
+      });
+      const creatorList = Array.from(creatorSet);
+      creatorFilter.innerHTML = `<option value="all">👥 ทุกผู้สร้างห้องสอบ</option>` +
+        creatorList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    } else {
+      creatorFilterBox.style.display = "none";
+    }
+  }
 }
 
 function renderRoomHistory() {
   const container = document.getElementById("historyRoomsList");
   if (!container) return;
 
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
+
+  // อัปเดต Scope Badge หัวตาราง
+  const scopeBadge = document.getElementById("roomsScopeBadge");
+  if (scopeBadge) {
+    if (isAdmin) {
+      scopeBadge.textContent = "🛡️ สิทธิ์ Admin: แสดงห้องสอบทั้งหมดในระบบ (All Rooms)";
+      scopeBadge.className = "badge badge-danger";
+    } else {
+      const uName = currentUser ? (currentUser.displayName || currentUser.username || "ครูผู้สอน") : "ฉัน";
+      scopeBadge.textContent = `👨‍🏫 สิทธิ์ครู: แสดงเฉพาะห้องสอบของ ${uName}`;
+      scopeBadge.className = "badge badge-primary";
+    }
+  }
+
   const searchQuery = (document.getElementById("historySearchInput") ? document.getElementById("historySearchInput").value : "").trim().toLowerCase();
   const categoryFilter = (document.getElementById("historyCategoryFilter") ? document.getElementById("historyCategoryFilter").value : "all") || "all";
   const gradeFilter = (document.getElementById("historyGradeFilter") ? document.getElementById("historyGradeFilter").value : "all") || "all";
   const statusFilter = (document.getElementById("historyStatusFilter") ? document.getElementById("historyStatusFilter").value : "all") || "all";
+  const creatorFilter = (isAdmin && document.getElementById("historyCreatorFilter")) ? document.getElementById("historyCreatorFilter").value : "all";
 
-  const rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
+  const allSystemRooms = allRooms.length > 0 ? allRooms : getStoredRooms();
 
-  if (rooms.length === 0) {
+  // กรองตามสิทธิ์: Admin ดูทั้งหมด, ครูผู้สอนดูเฉพาะห้องของตนเอง
+  const accessibleRooms = isAdmin ? allSystemRooms : allSystemRooms.filter(r => isRoomOwnedByUser(r, currentUser));
+
+  if (accessibleRooms.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
         <div style="font-size: 42px; margin-bottom: 10px;">📋</div>
-        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">ยังไม่มีข้อมูลห้องสอบ</h4>
+        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${isAdmin ? "ยังไม่มีข้อมูลห้องสอบในระบบ" : "คุณยังไม่มีห้องสอบที่สร้างไว้"}</h4>
         <p style="font-size: 13px;">คุณสามารถสร้างห้องสอบแรกได้ที่เมนู <a href="create.html" style="color: var(--primary); font-weight: 700; text-decoration: underline;">➕ สร้างห้องสอบ</a></p>
       </div>
     `;
     return;
   }
 
-  const filtered = rooms.filter((r) => {
+  const filtered = accessibleRooms.filter((r) => {
     if (searchQuery && !String(r.title || "").toLowerCase().includes(searchQuery) && !String(r.roomId || "").toLowerCase().includes(searchQuery)) {
       return false;
     }
@@ -64,6 +134,10 @@ function renderRoomHistory() {
     }
     if (statusFilter !== "all" && r.status !== statusFilter) {
       return false;
+    }
+    if (isAdmin && creatorFilter !== "all") {
+      const matchCreator = (r.creatorUsername && r.creatorUsername === creatorFilter) || (r.createdBy && r.createdBy === creatorFilter);
+      if (!matchCreator) return false;
     }
     return true;
   });
@@ -77,13 +151,13 @@ function renderRoomHistory() {
     return;
   }
 
-  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
-
   container.innerHTML = filtered.map((r) => {
     const isOpen = r.status === "OPEN";
     const statusBadge = isOpen
       ? `<span class="badge badge-success" style="font-weight: 700;">🟢 กำลังเปิดสอบ (OPEN)</span>`
       : `<span class="badge badge-neutral" style="font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca;">🔴 ปิดห้องสอบ (CLOSED)</span>`;
+
+    const canManage = isAdmin || isRoomOwnedByUser(r, currentUser);
 
     // Ensure full exam URL is present
     let roomExamUrl = r.examUrl;
@@ -99,6 +173,9 @@ function renderRoomHistory() {
       }
     }
 
+    const creatorDisplayName = r.createdBy || r.creatorUsername || "ครูผู้สอน";
+    const creatorUserTag = r.creatorUsername ? ` (@${escapeHtml(r.creatorUsername)})` : "";
+
     return `
       <div class="room-mgmt-card" style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
@@ -110,21 +187,26 @@ function renderRoomHistory() {
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px;">
               <span class="badge badge-neutral" style="font-size: 11.5px;">📁 ${escapeHtml(r.category || "ทั่วไป")}</span>
               <span class="badge badge-neutral" style="font-size: 11.5px;">🎓 ${escapeHtml(r.gradeLevel || "ไม่ระบุ")}</span>
+              <span class="badge badge-neutral" style="font-size: 11.5px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">
+                👤 ผู้สร้าง: <strong>${escapeHtml(creatorDisplayName)}</strong>${creatorUserTag}
+              </span>
               <span style="font-size: 12px; color: var(--text-muted);">รหัสห้อง: <code>${escapeHtml(r.roomId || "-")}</code></span>
             </div>
           </div>
 
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <!-- สลับเปิด/ปิดสถานะสอบ (ทุกคนทำได้) -->
-            <button 
-              type="button" 
-              class="btn ${isOpen ? "btn-secondary" : "btn-success"} btn-toggle-status" 
-              data-room-id="${escapeHtml(r.roomId)}" 
-              style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
-              title="${isOpen ? "คลิกเพื่อปิดห้องสอบชั่วคราว" : "คลิกเพื่อเปิดรับนักเรียนเข้าสอบ"}"
-            >
-              ${isOpen ? "⏸️ พักการสอบ" : "▶️ เปิดรับเข้าสอบ"}
-            </button>
+            <!-- สลับเปิด/ปิดสถานะสอบ (เจ้าของห้อง หรือ Admin) -->
+            ${canManage ? `
+              <button 
+                type="button" 
+                class="btn ${isOpen ? "btn-secondary" : "btn-success"} btn-toggle-status" 
+                data-room-id="${escapeHtml(r.roomId)}" 
+                style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+                title="${isOpen ? "คลิกเพื่อปิดห้องสอบชั่วคราว" : "คลิกเพื่อเปิดรับนักเรียนเข้าสอบ"}"
+              >
+                ${isOpen ? "⏸️ พักการสอบ" : "▶️ เปิดรับเข้าสอบ"}
+              </button>
+            ` : ""}
 
             <!-- คัดลอกลิงก์ -->
             <button 
@@ -146,8 +228,8 @@ function renderRoomHistory() {
               🔍 QR Code
             </button>
 
-            <!-- แก้ไข และ ลบ (เฉพาะ Admin) -->
-            ${isAdmin ? `
+            <!-- แก้ไข และ ลบ (เจ้าของห้อง หรือ Admin) -->
+            ${canManage ? `
               <button 
                 type="button" 
                 class="btn btn-secondary btn-edit-room" 
@@ -175,7 +257,7 @@ function renderRoomHistory() {
             <code style="font-size: 15px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.entryCode || "-")}</code>
           </div>
           <div style="font-size: 12.5px; border-left: 1.5px solid #cbd5e1; padding-left: 12px;">
-            <span style="color: #991b1b; font-weight: 700;">🔒 รหัสคุมสอบ (Passcode):</span>
+            <span style="color: #991b1b; font-weight: 700;">🔒 รหัสคุมสอบ (Passcode 6 หลัก):</span>
             <code style="font-size: 15px; font-weight: 800; color: #b91c1c; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.adminPasscode || "-")}</code>
           </div>
           <div style="font-size: 12px; color: var(--text-muted); margin-left: auto;">
@@ -276,19 +358,22 @@ async function toggleRoomStatus(roomId) {
   showAlert(msg, { type: "info", confirmText: "ตกลง" });
 }
 
-// ลบห้องสอบ — เฉพาะ Role Admin เท่านั้น
+// ลบห้องสอบ — เฉพาะ Role Admin หรือเจ้าของห้องสอบ
 async function deleteRoom(roomId) {
-  if (typeof isCurrentUserAdmin === "function" && !isCurrentUserAdmin()) {
-    showAlert("คุณต้องมีสิทธิ์ผู้ดูแลระบบ (Admin) เท่านั้นจึงจะสามารถลบห้องสอบได้", {
+  let rooms = getStoredRooms();
+  const room = rooms.find(r => r.roomId === roomId);
+  if (!room) return;
+
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
+
+  if (!isAdmin && !isRoomOwnedByUser(room, currentUser)) {
+    showAlert("คุณสามารถลบได้เฉพาะห้องสอบที่คุณเป็นผู้สร้างเท่านั้น", {
       type: "warning",
       confirmText: "เข้าใจแล้ว"
     });
     return;
   }
-
-  let rooms = getStoredRooms();
-  const room = rooms.find(r => r.roomId === roomId);
-  if (!room) return;
 
   const confirmed = await showConfirm(
     `คุณแน่ใจหรือไม่ว่าต้องการลบห้องสอบ "${room.title}" (รหัส: ${roomId})?\n\nการกระทำนี้จะนำห้องสอบออกจากระบบและหน้ารวมข้อสอบทันที`,
@@ -313,18 +398,21 @@ async function deleteRoom(roomId) {
   }
 }
 
-// เปิด Modal แก้ไขข้อมูลห้องสอบ — เฉพาะ Role Admin
+// เปิด Modal แก้ไขข้อมูลห้องสอบ — เฉพาะ Role Admin หรือเจ้าของห้องสอบ
 function openEditRoomModal(roomId) {
-  if (typeof isCurrentUserAdmin === "function" && !isCurrentUserAdmin()) {
-    showAlert("คุณต้องมีสิทธิ์ผู้ดูแลระบบ (Admin) เท่านั้นจึงจะสามารถแก้ไขห้องสอบได้", {
+  const room = (allRooms.length > 0 ? allRooms : getStoredRooms()).find(r => r.roomId === roomId);
+  if (!room) return;
+
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
+
+  if (!isAdmin && !isRoomOwnedByUser(room, currentUser)) {
+    showAlert("คุณสามารถแก้ไขได้เฉพาะห้องสอบที่คุณเป็นผู้สร้างเท่านั้น", {
       type: "warning",
       confirmText: "เข้าใจแล้ว"
     });
     return;
   }
-
-  const room = (allRooms.length > 0 ? allRooms : getStoredRooms()).find(r => r.roomId === roomId);
-  if (!room) return;
 
   const modal = document.getElementById("editRoomModal");
   const subEl = document.getElementById("editRoomSubtitle");
@@ -414,6 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRoomHistory();
 
   fetchCloudRooms(() => {
+    populateRoomsDropdowns();
     renderRoomHistory();
   });
 
@@ -445,6 +534,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyStatusFilter = document.getElementById("historyStatusFilter");
   if (historyStatusFilter) {
     historyStatusFilter.addEventListener("change", renderRoomHistory);
+  }
+
+  const historyCreatorFilter = document.getElementById("historyCreatorFilter");
+  if (historyCreatorFilter) {
+    historyCreatorFilter.addEventListener("change", renderRoomHistory);
   }
 
   // Edit Room Modal bindings

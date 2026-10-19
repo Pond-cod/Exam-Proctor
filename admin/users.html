@@ -109,7 +109,7 @@
                 <th style="width: 140px;">ชื่อผู้ใช้ (Username)</th>
                 <th>ชื่อ-นามสกุล / ตำแหน่ง</th>
                 <th style="width: 180px;">สิทธิ์การใช้งาน (Role)</th>
-                <th style="width: 130px;">รหัสผ่าน / PIN</th>
+                <th style="width: 150px;">รหัสผ่าน (Password)</th>
                 <th style="width: 130px;">สถานะ</th>
                 <th style="width: 150px;">เข้าสู่ระบบล่าสุด</th>
                 <th style="width: 140px;">การจัดการ</th>
@@ -189,21 +189,24 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="modalPasscodeInput">รหัสผ่าน / Passcode *</label>
+          <label class="form-label" for="modalPasscodeInput">รหัสผ่านเข้าใช้งาน (Password) *</label>
           <div style="display: flex; gap: 8px;">
             <input 
               type="text" 
               id="modalPasscodeInput" 
               class="form-control" 
-              placeholder="กรอกรหัสผ่านอย่างน้อย 4-6 หลัก"
+              placeholder="กรอกรหัสผ่านอย่างน้อย 8 ตัวอักษร/หลัก"
+              minlength="8"
               required
-              style="font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 0.12em; color: #1d4ed8;"
+              style="font-family: monospace; font-size: 15.5px; font-weight: 700; letter-spacing: 0.08em; color: #1d4ed8;"
             >
             <button type="button" id="randomUserPasscodeBtn" class="btn btn-secondary" style="white-space: nowrap;">
-              🎲 สุ่ม
+              🎲 สุ่ม 8 หลัก
             </button>
           </div>
-          <div class="form-hint">รหัสผ่านสำหรับผู้ใช้คนนี้นำไปใช้ล็อกอินเข้าสู่ระบบ</div>
+          <div class="form-hint" style="color: var(--text-muted);">
+            รหัสผ่านสำหรับเข้าใช้งานระบบ ต้องมีอย่างน้อย 8 ตัวอักษร/หลัก *แยกจากรหัสผู้คุมสอบ 6 หลัก
+          </div>
         </div>
 
         <div id="userModalError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 10px;">
@@ -220,9 +223,9 @@
     </div>
   </div>
 
-  <script src="../js/shared/config.js?v=5.7"></script>
-  <script src="../js/backend/auth.js?v=5.7"></script>
-  <script src="../js/shared/common.js?v=5.7"></script>
-  <script src="../js/backend/users.js?v=5.7"></script>
+  <script src="../js/shared/config.js?v=5.8"></script>
+  <script src="../js/backend/auth.js?v=5.8"></script>
+  <script src="../js/shared/common.js?v=5.8"></script>
+  <script src="../js/backend/users.js?v=5.8"></script>
 </body>
 </html>

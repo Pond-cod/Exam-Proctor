@@ -162,7 +162,7 @@ function getStoredUsers() {
         username: "admin",
         displayName: "ผู้ดูแลระบบหลัก (Super Admin)",
         role: "ADMIN",
-        passcode: "999888",
+        passcode: "admin1234",
         status: "ACTIVE",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -172,7 +172,7 @@ function getStoredUsers() {
         username: "teacher",
         displayName: "ครูผู้สอน / ผู้คุมสอบ",
         role: "TEACHER",
-        passcode: "111222",
+        passcode: "teacher1234",
         status: "ACTIVE",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -183,7 +183,27 @@ function getStoredUsers() {
       localStorage.setItem("examProctorUsersList", JSON.stringify(defaultUsers));
       return defaultUsers;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem("examProctorUsersList", JSON.stringify(defaultUsers));
+      return defaultUsers;
+    }
+    // อัปเดตรหัสผ่านตั้งต้นของ admin / teacher หากยังเป็นรหัส 6 หลักเดิม
+    let updated = false;
+    parsed.forEach(u => {
+      if (u.username === "admin" && u.passcode === "999888") {
+        u.passcode = "admin1234";
+        updated = true;
+      }
+      if (u.username === "teacher" && u.passcode === "111222") {
+        u.passcode = "teacher1234";
+        updated = true;
+      }
+    });
+    if (updated) {
+      localStorage.setItem("examProctorUsersList", JSON.stringify(parsed));
+    }
+    return parsed;
   } catch (_) {
     return [];
   }
