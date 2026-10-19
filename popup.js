@@ -199,7 +199,7 @@ if (testWebhookBtn) {
 
 // เปิดหน้าจอ Admin Monitor
 openMonitorBtn.addEventListener("click", () => {
-  chrome.tabs.create({ url: chrome.runtime.getURL("monitor.html") });
+  chrome.tabs.create({ url: chrome.runtime.getURL("admin/monitor.html") });
 });
 
 // ดักจับและอนุญาตให้พิมพ์ได้เฉพาะตัวเลขเท่านั้น (0-9)

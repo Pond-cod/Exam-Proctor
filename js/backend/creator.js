@@ -75,7 +75,8 @@ async function generateExamLink() {
     };
 
     const encodedData = encodeExamConfig(roomConfig);
-    const baseUrl = new URL("exam.html", window.location.href);
+    const examRelPath = window.location.pathname.includes("/admin/") ? "../exam.html" : "exam.html";
+    const baseUrl = new URL(examRelPath, window.location.href);
     baseUrl.searchParams.set("data", encodedData);
     const fullExamUrl = baseUrl.toString();
 

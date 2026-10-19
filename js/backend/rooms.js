@@ -90,7 +90,8 @@ function renderRoomHistory() {
     if (!roomExamUrl) {
       try {
         const encoded = encodeExamConfig(r);
-        const baseUrl = new URL("exam.html", window.location.href);
+        const examRelPath = window.location.pathname.includes("/admin/") ? "../exam.html" : "exam.html";
+        const baseUrl = new URL(examRelPath, window.location.href);
         baseUrl.searchParams.set("data", encoded);
         roomExamUrl = baseUrl.toString();
       } catch (_) {
@@ -209,7 +210,8 @@ function renderRoomHistory() {
       if (!roomExamUrl) {
         try {
           const encoded = encodeExamConfig(room);
-          const baseUrl = new URL("exam.html", window.location.href);
+          const examRelPath = window.location.pathname.includes("/admin/") ? "../exam.html" : "exam.html";
+          const baseUrl = new URL(examRelPath, window.location.href);
           baseUrl.searchParams.set("data", encoded);
           roomExamUrl = baseUrl.toString();
         } catch (_) {}
@@ -383,7 +385,8 @@ async function handleSaveEditRoom() {
 
   // สร้างลิงก์ใหม่ด้วย config ที่อัปเดต
   const encoded = encodeExamConfig(updatedRoom);
-  const baseUrl = new URL("exam.html", window.location.href);
+  const examRelPath = window.location.pathname.includes("/admin/") ? "../exam.html" : "exam.html";
+  const baseUrl = new URL(examRelPath, window.location.href);
   baseUrl.searchParams.set("data", encoded);
   updatedRoom.examUrl = baseUrl.toString();
 

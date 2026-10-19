@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Proctor Studio - ระบบจัดการห้องสอบและประวัติ</title>
+  <meta name="description" content="ระบบจัดการห้องสอบ เปิด/ปิดรับนักเรียน คัดลอกลิงก์ แสดง QR Code และแก้ไขข้อมูลห้องสอบ">
+  <link rel="icon" type="image/png" href="../logo.png">
+  <link rel="stylesheet" href="../css/style.css?v=5.7">
+</head>
+<body>
+
+  <!-- แถบเมนูด้านบนหลังบ้าน (Back-Office Navigation) -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="rooms.html" class="brand">
+        <img src="../logo.png" alt="Exam Proctor Studio" class="brand-logo-img">
+        <div>
+          <div class="brand-title">Exam Proctor Studio</div>
+          <div class="brand-subtitle">ระบบบริหารจัดการห้องสอบและคุมสอบออนไลน์</div>
+        </div>
+      </a>
+
+      <!-- ปุ่ม Hamburger สำหรับหน้าจอมือถือ -->
+      <button class="nav-hamburger" id="navHamburgerBtn" type="button" aria-label="เปิดเมนู" aria-expanded="false">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <!-- เมนูนำทางหลังบ้าน -->
+      <div class="nav-links" id="navLinksMenu">
+        <a href="create.html" class="nav-tab-btn">➕ สร้างห้องสอบ</a>
+        <a href="monitor.html" class="nav-tab-btn">🖥️ หน้าจอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn active">📁 จัดการห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">👥 จัดการผู้ใช้</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">⚙️ ตั้งค่าระบบ</a>
+      </div>
+
+      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
+      <div class="nav-role-box">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
+          <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
+          <span id="navUserNameDisplay" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"></span>
+        </div>
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
+          🚪 ออกจากระบบ
+        </button>
+        <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
+          🌐 หน้าบ้าน
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- จัดการห้องสอบและประวัติ (Exam Rooms Management - CRUD & History) -->
+    <section id="historySection" class="view-section active">
+      <div class="card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div class="card-title">ระบบจัดการและประวัติห้องสอบ (Exam Rooms Management)</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+              เปิด/ปิดรับนักเรียน คัดลอกลิงก์ แสดง QR Code และจัดการห้องสอบ
+            </div>
+          </div>
+          <div class="card-actions-group">
+            <button id="refreshHistoryBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">
+              🔄 รีเฟรชข้อมูล
+            </button>
+            <a href="create.html" class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              ➕ สร้างห้องสอบใหม่
+            </a>
+          </div>
+        </div>
+
+        <!-- แถบตัวกรองประวัติห้องสอบ -->
+        <div class="room-mgmt-toolbar">
+          <div style="flex: 2; min-width: 200px;">
+            <input 
+              type="text" 
+              id="historySearchInput" 
+              class="form-control" 
+              placeholder="🔍 ค้นหาห้องสอบด้วยชื่อวิชา หรือรหัสห้อง..."
+            >
+          </div>
+          <div style="flex: 1; min-width: 160px;">
+            <select id="historyCategoryFilter" class="form-control">
+              <option value="all">ทุกกลุ่มสาระ / หมวดหมู่</option>
+            </select>
+          </div>
+          <div style="flex: 1; min-width: 150px;">
+            <select id="historyGradeFilter" class="form-control">
+              <option value="all">ทุกระดับชั้น</option>
+            </select>
+          </div>
+          <div style="flex: 1; min-width: 140px;">
+            <select id="historyStatusFilter" class="form-control">
+              <option value="all">ทุกสถานะ (เปิด/ปิด)</option>
+              <option value="OPEN">🟢 เฉพาะเปิดสอบ (OPEN)</option>
+              <option value="CLOSED">🔴 เฉพาะปิดสอบ (CLOSED)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- รายการห้องสอบ -->
+        <div id="historyRoomsList" style="margin-top: 16px;">
+          <div style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+            <div style="font-size: 32px; margin-bottom: 8px;">⏳</div>
+            <p style="font-size: 13.5px;">กำลังโหลดรายการห้องสอบ...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal แก้ไขห้องสอบสำหรับ Admin (Edit Room Modal) -->
+  <div id="editRoomModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <div class="modal-header-icon" style="background: #e0f2fe; color: #0284c7;">✏️</div>
+          <div>
+            <div class="modal-title-text">แก้ไขข้อมูลห้องสอบ</div>
+            <div class="modal-subtitle-text" id="editRoomSubtitle">รหัสห้อง: -</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="closeEditRoomModalBtn" title="ปิดหน้าต่าง">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="editRoomIdInput">
+
+        <div class="form-group">
+          <label class="form-label" for="editRoomTitleInput">ชื่อวิชา หรือหัวข้อการสอบ *</label>
+          <input type="text" id="editRoomTitleInput" class="form-control" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editRoomCategorySelect">กลุ่มสาระ / หมวดหมู่ *</label>
+            <select id="editRoomCategorySelect" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editRoomGradeSelect">ระดับชั้น *</label>
+            <select id="editRoomGradeSelect" class="form-control" required></select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editRoomFormUrlInput">ลิงก์ Google Forms ข้อสอบ *</label>
+          <input type="url" id="editRoomFormUrlInput" class="form-control" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editRoomStatusSelect">สถานะเปิดรับนักเรียน *</label>
+            <select id="editRoomStatusSelect" class="form-control">
+              <option value="OPEN">🟢 OPEN - เปิดรับนักเรียน</option>
+              <option value="CLOSED">🔴 CLOSED - ปิดห้องสอบ</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editRoomEntryCodeInput">รหัสเข้าสอบนักเรียน (6 หลัก) *</label>
+            <input type="text" id="editRoomEntryCodeInput" class="form-control" maxlength="6" style="font-family: monospace; font-weight: 700;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editRoomAdminPasscodeInput">รหัสผ่านผู้คุมสอบ (Admin Passcode 6 หลัก) *</label>
+          <input type="text" id="editRoomAdminPasscodeInput" class="form-control" maxlength="6" style="font-family: monospace; font-weight: 700;">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelEditRoomBtn">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" id="saveEditRoomBtn" style="font-weight: 700;">
+          บันทึกการแก้ไข
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal สำหรับฉาย QR Code ขึ้นจอโปรเจกเตอร์ขนาดใหญ่ -->
+  <div id="qrProjectorModal" class="custom-dialog-overlay">
+    <div class="custom-dialog-box" style="max-width: 480px; text-align: center; padding: 28px 20px;">
+      <h3 style="font-size: 19px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;" id="projectorExamTitle">แบบทดสอบออนไลน์</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+        สแกน QR Code ด้วยกล้องสมาร์ตโฟนหรือแท็บเล็ต เพื่อเข้าสู่ห้องสอบทันที
+      </p>
+      <div id="projectorQrWrapper" style="display: flex; justify-content: center; align-items: center; background: #ffffff; padding: 16px; border-radius: var(--radius-md); border: 2px solid #e2e8f0; width: fit-content; margin: 0 auto 16px; box-shadow: var(--shadow-md);">
+        <div id="projectorQrContainer"></div>
+      </div>
+      
+      <!-- รหัส 2 ชุดในโปรเจกเตอร์ -->
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px;">
+        <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: var(--radius-sm); padding: 6px 14px; display: inline-flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: #1e40af; font-weight: 700;">🎓 รหัสเข้าสอบนักเรียน:</span>
+          <strong style="font-size: 18px; color: #1d4ed8; font-family: monospace; letter-spacing: 0.12em;" id="projectorEntryCodeDisplay">------</strong>
+        </div>
+        <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: var(--radius-sm); padding: 6px 14px; display: inline-flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: #991b1b; font-weight: 700;">🔒 รหัสคุมสอบ:</span>
+          <strong style="font-size: 18px; color: #b91c1c; font-family: monospace; letter-spacing: 0.12em;" id="projectorPasscodeDisplay">------</strong>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="closeProjectorBtn" class="btn btn-primary" style="min-width: 130px; font-size: 13.5px;">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal เข้าสู่ระบบ Admin (Admin Authentication Modal) -->
+  <div id="adminLoginModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 420px;">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <div class="modal-header-icon" style="background: #fef3c7; color: #d97706;">🔑</div>
+          <div>
+            <div class="modal-title-text">เข้าสู่ระบบผู้ดูแลระบบ (Admin)</div>
+            <div class="modal-subtitle-text">กรอกรหัสผ่านเพื่อปลดล็อกสิทธิ์ระดับสูงสุด</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="closeAdminLoginModalBtn" title="ปิดหน้าต่าง">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+          สิทธิ์ Admin สามารถแก้ไข/ลบห้องสอบ, ตั้งค่า Webhook/Google Sheets, รีเซ็ตหน้าจอคุมสอบสด และจัดการข้อมูลระดับโครงสร้าง
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="adminLoginPasscodeInput">รหัสผ่าน Master Admin Passcode (6 หลัก) *</label>
+          <input 
+            type="password" 
+            id="adminLoginPasscodeInput" 
+            class="form-control" 
+            maxlength="6"
+            placeholder="กรอกรหัสผ่าน 6 หลัก (ค่าเริ่มต้น 999888)"
+            autocomplete="current-password"
+            style="font-family: monospace; font-size: 20px; font-weight: 800; letter-spacing: 0.2em; text-align: center;"
+          >
+        </div>
+
+        <div id="adminLoginError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px;">
+          รหัสผ่าน Admin ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelAdminLoginBtn">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" id="confirmAdminLoginBtn" style="font-weight: 700;">
+          ยืนยันเข้าสู่ระบบ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/shared/qrcode.min.js"></script>
+  <script src="../js/shared/config.js?v=5.7"></script>
+  <script src="../js/backend/auth.js?v=5.7"></script>
+  <script src="../js/shared/common.js?v=5.7"></script>
+  <script src="../js/backend/rooms.js?v=5.7"></script>
+</body>
+</html>

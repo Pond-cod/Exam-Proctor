@@ -15,26 +15,33 @@
 
 ---
 
-### 📂 โครงสร้างระบบแยกหน้าบ้าน-หลังบ้าน (Front-End & Back-Office Architecture v5.5):
+### 📂 โครงสร้างระบบแยกหน้าบ้าน-หลังบ้านชัดเจน (Enterprise Front-End & Back-Office Architecture v5.7):
 
-#### 🌐 หน้าบ้านสำหรับนักเรียน (Student Portal - ไม่ต้อง Login):
+#### 🌐 1. หน้าบ้านสำหรับนักเรียน (Student Portal - Public & Fullscreen Exam):
 - [`index.html`](index.html): **🎓 ศูนย์รวมข้อสอบออนไลน์** สำหรับนักเรียนค้นหาและเข้าสอบด้วย Student ID + รหัสเข้าห้องสอบ 6 หลัก โดยไม่มีแถบเมนูหลังบ้านของครูปะปน พร้อมปุ่มทางเข้า "🔐 สำหรับครู / เจ้าหน้าที่"
 - [`exam.html`](exam.html): **🔒 ระบบคุมสอบเต็มหน้าจอ (Proctor Engine)** ครอบ Google Forms เต็มจอ ตรวจจับการสลับแท็บ/ย่อหน้าจอ พร้อมรหัสฉุกเฉินปลดล็อก (Emergency Passcode)
+- [`js/frontend/portal.js`](js/frontend/portal.js): สคริปต์ค้นหา กรองหมวดหมู่วิชา และส่งนักเรียนเข้าสู่ห้องสอบ
+- [`js/frontend/proctor.js`](js/frontend/proctor.js): เครื่องยนต์คุมสอบ ตรวจจับสลับหน้าจอ และส่งสัญญาณสด 0ms
 
-#### 🔐 ประตูเข้าสู่ระบบ (Staff Login Hub):
-- [`login.html`](login.html): **เข้าสู่ระบบบุคลากร** รองรับทั้งเลือกแท็บครูผู้สอน/ผู้คุมสอบ (Teacher) และผู้ดูแลระบบ (Admin) หรือใส่ Username ตรวจสอบสิทธิ์กับตาราง `Users`
+#### 🏢 2. หลังบ้านสำหรับบุคลากร (Back-Office Studio - โฟลเดอร์ `admin/`):
+- [`admin/index.html`](admin/index.html): **🚪 ทางเข้าและเราเตอร์กลางหลังบ้าน** ตรวจสอบ Session แล้วส่งต่อไปยังแผงควบคุม
+- [`admin/login.html`](admin/login.html): **🔐 เข้าสู่ระบบบุคลากร** รองรับทั้งเลือกแท็บครูผู้สอน/ผู้คุมสอบ (Teacher) และผู้ดูแลระบบ (Admin)
+- [`admin/rooms.html`](admin/rooms.html): **📁 จัดการห้องสอบ (Rooms Management)** สลับเปิด/ปิดรับนักเรียน (`OPEN`/`CLOSED`), คัดลอกลิงก์, ฉาย QR Code, แก้ไข/ลบห้องสอบ
+- [`admin/create.html`](admin/create.html): **➕ สร้างห้องสอบใหม่** กำหนดวิชา ระดับชั้น Google Forms URL พร้อมสุ่มรหัสผ่าน 2 รูปแบบ และสร้าง QR Code
+- [`admin/monitor.html`](admin/monitor.html): **🖥️ หน้าจอคุมสอบสด (Live Proctor Monitor)** ติดตามผู้สอบสดแบบเรียลไทม์ กรองเฉพาะห้องสอบ แจ้งเตือนทุจริตสด และดู Timeline
+- [`admin/users.html`](admin/users.html): **👥 ระบบจัดการผู้ใช้งาน (User Management - เฉพาะ Admin)** เพิ่ม, แก้ไข, ลบ บัญชีผู้ใช้, กำหนด Role (Teacher/Admin), รหัสผ่าน และสถานะ Active/Inactive
+- [`admin/settings.html`](admin/settings.html): **⚙️ ตั้งค่าระบบกลาง (System Settings - เฉพาะ Admin)** แก้ไขชื่อระบบ, ข้อความประกาศหน้าแรก, Master Passcode, และทดสอบ Webhook
+- [`js/backend/`](js/backend/): รวมสคริปต์หลังบ้าน `auth.js`, `rooms.js`, `creator.js`, `monitor.js`, `users.js`, `settings.js`
 
-#### 🏢 หลังบ้านสำหรับบุคลากร (Back-Office Studio - มีระบบ Auth Guard):
-- [`create.html`](create.html): **➕ สร้างห้องสอบใหม่** กำหนดวิชา ระดับชั้น Google Forms URL พร้อมสุ่มรหัสผ่าน 2 รูปแบบ และสร้าง QR Code
-- [`monitor.html`](monitor.html): **🖥️ หน้าจอคุมสอบสด (Live Proctor Monitor)** ติดตามผู้สอบสดแบบเรียลไทม์ กรองเฉพาะห้องสอบ แจ้งเตือนทุจริตสด และดู Timeline
-- [`rooms.html`](rooms.html): **📁 จัดการห้องสอบ (Rooms Management)** สลับเปิด/ปิดรับนักเรียน (`OPEN`/`CLOSED`), คัดลอกลิงก์, ฉาย QR Code, แก้ไข/ลบห้องสอบ
-- [`users.html`](users.html): **👥 ระบบจัดการผู้ใช้งาน (User Management - เฉพาะ Admin)** เพิ่ม, แก้ไข, ลบ บัญชีผู้ใช้, กำหนด Role (Teacher/Admin), รหัสผ่าน และสถานะ Active/Inactive
-- [`settings.html`](settings.html): **⚙️ ตั้งค่าระบบกลาง (System Settings - เฉพาะ Admin)** แก้ไขชื่อระบบ, ข้อความประกาศหน้าแรก, Master Passcode, และทดสอบ Webhook
-
-#### 🧩 โมดูลสคริปต์ส่วนกลาง:
-- [`js/auth.js`](js/auth.js): ระบบจัดการ Session, Login Verification, และ Route Guards (`requireAuth`)
-- [`js/common.js`](js/common.js): ฐานข้อมูลส่วนกลาง, การจัดการ Role UI, การซิงก์คลาวด์ทั้ง Rooms และ Users
+#### ⚙️ 3. โมดูลสคริปต์และทรัพยากรส่วนกลาง (Shared Core):
+- [`js/shared/config.js`](js/shared/config.js): ค่าคอนฟิกเริ่มต้น, รหัสผ่าน Master, คีย์จัดเก็บข้อมูล และโครงสร้างข้อมูล
+- [`js/shared/common.js`](js/shared/common.js): ฟังก์ชันกลาง, ระบบ Toast/Modal แจ้งเตือน, เครื่องมือ Sanitizer และการซิงก์คลาวด์
+- [`js/shared/qrcode.min.js`](js/shared/qrcode.min.js): ไลบรารีสร้าง QR Code สแกนเข้าสอบ
+- [`css/style.css`](css/style.css): ดีไซน์ระบบ Glassmorphism โทนสี Vibrant Gradient ทันสมัย
 - [`google-apps-script.js`](google-apps-script.js): เครื่องยนต์ฐานข้อมูล Google Sheets 4 ตาราง (`Users`, `SystemConfig`, `ExamRooms`, `ExamLogs`) พร้อม Webhook Engine v5.5
+
+#### 🔄 4. ระบบป้องกันลิงก์เดิมเสีย (Backward Compatibility):
+- ที่ Root มีไฟล์ Redirect Stub (`create.html`, `monitor.html`, `rooms.html`, `users.html`, `settings.html`, `login.html`) ที่จะเปลี่ยนเส้นทางอัตโนมัติ 0ms ไปยังโฟลเดอร์ `admin/` เพื่อไม่ให้ผู้ใช้งานเดิมเจอปัญหา 404
 
 ---
 

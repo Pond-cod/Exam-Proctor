@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>กำลังเข้าสู่ระบบหลังบ้าน Exam Proctor Studio...</title>
+  <link rel="icon" type="image/png" href="../logo.png">
+  <script>
+    // ตรวจสอบเซสชัน หากล็อกอินแล้วไป rooms.html มิฉะนั้นไป login.html
+    const sessionRaw = localStorage.getItem("exam_staff_session") || sessionStorage.getItem("exam_staff_session");
+    if (sessionRaw) {
+      window.location.replace("rooms.html");
+    } else {
+      window.location.replace("login.html");
+    }
+  </script>
+</head>
+<body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc;">
+  <p style="color: #64748b; font-size: 14px;">กำลังนำท่านเข้าสู่แผงควบคุมหลังบ้าน Exam Proctor Studio...</p>
+</body>
+</html>
