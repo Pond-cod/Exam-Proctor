@@ -63,6 +63,9 @@ async function generateExamLink() {
     const roomId = "RM-" + Math.floor(100000 + Math.random() * 900000);
 
     const creatorUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+    const creatorUserLabel = creatorUser && creatorUser.username 
+      ? `${creatorUser.displayName || creatorUser.username} (@${creatorUser.username})` 
+      : (creatorUser ? (creatorUser.displayName || creatorUser.username) : "ครูผู้สอน");
     const roomConfig = {
       roomId: roomId,
       title: title,
@@ -75,7 +78,7 @@ async function generateExamLink() {
       webhookUrl: webhookUrl,
       creatorUsername: creatorUser ? (creatorUser.username || "") : "",
       creatorId: creatorUser ? (creatorUser.userId || "") : "",
-      createdBy: creatorUser ? (creatorUser.displayName || creatorUser.username || "ครูผู้สอน") : "ครูผู้สอน",
+      createdBy: creatorUserLabel,
       createdAt: new Date().toISOString()
     };
 
@@ -184,11 +187,13 @@ async function generateExamLink() {
     }
 
     // บันทึกลง Storage
+    let history = getStoredRooms();
     // ดึงชื่อผู้สร้างจากโปรไฟล์ที่เข้าสู่ระบบอยู่
     const authUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
     const creatorUsername = authUser ? (authUser.username || "") : "";
     const creatorId = authUser ? (authUser.userId || "") : "";
     const creatorName = authUser ? (authUser.displayName || authUser.username || "ครูผู้สอน") : "ครูผู้สอน";
+    const creatorLabel = authUser && authUser.username ? `${creatorName} (@${authUser.username})` : creatorName;
 
     const newRoomRecord = {
       roomId: roomId,
@@ -202,7 +207,7 @@ async function generateExamLink() {
       status: status,
       creatorUsername: creatorUsername,
       creatorId: creatorId,
-      createdBy: creatorName,
+      createdBy: creatorLabel,
       createdAt: new Date().toLocaleString("th-TH")
     };
     history.unshift(newRoomRecord);

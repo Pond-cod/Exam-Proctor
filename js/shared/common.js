@@ -127,10 +127,27 @@ async function fetchCloudRooms(callback) {
     if (json && json.status === "success" && Array.isArray(json.data)) {
       const cloudRooms = json.data;
       const localRooms = getStoredRooms();
+      const localMap = new Map();
+      localRooms.forEach((lr) => {
+        if (lr.roomId) localMap.set(lr.roomId, lr);
+      });
+
       const map = new Map();
 
       cloudRooms.forEach((r) => {
-        if (r.roomId) map.set(r.roomId, r);
+        if (r.roomId) {
+          const loc = localMap.get(r.roomId);
+          if (loc) {
+            r.creatorUsername = r.creatorUsername || loc.creatorUsername || "";
+            r.creatorId = r.creatorId || loc.creatorId || "";
+            r.createdBy = r.createdBy || loc.createdBy || "";
+          }
+          if (!r.creatorUsername && r.createdBy) {
+            const m = String(r.createdBy).match(/\(@([a-zA-Z0-9_\-\.]+)\)/);
+            if (m) r.creatorUsername = m[1];
+          }
+          map.set(r.roomId, r);
+        }
       });
       localRooms.forEach((r) => {
         if (r.roomId && !map.has(r.roomId)) {
