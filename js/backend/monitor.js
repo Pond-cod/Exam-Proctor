@@ -265,25 +265,71 @@ function handleIncomingLiveEvent(payload) {
   }
 }
 
+const ACKNOWLEDGED_ALERTS_KEY = "examAcknowledgedAlertsMap";
+
+function getAcknowledgedAlertsMap() {
+  try {
+    const raw = sessionStorage.getItem(ACKNOWLEDGED_ALERTS_KEY) || localStorage.getItem(ACKNOWLEDGED_ALERTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function getAcknowledgedCount(studentId) {
+  const map = getAcknowledgedAlertsMap();
+  return typeof map[studentId] === "number" ? map[studentId] : 0;
+}
+
+function saveAcknowledgedAlert(studentId, count) {
+  try {
+    const map = getAcknowledgedAlertsMap();
+    map[studentId] = count;
+    sessionStorage.setItem(ACKNOWLEDGED_ALERTS_KEY, JSON.stringify(map));
+    localStorage.setItem(ACKNOWLEDGED_ALERTS_KEY, JSON.stringify(map));
+  } catch (_) {}
+}
+
+function acknowledgeStudentAlert(studentId) {
+  if (!studentId || !studentsData[studentId]) return;
+  const s = studentsData[studentId];
+  saveAcknowledgedAlert(studentId, s.violationCount);
+  if (typeof showAlert === "function") {
+    showAlert(`ตรวจสอบรหัส ${studentId} เรียบร้อยแล้ว (สถานะกลับสู่ปกติ)`, { type: "success" });
+  }
+  renderMonitorLogs();
+  if (activeModalStudentId === studentId) {
+    updateModalContent(s);
+  }
+}
+
+function getAccessibleRoomsForCurrentUser() {
+  const all = allRooms.length > 0 ? allRooms : (typeof getStoredRooms === "function" ? getStoredRooms() : []);
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  if (!currentUser || String(currentUser.role).toUpperCase() === USER_ROLES.ADMIN) {
+    return all;
+  }
+  if (typeof isRoomOwnedByUser === "function") {
+    return all.filter(r => isRoomOwnedByUser(r, currentUser));
+  }
+  return all;
+}
+
 function updateMonitorRoomFilterDropdown() {
   const sel = document.getElementById("monitorRoomFilterSelect");
   if (!sel) return;
 
   const currentVal = sel.value || "all";
-  let rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
   const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
-  if (currentUser && currentUser.role !== USER_ROLES.ADMIN) {
-    if (typeof isRoomOwnedByUser === "function") {
-      rooms = rooms.filter(r => isRoomOwnedByUser(r, currentUser));
-    }
-  }
+  const isAdmin = !currentUser || String(currentUser.role).toUpperCase() === USER_ROLES.ADMIN;
+  const accessibleRooms = getAccessibleRoomsForCurrentUser();
 
-  let html = `<option value="all">ทุกห้องสอบ (All Rooms)</option>`;
-  rooms.forEach((r) => {
+  let html = `<option value="all">${isAdmin ? "ทุกห้องสอบ (All Rooms)" : "ทุกห้องสอบของฉัน (My Rooms)"}</option>`;
+  accessibleRooms.forEach((r) => {
     html += `<option value="${escapeHtml(r.roomId)}">${escapeHtml(r.title)} (${escapeHtml(r.roomId)})</option>`;
   });
   sel.innerHTML = html;
-  if (rooms.some(r => r.roomId === currentVal)) {
+  if (accessibleRooms.some(r => r.roomId === currentVal)) {
     sel.value = currentVal;
   } else {
     sel.value = "all";
@@ -362,7 +408,45 @@ function renderMonitorLogs() {
   const selectedRoomFilter = (document.getElementById("monitorRoomFilterSelect") ? document.getElementById("monitorRoomFilterSelect").value : "all") || "all";
   const targetRoom = allRooms.find(r => r.roomId === selectedRoomFilter);
 
-  sortedLogs.forEach((item) => {
+  // การแยกคลังประวัติตาม Role ผู้สร้างห้องสอบ (Requirement 4)
+  const accessibleRooms = getAccessibleRoomsForCurrentUser();
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = !currentUser || String(currentUser.role).toUpperCase() === USER_ROLES.ADMIN;
+  const accessibleRoomIds = new Set(accessibleRooms.map(r => String(r.roomId).trim()));
+  const accessibleRoomTitles = new Set(accessibleRooms.map(r => String(r.title).trim().toLowerCase()));
+
+  // อัปเดต Scope Badge ในส่วนหัวของคลังประวัติ
+  const archiveRoleBadge = document.getElementById("archiveRoleBadge");
+  const archiveScopeLead = document.getElementById("archiveScopeLead");
+  if (archiveRoleBadge) {
+    archiveRoleBadge.textContent = isAdmin 
+      ? "สิทธิ์: ผู้ดูแลระบบ (ทุกห้องสอบ)" 
+      : `สิทธิ์: ครูผู้สอน (${currentUser ? currentUser.displayName || currentUser.username : "ห้องของฉัน"})`;
+    archiveRoleBadge.className = isAdmin ? "badge badge-primary" : "badge badge-neutral";
+  }
+  if (archiveScopeLead) {
+    archiveScopeLead.textContent = isAdmin
+      ? "รวบรวมประวัตินักเรียนและบันทึกเหตุการณ์ทั้งหมดของทุกห้องสอบในระบบ"
+      : `รวบรวมประวัตินักเรียนที่ส่งข้อสอบและบันทึกเหตุการณ์เฉพาะห้องสอบที่คุณสร้าง (${accessibleRooms.length} ห้อง)`;
+  }
+
+  // 1. กรองสิทธิ์ระดับ Role: หากไม่ใช่ Admin ให้ดึงเฉพาะ Log ที่เป็นห้องของครูท่านนี้
+  let userScopedLogs = sortedLogs;
+  if (!isAdmin) {
+    userScopedLogs = sortedLogs.filter(item => {
+      const itemRoomId = String(item.roomId || "").trim();
+      const itemTitle = String(item.roomTitle || item.formTitle || "").trim().toLowerCase();
+      if (itemRoomId && accessibleRoomIds.has(itemRoomId)) return true;
+      if (itemTitle && accessibleRoomTitles.has(itemTitle)) return true;
+      return accessibleRooms.some(r => {
+        const t = String(r.title || "").trim().toLowerCase();
+        return t && itemTitle && (itemTitle === t || itemTitle.includes(t));
+      });
+    });
+  }
+
+  // 2. กรองตามห้องที่เลือกใน Dropdown (หากเลือกห้องเฉพาะ)
+  userScopedLogs.forEach((item) => {
     if (selectedRoomFilter !== "all") {
       const itemRoomId = item.roomId || "";
       const itemTitle = item.roomTitle || item.formTitle || "";
@@ -391,6 +475,10 @@ function renderMonitorLogs() {
         lastEventIso: null,
         lastEventText: "",
         hasAlert: false,
+        hasActiveAlert: false,
+        isAcknowledged: false,
+        acknowledgedCount: 0,
+        unacknowledgedCount: 0,
         isTestPing: isTestEntry,
         isOldDate: false,
         isBeforeCutoff: false
@@ -445,8 +533,21 @@ function renderMonitorLogs() {
   });
 
   const allList = Object.values(studentsData).filter(s => !s.isTestPing);
+  const ackMap = getAcknowledgedAlertsMap();
+  let unacknowledgedStudentsCount = 0;
+
   allList.forEach((s) => {
     s.hasAlert = s.violationCount > 0;
+    const ackCount = typeof ackMap[s.studentId] === "number" ? ackMap[s.studentId] : 0;
+    s.acknowledgedCount = ackCount;
+    // มีแจ้งเตือนสดยังไม่ได้รับการตรวจ หาก violationCount มากกว่าจำนวนที่ตรวจแล้ว (Requirement 2 & 3)
+    s.hasActiveAlert = s.violationCount > ackCount;
+    s.unacknowledgedCount = Math.max(0, s.violationCount - ackCount);
+    s.isAcknowledged = !s.hasActiveAlert && s.violationCount > 0;
+
+    if (s.hasActiveAlert) {
+      unacknowledgedStudentsCount++;
+    }
   });
 
   liveStudents = allList.filter((s) => !s.isSubmitted && !s.isOldDate && !s.isBeforeCutoff);
@@ -488,7 +589,15 @@ function renderMonitorLogs() {
   const violationsProgressFill = document.getElementById("statViolationsProgressFill");
   const violationsSubDetail = document.getElementById("statViolationsSubDetail");
   if (violationsProgressFill) violationsProgressFill.style.width = `${alertPercent}%`;
-  if (violationsSubDetail) violationsSubDetail.textContent = alertStudentsCount > 0 ? `ตรวจพบใน ${alertStudentsCount} คน (${alertPercent}%)` : `✅ ไม่พบการกระทำผิด`;
+  if (violationsSubDetail) {
+    if (unacknowledgedStudentsCount > 0) {
+      violationsSubDetail.innerHTML = `🚨 ยังไม่ได้ตรวจ ${unacknowledgedStudentsCount} คน • รวมเตือน ${alertStudentsCount} คน`;
+    } else if (alertStudentsCount > 0) {
+      violationsSubDetail.innerHTML = `🟢 ตรวจแล้วครบทั้ง ${alertStudentsCount} คน`;
+    } else {
+      violationsSubDetail.textContent = `✅ ไม่พบการกระทำผิด`;
+    }
+  }
 
   const submittedProgressFill = document.getElementById("statSubmittedProgressFill");
   const submittedSubDetail = document.getElementById("statSubmittedSubDetail");
@@ -528,11 +637,11 @@ function renderMonitorLogs() {
 
   updateFilterBadges();
 
-  // Find latest incident among active live students for the Ticker
+  // Find latest active unacknowledged incident among active live students for the Ticker (Requirement 3)
   let latestAlertStudent = null;
   let latestAlertTimeMs = 0;
   liveStudents.forEach(s => {
-    if (s.hasAlert && s.logs && s.logs.length > 0) {
+    if (s.hasActiveAlert && s.logs && s.logs.length > 0) {
       for (let i = s.logs.length - 1; i >= 0; i--) {
         const l = s.logs[i];
         const v = String(l.violation || "");
@@ -590,22 +699,33 @@ function renderStudentCardHtml(s, isCompletedView) {
 
   if (s.isSubmitted) {
     cardClass += " is-submitted";
-    if (s.hasAlert && s.violationCount > 0) {
+    if (s.hasActiveAlert) {
       cardClass += " has-alert";
       statusBadge = `
         <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-          <span class="badge badge-danger" title="พบเหตุการณ์สลับหน้าจอ">
+          <span class="badge badge-danger" title="พบเหตุการณ์สลับหน้าจอ (ยังไม่ได้ตรวจ)">
             ⚠️ เตือน ${s.violationCount} ครั้ง
           </span>
           <span class="badge badge-success">ส่งข้อสอบแล้ว</span>
         </div>
       `;
       statusText = `⚠️ ส่งแล้ว (เตือน ${s.violationCount} ครั้ง)`;
+    } else if (s.isAcknowledged) {
+      cardClass += " is-acknowledged";
+      statusBadge = `
+        <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+          <span class="badge badge-acknowledged" title="ผู้คุมสอบตรวจรับทราบแล้ว">
+            🟢 ตรวจแล้ว (${s.violationCount} ครั้ง)
+          </span>
+          <span class="badge badge-success">ส่งข้อสอบแล้ว</span>
+        </div>
+      `;
+      statusText = `✅ ส่งแล้ว (ตรวจแล้ว ${s.violationCount} ครั้ง)`;
     } else {
       statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
       statusText = "✅ ส่งข้อสอบแล้ว";
     }
-  } else if (s.hasAlert) {
+  } else if (s.hasActiveAlert) {
     cardClass += " has-alert";
     statusBadge = `
       <span class="badge badge-danger">
@@ -613,7 +733,15 @@ function renderStudentCardHtml(s, isCompletedView) {
         เตือน ${s.violationCount} ครั้ง
       </span>
     `;
-    statusText = "🚨 พบการแจ้งเตือน";
+    statusText = "🚨 พบการแจ้งเตือนสลับจอ";
+  } else if (s.isAcknowledged) {
+    cardClass += " is-acknowledged";
+    statusBadge = `
+      <span class="badge badge-acknowledged">
+        🟢 ตรวจแล้ว (${s.violationCount} ครั้ง)
+      </span>
+    `;
+    statusText = "🟢 ปกติ (ตรวจแล้ว)";
   } else {
     statusBadge = `<span class="badge badge-primary">กำลังสอบ</span>`;
   }
@@ -652,19 +780,27 @@ function renderStudentCardHtml(s, isCompletedView) {
           </div>
           <div class="screen-content-area">
             ${s.isSubmitted ? `
-              <div class="screen-status-center success">
-                <div style="font-size: 26px;">${s.hasAlert && s.violationCount > 0 ? "⚠️" : "📝"}</div>
-                <div style="font-size: 13px; font-weight: 700; color: ${s.hasAlert && s.violationCount > 0 ? "#b91c1c" : "#059669"}; margin-top: 4px;">
-                  ${s.hasAlert && s.violationCount > 0 ? `ส่งแล้ว (เตือน ${s.violationCount} ครั้ง)` : "ส่งข้อสอบสำเร็จ"}
+              <div class="screen-status-center ${s.hasActiveAlert ? "alert" : (s.isAcknowledged ? "acknowledged" : "success")}">
+                <div style="font-size: 26px;">${s.hasActiveAlert ? "⚠️" : "📝"}</div>
+                <div style="font-size: 13px; font-weight: 700; color: ${s.hasActiveAlert ? "#b91c1c" : "#059669"}; margin-top: 4px;">
+                  ${s.hasActiveAlert 
+                    ? `ส่งแล้ว (เตือน ${s.violationCount} ครั้ง - ยังไม่ตรวจ)` 
+                    : (s.isAcknowledged ? `ส่งข้อสอบแล้ว (ตรวจแล้ว ${s.violationCount} ครั้ง)` : "ส่งข้อสอบสำเร็จ")}
                 </div>
                 <div style="font-size: 11px; color: var(--text-muted);">ส่งเมื่อ: ${formatDisplayTime(s.submitTime)}</div>
                 ${s.roomTitle ? `<div style="font-size: 11px; color: #047857; margin-top: 3px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 200px;" title="${escapeHtml(s.roomTitle)}">วิชา: ${escapeHtml(s.roomTitle)}</div>` : ""}
               </div>
-            ` : (s.hasAlert ? `
+            ` : (s.hasActiveAlert ? `
               <div class="screen-status-center alert">
                 <div style="font-size: 28px;">🚨</div>
                 <div style="font-size: 12.5px; font-weight: 700; color: #dc2626; margin-top: 4px;">ตรวจพบการสลับจอ / หลุดเต็มจอ</div>
                 <div style="font-size: 11px; color: #991b1b; max-width: 180px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(s.lastEventText)}</div>
+              </div>
+            ` : (s.isAcknowledged ? `
+              <div class="screen-status-center acknowledged">
+                <div style="font-size: 26px;">🟢</div>
+                <div style="font-size: 12.5px; font-weight: 600; color: #059669; margin-top: 4px;">สถานะปกติ (ตรวจสอบแล้ว)</div>
+                <div style="font-size: 11px; color: var(--text-muted);">ตรวจแล้ว ${s.violationCount} ครั้ง • เฝ้าระวังต่อ</div>
               </div>
             ` : `
               <div class="screen-status-center normal">
@@ -672,7 +808,7 @@ function renderStudentCardHtml(s, isCompletedView) {
                 <div style="font-size: 12.5px; font-weight: 600; color: #2563eb;">กำลังทำข้อสอบอย่างซื่อสัตย์</div>
                 <div style="font-size: 11px; color: var(--text-muted);">โหมดคุมสอบเต็มหน้าจอ</div>
               </div>
-            `)}
+            `))}
           </div>
         </div>
       </div>
@@ -684,9 +820,16 @@ function renderStudentCardHtml(s, isCompletedView) {
             ${escapeHtml(s.lastEventText || statusText)}
           </span>
         </div>
-        <button class="btn btn-secondary screen-view-detail-btn" data-student-id="${escapeHtml(s.studentId)}" style="min-height: 32px; padding: 4px 10px; font-size: 12px;">
-          ประวัติ
-        </button>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          ${s.hasActiveAlert ? `
+            <button type="button" class="screen-ack-btn" data-student-id="${escapeHtml(s.studentId)}" title="คลิกเมื่อตรวจสอบแล้ว เพื่อรีเซ็ตสถานะกลับเป็นปกติ">
+              ✅ ตรวจแล้ว
+            </button>
+          ` : ""}
+          <button class="btn btn-secondary screen-view-detail-btn" data-student-id="${escapeHtml(s.studentId)}" style="min-height: 32px; padding: 4px 10px; font-size: 12px;">
+            ประวัติ
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -1050,7 +1193,27 @@ function renderTableLogs(query) {
   const tbody = document.getElementById("monitorTableBody");
   if (!tbody) return;
 
-  let filtered = [...allLogs].reverse();
+  const accessibleRooms = getAccessibleRoomsForCurrentUser();
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = !currentUser || String(currentUser.role).toUpperCase() === USER_ROLES.ADMIN;
+  const accessibleRoomIds = new Set(accessibleRooms.map(r => String(r.roomId).trim()));
+  const accessibleRoomTitles = new Set(accessibleRooms.map(r => String(r.title).trim().toLowerCase()));
+
+  let userLogs = [...allLogs];
+  if (!isAdmin) {
+    userLogs = userLogs.filter(item => {
+      const itemRoomId = String(item.roomId || "").trim();
+      const itemTitle = String(item.roomTitle || item.formTitle || "").trim().toLowerCase();
+      if (itemRoomId && accessibleRoomIds.has(itemRoomId)) return true;
+      if (itemTitle && accessibleRoomTitles.has(itemTitle)) return true;
+      return accessibleRooms.some(r => {
+        const t = String(r.title || "").trim().toLowerCase();
+        return t && itemTitle && (itemTitle === t || itemTitle.includes(t));
+      });
+    });
+  }
+
+  let filtered = userLogs.reverse();
   if (query) {
     filtered = filtered.filter(item => {
       const sId = String(item.studentId || "").toLowerCase();
@@ -1101,6 +1264,15 @@ function bindStudentCardClicks(container) {
       if (sId && studentsData[sId]) openStudentDetail(studentsData[sId]);
     };
   });
+  container.querySelectorAll(".screen-ack-btn").forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const sId = btn.getAttribute("data-student-id");
+      if (sId) {
+        acknowledgeStudentAlert(sId);
+      }
+    };
+  });
 }
 
 function openStudentDetail(s) {
@@ -1126,19 +1298,49 @@ function updateModalContent(s) {
   const lastTimeVal = document.getElementById("modalLastTimeVal");
   const timelineEl = document.getElementById("studentTimelineContainer");
   const countEl = document.getElementById("modalTimelineCount");
+  const ackBtn = document.getElementById("modalAcknowledgeAlertBtn");
 
   if (titleEl) titleEl.textContent = `รหัสประจำตัว: ${s.studentId}`;
   if (subEl) subEl.textContent = `ประวัติพฤติกรรมและความซื่อสัตย์ในการสอบ (${s.logs.length} รายการ)`;
 
   if (statusVal) {
-    statusVal.innerHTML = s.isSubmitted 
-      ? `<span style="color:#059669; font-weight:700;">ส่งข้อสอบแล้ว</span>` 
-      : (s.hasAlert ? `<span style="color:#dc2626; font-weight:700;">พบแจ้งเตือน</span>` : `<span style="color:#2563eb; font-weight:700;">กำลังสอบ</span>`);
+    if (s.isSubmitted) {
+      statusVal.innerHTML = s.hasActiveAlert 
+        ? `<span style="color:#dc2626; font-weight:700;">ส่งแล้ว (⚠️ เตือน ${s.violationCount} ครั้ง - ยังไม่ตรวจ)</span>` 
+        : (s.isAcknowledged 
+          ? `<span style="color:#059669; font-weight:700;">ส่งแล้ว (🟢 ตรวจแล้ว ${s.violationCount} ครั้ง)</span>` 
+          : `<span style="color:#059669; font-weight:700;">ส่งข้อสอบแล้ว (ปกติ)</span>`);
+    } else {
+      statusVal.innerHTML = s.hasActiveAlert 
+        ? `<span style="color:#dc2626; font-weight:700;">🚨 พบแจ้งเตือนสลับจอ (ยังไม่ตรวจ)</span>` 
+        : (s.isAcknowledged 
+          ? `<span style="color:#059669; font-weight:700;">🟢 สถานะปกติ (ตรวจแล้ว ${s.violationCount} ครั้ง)</span>` 
+          : `<span style="color:#2563eb; font-weight:700;">🟢 กำลังสอบ (ปกติ)</span>`);
+    }
   }
   if (violationVal) violationVal.textContent = `${s.violationCount} ครั้ง`;
   if (startTimeVal) startTimeVal.textContent = formatDisplayTime(s.startTime);
   if (lastTimeVal) lastTimeVal.textContent = formatDisplayTime(s.lastEventTime, s.lastEventIso);
   if (countEl) countEl.textContent = `${s.logs.length} รายการ`;
+
+  if (ackBtn) {
+    if (s.hasActiveAlert) {
+      ackBtn.style.display = "inline-flex";
+      ackBtn.disabled = false;
+      ackBtn.innerHTML = `✅ ตรวจสอบแล้ว (กลับสู่สถานะปกติ)`;
+      ackBtn.onclick = () => {
+        acknowledgeStudentAlert(s.studentId);
+      };
+    } else if (s.isAcknowledged) {
+      ackBtn.style.display = "inline-flex";
+      ackBtn.disabled = true;
+      ackBtn.innerHTML = `✓ ตรวจสอบแล้ว (${s.violationCount} ครั้ง)`;
+      ackBtn.onclick = null;
+    } else {
+      ackBtn.style.display = "none";
+      ackBtn.onclick = null;
+    }
+  }
 
   if (timelineEl) {
     const reversed = [...s.logs].reverse();
@@ -1393,6 +1595,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (confirmed) {
         sessionCutoffTime = Date.now();
         localStorage.setItem("examSessionCutoff", sessionCutoffTime.toString());
+        try {
+          sessionStorage.removeItem(ACKNOWLEDGED_ALERTS_KEY);
+          localStorage.removeItem(ACKNOWLEDGED_ALERTS_KEY);
+        } catch (_) {}
         renderMonitorLogs();
         switchToMonitorTab("live");
         showAlert("เริ่มรอบสอบใหม่เรียบร้อยแล้ว", { type: "success" });

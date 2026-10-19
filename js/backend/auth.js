@@ -207,3 +207,38 @@ async function authenticateUser(credentials) {
     message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบใหม่อีกครั้ง"
   };
 }
+
+/**
+ * ตรวจสอบว่าห้องสอบนี้ถูกสร้างโดยผู้ใช้งานที่ระบุ หรือผู้ใช้งานมีสิทธิ์เข้าถึงหรือไม่
+ * Admin มีสิทธิ์เข้าถึงทุกห้องเสมอ ส่วน Teacher มีสิทธิ์เฉพาะห้องที่ตนเองสร้าง
+ */
+function isRoomOwnedByUser(room, user) {
+  if (!user || !room) return false;
+  if (user.role && String(user.role).toUpperCase() === USER_ROLES.ADMIN) return true;
+
+  const curUser = String(user.username || "").trim().toLowerCase();
+  const curName = String(user.displayName || "").trim().toLowerCase();
+  const curId = String(user.userId || "").trim();
+
+  // 1. ตรวจสอบ creatorUsername
+  if (room.creatorUsername && String(room.creatorUsername).trim().toLowerCase() === curUser) {
+    return true;
+  }
+  // 2. ตรวจสอบ creatorId
+  if (room.creatorId && curId && String(room.creatorId).trim() === curId) {
+    return true;
+  }
+  // 3. ตรวจสอบ createdBy
+  if (room.createdBy) {
+    const cb = String(room.createdBy).trim().toLowerCase();
+    if (cb === curUser || cb === curName || cb.includes(curUser) || cb.includes(curName)) {
+      return true;
+    }
+  }
+  // 4. กรณีห้องเก่าที่ไม่มีผู้สร้างระบุชัดเจน หากเป็น teacher พื้นฐานให้เข้าถึงได้
+  if (!room.creatorUsername && (!room.createdBy || room.createdBy === "User" || room.createdBy === "ครูผู้สอน") && curUser === "teacher") {
+    return true;
+  }
+  return false;
+}
+
