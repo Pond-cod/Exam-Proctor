@@ -426,8 +426,31 @@ function setupLiveBroadcastListener() {
   });
 }
 
+// ตรวจสอบว่าเป็นข้อมูลทดสอบระบบ (Test Ping / Curl / NodeTest) หรือไม่
+function isTestLogEntry(item) {
+  if (!item) return false;
+  const sId = String(item.studentId !== undefined && item.studentId !== null ? item.studentId : "").trim();
+  const sIdLower = sId.toLowerCase();
+  const text = String(item.violation || "").toLowerCase();
+  return (
+    sIdLower.includes("test") ||
+    sIdLower.includes("ping") ||
+    sIdLower.includes("curl") ||
+    sId.includes("ทดสอบ") ||
+    sId === "ไม่ระบุชื่อ" ||
+    sId === "ไม่ระบุรหัส" ||
+    sId.startsWith("{") ||
+    sId.includes(":") ||
+    text.includes("test ping") ||
+    text.includes("test from node") ||
+    text.includes("test violation") ||
+    text.includes("ทดสอบการเชื่อมต่อ")
+  );
+}
+
 function handleIncomingLiveEvent(payload) {
   if (!payload || !payload.studentId) return;
+  if (isTestLogEntry(payload)) return;
 
   const exists = allLogs.some((l) => {
     if (String(l.studentId) !== String(payload.studentId)) return false;
@@ -543,6 +566,8 @@ function renderMonitorLogs() {
 
   sortedLogs.forEach((item) => {
     const sId = String(item.studentId !== undefined && item.studentId !== null ? item.studentId : "ไม่ระบุรหัส").trim();
+    const isTestEntry = isTestLogEntry(item);
+
     if (!studentsData[sId]) {
       studentsData[sId] = {
         studentId: sId,
@@ -556,10 +581,12 @@ function renderMonitorLogs() {
         lastEventIso: null,
         lastEventText: "",
         hasAlert: false,
-        isTestPing: sId.includes("ทดสอบ") || sId.toLowerCase().includes("test ping"),
+        isTestPing: isTestEntry,
         isOldDate: false,
         isBeforeCutoff: false
       };
+    } else if (isTestEntry) {
+      studentsData[sId].isTestPing = true;
     }
 
     const s = studentsData[sId];
@@ -579,8 +606,8 @@ function renderMonitorLogs() {
     } else if (isEnd) {
       s.isSubmitted = true;
       s.submitTime = itemTime || itemIso;
-    } else if (!s.isTestPing) {
-      // พฤติกรรมละเมิดกฎ (ไม่นับ Test Ping)
+    } else if (!s.isTestPing && !isTestEntry) {
+      // พฤติกรรมละเมิดกฎ (ไม่นับ Test Ping / Test Entry)
       s.violationCount++;
       totalViolationsCount++;
     }
@@ -897,6 +924,7 @@ function renderTableLogs(query) {
   if (!tableBody) return;
 
   let filtered = allLogs.filter((item) => {
+    if (isTestLogEntry(item)) return false;
     if (!query) return true;
     const sIdStr = String(item.studentId != null ? item.studentId : "").toLowerCase();
     const textStr = String(item.violation || "").toLowerCase();
