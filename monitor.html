@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exam Proctor Studio - หน้าจอคุมสอบสด (Real-time Live Monitor)</title>
   <meta name="description" content="ระบบติดตามและคุมสอบแบบเรียลไทม์ ตรวจจับการสลับหน้าจอ ออกจากโหมดเต็มจอ และพฤติกรรมผิดปกติในการสอบ">
-  <link rel="stylesheet" href="css/style.css?v=5.3">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="css/style.css?v=5.6">
 </head>
 <body>
 
@@ -13,11 +14,7 @@
   <nav class="navbar">
     <div class="navbar-container">
       <a href="rooms.html" class="brand">
-        <div class="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
+        <img src="logo.png" alt="Exam Proctor Studio" class="brand-logo-img">
         <div>
           <div class="brand-title">Exam Proctor Studio</div>
           <div class="brand-subtitle">ระบบบริหารจัดการห้องสอบและคุมสอบออนไลน์</div>
@@ -60,25 +57,67 @@
 
     <!-- หน้าจอคุมสอบสด (Real-time Monitor) -->
     <section id="monitorSection" class="view-section active">
-      <!-- การ์ดสถิติภาพรวม 4 มิติ -->
+      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์โมเดิร์น -->
       <div class="stats-grid">
         <div class="stat-card">
+          <div class="stat-card-header-row">
+            <span class="stat-badge stat-badge-blue">👥 ผู้เข้าสอบทั้งหมด</span>
+            <div class="stat-icon-circle blue">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+          </div>
           <div class="stat-value" id="statTotalStudents">0 คน</div>
           <div class="stat-label">ผู้เข้าสอบทั้งหมด</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-value" id="statActiveStudents" style="color: #0284c7;">0 คน</div>
+          <div class="stat-card-header-row">
+            <span class="stat-badge stat-badge-emerald">
+              <span class="live-pulse-dot"></span> กำลังสอบอยู่
+            </span>
+            <div class="stat-icon-circle emerald">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statActiveStudents" style="color: #047857;">0 คน</div>
           <div class="stat-label">กำลังสอบอยู่ (Active)</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-value" id="statTotalViolations" style="color: #dc2626;">0 ครั้ง</div>
+          <div class="stat-card-header-row">
+            <span class="stat-badge stat-badge-rose">⚠️ แจ้งเตือนสลับจอ</span>
+            <div class="stat-icon-circle rose">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</div>
           <div class="stat-label">ตรวจพบการแจ้งเตือน / สลับจอ</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-value" id="statTotalSubmitted" style="color: #059669;">0 คน</div>
+          <div class="stat-card-header-row">
+            <span class="stat-badge stat-badge-violet">🏆 ส่งข้อสอบแล้ว</span>
+            <div class="stat-icon-circle violet">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</div>
           <div class="stat-label">ส่งข้อสอบเรียบร้อยแล้ว</div>
         </div>
       </div>
@@ -103,10 +142,10 @@
 
           <div class="card-actions-group">
             <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">กำลังเชื่อมต่อ...</span>
-            <button id="refreshLogsBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">🔄 รีเฟรช</button>
-            <button id="resetSessionBtn" class="btn btn-secondary admin-only-btn" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบสอบใหม่</button>
-            <button id="testWebhookBtn" class="btn btn-secondary admin-only-btn" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">ทดสอบ Webhook</button>
-            <button id="openSheetBtn" class="btn btn-success admin-only-btn" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">เปิด Google Sheets</button>
+            <button id="refreshLogsBtn" class="btn btn-refresh-modern" title="รีเฟรชข้อมูลล่าสุด">🔄 รีเฟรช</button>
+            <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบสอบใหม่</button>
+            <button id="testWebhookBtn" class="btn btn-webhook-modern admin-only-btn" title="ทดสอบส่งข้อมูลเข้า Google Sheets">⚡ ทดสอบ Webhook</button>
+            <button id="openSheetBtn" class="btn btn-sheet-modern admin-only-btn" title="เปิดหน้าต่าง Google Sheets">📊 เปิด Google Sheets</button>
           </div>
         </div>
 

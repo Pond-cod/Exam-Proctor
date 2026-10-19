@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>เข้าสู่ระบบบุคลากร (Staff Login) - Exam Proctor Studio</title>
   <meta name="description" content="ระบบเข้าสู่ระบบสำหรับครูผู้สอนและผู้ดูแลระบบ Exam Proctor Studio">
-  <link rel="stylesheet" href="css/style.css?v=5.5">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="css/style.css?v=5.6">
   <style>
     .login-wrapper {
       min-height: 100vh;
@@ -14,17 +15,19 @@
       justify-content: center;
       align-items: center;
       padding: 24px 16px;
-      background: radial-gradient(circle at top, #f0fdf4 0%, #f8fafc 100%);
+      background: radial-gradient(circle at 50% 0%, #e0f2fe 0%, #f0fdf4 50%, #f8fafc 100%);
     }
 
     .login-card {
       width: 100%;
       max-width: 440px;
-      background: #ffffff;
-      border: 1.5px solid var(--bg-card-border);
-      border-radius: var(--radius-lg);
-      padding: 32px 28px;
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(226, 232, 240, 0.9);
+      border-radius: 24px;
+      padding: 34px 30px;
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12), 0 8px 18px -4px rgba(2, 132, 199, 0.08);
     }
 
     .login-brand {
@@ -103,11 +106,7 @@
   <div class="login-wrapper">
     <div class="login-card">
       <div class="login-brand">
-        <div class="brand-icon" style="width: 48px; height: 48px; margin-bottom: 12px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ffffff;">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
+        <img src="logo.png" alt="Exam Proctor Studio" class="login-brand-logo">
         <h1 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px 0;">เข้าสู่ระบบบุคลากร</h1>
         <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Exam Proctor Studio Management</p>
       </div>
