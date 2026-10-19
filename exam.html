@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบคุมสอบออนไลน์</title>
   <meta name="description" content="ระบบคุมสอบออนไลน์ระดับสถานศึกษา ครอบ Google Forms พร้อมระบบตรวจสอบความซื่อสัตย์ในการสอบ">
-  <link rel="stylesheet" href="css/style.css?v=3.8">
+  <link rel="stylesheet" href="css/style.css?v=3.9">
 </head>
 <body>
 
@@ -92,17 +92,28 @@
     </main>
   </div>
 
-  <!-- 3. Violation Modal เมื่อหลุดจากโหมดเต็มจอ -->
+  <!-- 3. Violation Modal เมื่อทำผิดกฎหรือหลุดจากโหมดเต็มจอ -->
   <div id="violationModal" class="violation-modal">
     <div class="violation-box">
-      <h2 class="violation-title">แจ้งเตือน: หลุดจากโหมดเต็มหน้าจอ</h2>
+      <div class="violation-icon-wrapper">
+        <div class="violation-pulse-ring"></div>
+        <div class="violation-icon-circle">🚨</div>
+      </div>
+      <h2 class="violation-title">ตรวจพบการทำผิดกฎการสอบ!</h2>
+      <div id="violationCountBadge" class="violation-badge">เตือนครั้งที่ 1</div>
+      
+      <div class="violation-detail-box">
+        <span class="violation-detail-label">พฤติกรรมที่ระบบตรวจพบ:</span>
+        <div id="violationReason" class="violation-detail-text">หลุดออกจากโหมดเต็มหน้าจอ หรือสลับโปรแกรมอื่นทับ</div>
+      </div>
+
       <p class="violation-desc">
-        ระบบตรวจพบว่าหน้าจอหลุดจากโหมดเต็มหน้าจอ หรือมีการสลับหน้าต่าง<br>
-        <strong>เหตุการณ์นี้ถูกบันทึกและส่งรายงานไปยังผู้คุมสอบเรียบร้อยแล้ว</strong><br>
-        กรุณากดปุ่มด้านล่างเพื่อกลับเข้าสู่โหมดเต็มหน้าจอทันที
+        ⚠️ <strong>เหตุการณ์นี้ถูกบันทึกและส่งรายงานไปยังผู้คุมสอบแบบ Real-time เรียบร้อยแล้ว</strong><br>
+        กรุณาปฏิบัติตามระเบียบการสอบอย่างเคร่งครัด และกดปุ่มด้านล่างเพื่อกลับเข้าสู่การสอบทันที
       </p>
-      <button id="returnFullscreenBtn" class="btn btn-danger btn-lg btn-block">
-        กลับเข้าสู่โหมดเต็มหน้าจอ
+
+      <button id="returnFullscreenBtn" class="btn btn-danger btn-lg btn-block" style="font-size: 15.5px; font-weight: 800; padding: 14px 24px; border-radius: var(--radius-md); box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);">
+        กลับเข้าสู่การสอบ (โหมดเต็มหน้าจอ)
       </button>
     </div>
   </div>
@@ -111,7 +122,7 @@
   <div id="toastAlert" class="toast-alert"></div>
 
   <!-- โหลดสคริปต์ -->
-  <script src="js/config.js?v=3.8"></script>
-  <script src="js/proctor.js?v=3.8"></script>
+  <script src="js/config.js?v=3.9"></script>
+  <script src="js/proctor.js?v=3.9"></script>
 </body>
 </html>

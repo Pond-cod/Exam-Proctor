@@ -45,7 +45,7 @@ function setupTabNavigation() {
       if (targetId === "monitorSection") {
         fetchMonitorLogs();
         if (!monitorInterval) {
-          monitorInterval = setInterval(fetchMonitorLogs, 5000);
+          monitorInterval = setInterval(fetchMonitorLogs, 3000);
         }
       } else {
         if (monitorInterval) {
@@ -394,6 +394,52 @@ function updateFilterBadges() {
   if (badgeToday) badgeToday.textContent = activePool.filter(s => !s.isOldDate).length;
 }
 
+let recentLocalLiveEvents = [];
+
+// รับสัญญาณ Real-time ตรงจากหน้าจอผู้สอบ (exam.html) ทันที 0ms ผ่าน BroadcastChannel & Storage Event
+function setupLiveBroadcastListener() {
+  try {
+    if (typeof BroadcastChannel !== "undefined") {
+      const channel = new BroadcastChannel("exam_proctor_bus");
+      channel.onmessage = (event) => {
+        if (event.data && event.data.type === "EXAM_EVENT" && event.data.payload) {
+          handleIncomingLiveEvent(event.data.payload);
+        }
+      };
+    }
+  } catch (_) {}
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === "exam_live_event" && e.newValue) {
+      try {
+        const payload = JSON.parse(e.newValue);
+        handleIncomingLiveEvent(payload);
+      } catch (_) {}
+    }
+  });
+}
+
+function handleIncomingLiveEvent(payload) {
+  if (!payload || !payload.studentId) return;
+
+  const key = `${payload.studentId}_${payload.violation}_${payload.timestamp || payload.time}`;
+  const exists = allLogs.some((l) => `${l.studentId}_${l.violation}_${l.timestamp || l.time}` === key);
+
+  if (!exists) {
+    allLogs.push(payload);
+    recentLocalLiveEvents.push(payload);
+    if (recentLocalLiveEvents.length > 50) recentLocalLiveEvents.shift();
+
+    renderMonitorLogs();
+    playAdminChime();
+
+    const syncStatus = document.getElementById("syncStatusText");
+    if (syncStatus) {
+      syncStatus.textContent = `⚡ อัปเดตสด: ${payload.studentId} (${new Date().toLocaleTimeString("th-TH")})`;
+    }
+  }
+}
+
 // 3. Real-time Admin Monitor Logs Fetcher
 function fetchMonitorLogs() {
   const webhookInput = document.getElementById("examWebhookInput");
@@ -417,7 +463,24 @@ function fetchMonitorLogs() {
         fetchedList = resData.logs;
       }
 
-      allLogs = fetchedList;
+      // ผสานข้อมูลจาก Google Sheets เข้ากับ local live events ล่าสุด
+      const mergedMap = new Map();
+      fetchedList.forEach((item) => {
+        const key = `${item.studentId}_${item.violation}_${item.timestamp || item.time}`;
+        mergedMap.set(key, item);
+      });
+      const recentThreshold = Date.now() - 45000;
+      recentLocalLiveEvents.forEach((item) => {
+        const key = `${item.studentId}_${item.violation}_${item.timestamp || item.time}`;
+        if (!mergedMap.has(key)) {
+          const itemMs = parseLogTimestampMs(item);
+          if (!itemMs || itemMs >= recentThreshold) {
+            mergedMap.set(key, item);
+          }
+        }
+      });
+
+      allLogs = Array.from(mergedMap.values());
       try {
         renderMonitorLogs();
         if (syncStatus) {
@@ -1261,10 +1324,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // เริ่มต้นดึงข้อมูล Real-time Monitor ทันทีและ Polling ต่อเนื่องทุก 4 วินาที
+  // รับสัญญาณ Real-time จากหน้าจอผู้สอบ
+  setupLiveBroadcastListener();
+
+  // เริ่มต้นดึงข้อมูล Real-time Monitor ทันทีและ Polling ต่อเนื่องทุก 3 วินาที
   fetchMonitorLogs();
   if (!monitorInterval) {
-    monitorInterval = setInterval(fetchMonitorLogs, 4000);
+    monitorInterval = setInterval(fetchMonitorLogs, 3000);
   }
 });
 

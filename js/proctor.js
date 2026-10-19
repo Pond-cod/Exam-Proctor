@@ -47,37 +47,22 @@ function playWarningBeep() {
   }
 }
 
-// Queue-based Webhook Sender (ป้องกันการทำหล่นเมื่อมีการแจ้งเตือนติดกัน)
-async function flushViolationsQueue() {
-  if (isSendingQueue || pendingViolationsQueue.length === 0) return;
-  if (!examConfig.webhookUrl) {
-    pendingViolationsQueue = [];
-    return;
-  }
-
-  isSendingQueue = true;
-  const currentItem = pendingViolationsQueue[0];
-
+// ส่งสัญญาณ Real-time ตรงไปยัง Admin Monitor ผ่าน BroadcastChannel และ localStorage
+function broadcastLocalEvent(payload) {
   try {
-    const res = await fetch(examConfig.webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(currentItem)
-    });
-    // นำรายการที่ส่งสำเร็จออกจากคิว
-    pendingViolationsQueue.shift();
-  } catch (err) {
-    console.warn("Webhook send error, will retry:", err);
-  } finally {
-    isSendingQueue = false;
-    if (pendingViolationsQueue.length > 0) {
-      setTimeout(flushViolationsQueue, 1500);
+    if (typeof BroadcastChannel !== "undefined") {
+      const channel = new BroadcastChannel("exam_proctor_bus");
+      channel.postMessage({ type: "EXAM_EVENT", payload });
+      channel.close();
     }
-  }
+  } catch (_) {}
+  try {
+    localStorage.setItem("exam_live_event", JSON.stringify({ ...payload, _t: Date.now() }));
+  } catch (_) {}
 }
 
-// Send Webhook Alert to Google Apps Script / Google Sheets
-function sendAlertToWebhook(violationText, isSeverityHigh = false) {
+// Send Webhook Alert to Google Apps Script / Google Sheets & Direct Local Real-time
+async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   if (!examConfig.webhookUrl) return;
 
   const now = new Date();
@@ -91,24 +76,59 @@ function sendAlertToWebhook(violationText, isSeverityHigh = false) {
     formTitle: examConfig.title
   };
 
-  pendingViolationsQueue.push(payload);
-  flushViolationsQueue();
+  // 1. ส่งสัญญาณตรงแบบ Instant Real-Time ทันที (0ms) สำหรับเบราว์เซอร์เดียวกัน
+  broadcastLocalEvent(payload);
+
+  // 2. ส่งขึ้น Cloud Google Sheets Webhook (Persistent Storage)
+  try {
+    await fetch(examConfig.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      keepalive: true
+    });
+  } catch (err) {
+    try {
+      await fetch(examConfig.webhookUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+        keepalive: true
+      });
+    } catch (_) {}
+  }
 }
 
-// Debounce Violation Alerts
+// Debounce Violation Alerts & Trigger Modal Warning at Student Screen
 let lastAlertTime = 0;
 function logViolation(detail, isSeverityHigh = false) {
   if (!isExamActive || isExamSubmitted) return;
 
   const now = Date.now();
-  if (now - lastAlertTime < 1600) return; // Debounce 1.6 วินาที
+  if (now - lastAlertTime < 1400) return; // Debounce 1.4 วินาที
   lastAlertTime = now;
 
   violationCount++;
   playWarningBeep();
+
+  // 1. อัปเดตและแสดง Modal แจ้งเตือนชัดเจนที่หน้าจอผู้สอบ
+  const modal = document.getElementById("violationModal");
+  if (modal) {
+    const reasonEl = document.getElementById("violationReason");
+    if (reasonEl) reasonEl.textContent = detail;
+    const countBadge = document.getElementById("violationCountBadge");
+    if (countBadge) countBadge.textContent = `เตือนครั้งที่ ${violationCount}`;
+    modal.classList.add("active");
+  }
+
+  // 2. แสดง Toast ด่วน
   showToastAlert(`ตรวจพบเหตุการณ์: ${detail} (เตือนครั้งที่ ${violationCount})`);
+
+  // 3. ส่งข้อมูล Real-Time ไปยังหน้าจอคุมสอบสด และ Google Sheets ทันที
   sendAlertToWebhook(detail, isSeverityHigh);
 
+  // 4. อัปเดตตัวเลขแจ้งเตือนบนแถบด้านบน
   const vCountEl = document.getElementById("headerViolationCount");
   if (vCountEl) {
     vCountEl.textContent = `แจ้งเตือน: ${violationCount} ครั้ง`;
@@ -530,6 +550,9 @@ document.addEventListener("DOMContentLoaded", () => {
       requestBrowserFullscreen();
       const modal = document.getElementById("violationModal");
       if (modal) modal.classList.remove("active");
+      const iframe = document.getElementById("examIframe");
+      if (iframe) iframe.focus();
+      lastAlertTime = Date.now() + 1200; // ให้เวลา 1.2 วินาทีในการสลับกลับสู่จอเต็ม
     });
   }
 
