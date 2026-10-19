@@ -16,7 +16,8 @@ function populateCreatorDropdowns() {
 }
 
 async function generateExamLink() {
-  const title = (document.getElementById("examTitleInput").value || "").trim() || "แบบทดสอบออนไลน์";
+  const title = (document.getElementById("examTitleInput") ? document.getElementById("examTitleInput").value : "").trim() || "แบบทดสอบออนไลน์";
+  const rawFormUrl = (document.getElementById("examFormUrlInput") ? document.getElementById("examFormUrlInput").value : "").trim();
   const defaultWh = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   const webhookUrl = (document.getElementById("examWebhookInput") ? document.getElementById("examWebhookInput").value : "").trim() || defaultWh;
   const category = (document.getElementById("examCategorySelect") ? document.getElementById("examCategorySelect").value : "").trim() || "ทั่วไป (General)";
