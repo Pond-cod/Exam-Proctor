@@ -7,6 +7,7 @@ let allLogs = [];
 let recentLocalLiveEvents = [];
 let previousViolationCount = 0;
 let monitorInterval = null;
+let currentPrimaryMode = "live"; // "live" | "archive"
 let currentMonitorTab = "live"; // "live" | "completed" | "table"
 let currentFilter = "all"; // "all" | "alert" | "today"
 let completedDateFilter = "all"; // "all" | "YYYY-MM-DD"
@@ -16,9 +17,11 @@ let completedStudents = [];
 let activeModalStudentId = null;
 let sessionCutoffTime = parseInt(localStorage.getItem("examSessionCutoff") || "0", 10);
 let adminLiveChannel = null;
+let soundAlertEnabled = localStorage.getItem("examMonitorSoundEnabled") !== "false";
 
 // Audio Chime for Admin Monitor
 function playAdminChime() {
+  if (!soundAlertEnabled) return;
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
@@ -36,6 +39,86 @@ function playAdminChime() {
     osc.stop(ctx.currentTime + 0.3);
   } catch (e) {}
 }
+
+function updateSoundButtonUI() {
+  const btn = document.getElementById("toggleSoundBtn");
+  if (!btn) return;
+  if (soundAlertEnabled) {
+    btn.innerHTML = `🔔 เสียงเตือน: เปิด`;
+    btn.classList.remove("muted");
+    btn.title = "คลิกเพื่อปิดเสียงแจ้งเตือน";
+  } else {
+    btn.innerHTML = `🔕 เสียงเตือน: ปิด`;
+    btn.classList.add("muted");
+    btn.title = "คลิกเพื่อเปิดเสียงแจ้งเตือน";
+  }
+}
+
+function toggleSoundAlert() {
+  soundAlertEnabled = !soundAlertEnabled;
+  localStorage.setItem("examMonitorSoundEnabled", soundAlertEnabled ? "true" : "false");
+  updateSoundButtonUI();
+  if (soundAlertEnabled) {
+    playAdminChime();
+    showAlert("เปิดเสียงแจ้งเตือนเหตุการณ์ผิดปกติแล้ว", { type: "info" });
+  } else {
+    showAlert("ปิดเสียงแจ้งเตือนเรียบร้อยแล้ว", { type: "neutral" });
+  }
+}
+
+function getStudentElapsedDuration(s) {
+  let startMs = null;
+  if (s.startTime) {
+    startMs = parseLogTimestampMs({ time: s.startTime }) || parseLogTimestampMs({ timestamp: s.startTime });
+  }
+  if (!startMs && s.logs && s.logs.length > 0) {
+    startMs = parseLogTimestampMs(s.logs[0]);
+  }
+  if (!startMs) return s.isSubmitted ? "ส่งแล้ว" : "เพิ่งเริ่มสอบ";
+
+  const endMs = s.isSubmitted 
+    ? (parseLogTimestampMs({ time: s.submitTime }) || parseLogTimestampMs({ timestamp: s.submitTime }) || Date.now())
+    : Date.now();
+
+  const diffMins = Math.max(0, Math.floor((endMs - startMs) / 60000));
+  if (diffMins < 1) return s.isSubmitted ? "ใช้เวลา < 1 นาที" : "เพิ่งเริ่ม (< 1 นาที)";
+  if (diffMins < 60) return s.isSubmitted ? `ใช้เวลา ${diffMins} นาที` : `สอบมาแล้ว ${diffMins} นาที`;
+  const hours = Math.floor(diffMins / 60);
+  const remMins = diffMins % 60;
+  return s.isSubmitted ? `ใช้เวลา ${hours} ชม. ${remMins} นาที` : `สอบมาแล้ว ${hours} ชม. ${remMins} นาที`;
+}
+
+function updateIncidentTicker(alertInfo) {
+  const ticker = document.getElementById("liveIncidentTicker");
+  const badge = document.getElementById("tickerBadge");
+  const msg = document.getElementById("tickerMessage");
+  const timeEl = document.getElementById("tickerTime");
+  if (!ticker || !badge || !msg || !timeEl) return;
+
+  if (alertInfo && alertInfo.s && alertInfo.log) {
+    ticker.className = "live-incident-ticker danger";
+    badge.textContent = "🚨 แจ้งเตือนสลับหน้าจอ!";
+    const sId = alertInfo.s.studentId;
+    const roomInfo = alertInfo.s.roomTitle ? ` (ห้อง: ${alertInfo.s.roomTitle})` : "";
+    const eventText = alertInfo.log.violation || "หลุดจากโหมดเต็มจอ";
+    const tStr = formatDisplayTime(alertInfo.log.time, alertInfo.log.timestamp);
+    msg.innerHTML = `ตรวจพบความผิดปกติ: <strong>รหัส ${escapeHtml(sId)}</strong> ${escapeHtml(eventText)}${escapeHtml(roomInfo)} (เตือนครั้งที่ ${alertInfo.s.violationCount}) • คลิกดูประวัติ`;
+    timeEl.textContent = `เกิดเหตุเมื่อ: ${tStr}`;
+    ticker.style.cursor = "pointer";
+    ticker.onclick = () => openStudentDetail(alertInfo.s);
+  } else {
+    ticker.className = "live-incident-ticker normal";
+    badge.textContent = "🟢 สถานะปกติ";
+    const activeCount = liveStudents.length;
+    msg.textContent = activeCount > 0 
+      ? `ระบบกำลังติดตามผู้สอบสด ${activeCount} คนแบบเรียลไทม์ • ทุกคนกำลังทำข้อสอบอย่างซื่อสัตย์` 
+      : "ระบบคุมสอบสดพร้อมทำงาน • ยังไม่มีผู้เข้าทำข้อสอบในขณะนี้";
+    timeEl.textContent = `ซิงค์ล่าสุด: ${new Date().toLocaleTimeString("th-TH")}`;
+    ticker.style.cursor = "default";
+    ticker.onclick = null;
+  }
+}
+
 
 function formatDisplayTime(timeStr, isoTimestamp) {
   if (isoTimestamp) {
@@ -385,6 +468,40 @@ function renderMonitorLogs() {
   if (totalViolationsEl) totalViolationsEl.textContent = `${totalViolationsCount} ครั้ง`;
   if (totalSubmittedEl) totalSubmittedEl.textContent = `${totalCompleted} คน`;
 
+  // Smart Metrics Hub: Progress bars & Sub-details
+  const activePercent = totalCombined > 0 ? Math.round((totalActive / totalCombined) * 100) : 0;
+  const completedPercent = totalCombined > 0 ? Math.round((totalCompleted / totalCombined) * 100) : 0;
+  const alertStudentsCount = allList.filter(s => s.hasAlert).length;
+  const alertPercent = totalCombined > 0 ? Math.round((alertStudentsCount / totalCombined) * 100) : 0;
+
+  const totalProgressFill = document.getElementById("statTotalProgressFill");
+  const totalSubDetail = document.getElementById("statTotalSubDetail");
+  if (totalProgressFill) totalProgressFill.style.width = totalCombined > 0 ? "100%" : "0%";
+  if (totalSubDetail) totalSubDetail.textContent = `กำลังสอบ ${activePercent}% • ส่งแล้ว ${completedPercent}%`;
+
+  const activeProgressFill = document.getElementById("statActiveProgressFill");
+  const activeSubDetail = document.getElementById("statActiveSubDetail");
+  if (activeProgressFill) activeProgressFill.style.width = `${activePercent}%`;
+  if (activeSubDetail) activeSubDetail.textContent = totalActive > 0 ? `🟢 กำลังคุมสอบสด ${totalActive} คน (${activePercent}%)` : `🟢 รอผู้เข้าทำข้อสอบ`;
+
+  const violationsProgressFill = document.getElementById("statViolationsProgressFill");
+  const violationsSubDetail = document.getElementById("statViolationsSubDetail");
+  if (violationsProgressFill) violationsProgressFill.style.width = `${alertPercent}%`;
+  if (violationsSubDetail) violationsSubDetail.textContent = alertStudentsCount > 0 ? `ตรวจพบใน ${alertStudentsCount} คน (${alertPercent}%)` : `✅ ไม่พบการกระทำผิด`;
+
+  const submittedProgressFill = document.getElementById("statSubmittedProgressFill");
+  const submittedSubDetail = document.getElementById("statSubmittedSubDetail");
+  if (submittedProgressFill) submittedProgressFill.style.width = `${completedPercent}%`;
+  const latestSubmittedStudent = completedStudents[0];
+  const latestSubTimeStr = latestSubmittedStudent && latestSubmittedStudent.submitTime ? formatDisplayTime(latestSubmittedStudent.submitTime) : "-";
+  if (submittedSubDetail) submittedSubDetail.textContent = `ส่งล่าสุด: ${latestSubTimeStr}`;
+
+  // Primary Mode Badges
+  const primaryLiveCountPill = document.getElementById("primaryLiveCountPill");
+  const primaryArchiveCountPill = document.getElementById("primaryArchiveCountPill");
+  if (primaryLiveCountPill) primaryLiveCountPill.textContent = totalActive;
+  if (primaryArchiveCountPill) primaryArchiveCountPill.textContent = totalCompleted;
+
   if (countLiveBadge) countLiveBadge.textContent = totalActive;
   if (countCompletedBadge) countCompletedBadge.textContent = totalCompleted;
   if (completedHeaderCount) completedHeaderCount.textContent = totalCompleted;
@@ -395,6 +512,27 @@ function renderMonitorLogs() {
   }
 
   updateFilterBadges();
+
+  // Find latest incident among active live students for the Ticker
+  let latestAlertStudent = null;
+  let latestAlertTimeMs = 0;
+  liveStudents.forEach(s => {
+    if (s.hasAlert && s.logs && s.logs.length > 0) {
+      for (let i = s.logs.length - 1; i >= 0; i--) {
+        const l = s.logs[i];
+        const v = String(l.violation || "");
+        if (!v.includes("เริ่มเข้าทำข้อสอบ") && !v.includes("ส่งข้อสอบเรียบร้อย")) {
+          const t = parseLogTimestampMs(l) || 0;
+          if (t > latestAlertTimeMs) {
+            latestAlertTimeMs = t;
+            latestAlertStudent = { s, log: l };
+          }
+          break;
+        }
+      }
+    }
+  });
+  updateIncidentTicker(latestAlertStudent);
 
   if (totalViolationsCount > previousViolationCount && previousViolationCount > 0) {
     playAdminChime();
@@ -449,6 +587,7 @@ function renderStudentCardHtml(s, isCompletedView) {
   const startTimeStr = formatDisplayTime(s.startTime);
   const lastTimeStr = formatDisplayTime(s.lastEventTime, s.lastEventIso);
   const datePrefix = isCompletedView && s.dateMeta && s.dateMeta.titleShort ? `📅 ${escapeHtml(s.dateMeta.titleShort)} • ` : "";
+  const durationText = getStudentElapsedDuration(s);
 
   return `
     <div class="${cardClass}" data-student-id="${escapeHtml(s.studentId)}">
@@ -461,8 +600,9 @@ function renderStudentCardHtml(s, isCompletedView) {
             <span class="screen-station-label">รหัสประจำตัวนักเรียน</span>
             <span class="screen-station-id">${escapeHtml(s.studentId)}</span>
             <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-              ${datePrefix}เริ่ม: ${startTimeStr}
+              ${datePrefix}⏱️ ${escapeHtml(durationText)} (เริ่ม: ${startTimeStr})
             </div>
+            ${s.roomTitle ? `<div style="font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 170px;" title="${escapeHtml(s.roomTitle)}">📚 ${escapeHtml(s.roomTitle)}</div>` : ""}
           </div>
         </div>
         ${statusBadge}
@@ -860,20 +1000,59 @@ function copyStudentHistory() {
   });
 }
 
+function switchPrimaryMonitorMode(mode) {
+  currentPrimaryMode = mode;
+  const liveBtn = document.getElementById("primaryModeLiveBtn");
+  const archiveBtn = document.getElementById("primaryModeArchiveBtn");
+  const liveZone = document.getElementById("liveProctorZone");
+  const archiveZone = document.getElementById("archiveZone");
+
+  if (liveBtn) liveBtn.classList.toggle("active", mode === "live");
+  if (archiveBtn) archiveBtn.classList.toggle("active", mode === "archive");
+  if (liveZone) liveZone.style.display = mode === "live" ? "block" : "none";
+  if (archiveZone) archiveZone.style.display = mode === "archive" ? "block" : "none";
+
+  if (mode === "live") {
+    currentMonitorTab = "live";
+    const liveContainer = document.getElementById("screensGridContainer");
+    if (liveContainer) liveContainer.style.display = "block";
+  } else {
+    if (currentMonitorTab === "live") {
+      currentMonitorTab = "completed";
+    }
+    switchToMonitorTab(currentMonitorTab);
+  }
+  updateFilterBadges();
+}
+
 function switchToMonitorTab(tab) {
   currentMonitorTab = tab;
-  const liveBtn = document.getElementById("toggleLiveViewBtn");
+  if (tab === "live") {
+    switchPrimaryMonitorMode("live");
+    return;
+  }
+
+  if (currentPrimaryMode !== "archive") {
+    currentPrimaryMode = "archive";
+    const liveBtn = document.getElementById("primaryModeLiveBtn");
+    const archiveBtn = document.getElementById("primaryModeArchiveBtn");
+    const liveZone = document.getElementById("liveProctorZone");
+    const archiveZone = document.getElementById("archiveZone");
+
+    if (liveBtn) liveBtn.classList.remove("active");
+    if (archiveBtn) archiveBtn.classList.add("active");
+    if (liveZone) liveZone.style.display = "none";
+    if (archiveZone) archiveZone.style.display = "block";
+  }
+
   const compBtn = document.getElementById("toggleCompletedViewBtn");
   const tableBtn = document.getElementById("toggleTableViewBtn");
-  const liveContainer = document.getElementById("screensGridContainer");
   const compContainer = document.getElementById("completedGridContainer");
   const tableContainer = document.getElementById("tableViewContainer");
 
-  if (liveBtn) liveBtn.classList.toggle("active", tab === "live");
   if (compBtn) compBtn.classList.toggle("active", tab === "completed");
   if (tableBtn) tableBtn.classList.toggle("active", tab === "table");
 
-  if (liveContainer) liveContainer.style.display = tab === "live" ? "block" : "none";
   if (compContainer) compContainer.style.display = tab === "completed" ? "block" : "none";
   if (tableContainer) tableContainer.style.display = tab === "table" ? "block" : "none";
 
@@ -942,8 +1121,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const primaryLiveBtn = document.getElementById("primaryModeLiveBtn");
+  if (primaryLiveBtn) primaryLiveBtn.addEventListener("click", () => switchPrimaryMonitorMode("live"));
+
+  const primaryArchiveBtn = document.getElementById("primaryModeArchiveBtn");
+  if (primaryArchiveBtn) primaryArchiveBtn.addEventListener("click", () => switchPrimaryMonitorMode("archive"));
+
+  const toggleSoundBtn = document.getElementById("toggleSoundBtn");
+  if (toggleSoundBtn) toggleSoundBtn.addEventListener("click", toggleSoundAlert);
+  updateSoundButtonUI();
+
   const toggleLiveBtn = document.getElementById("toggleLiveViewBtn");
-  if (toggleLiveBtn) toggleLiveBtn.addEventListener("click", () => switchToMonitorTab("live"));
+  if (toggleLiveBtn) toggleLiveBtn.addEventListener("click", () => switchPrimaryMonitorMode("live"));
 
   const toggleCompletedBtn = document.getElementById("toggleCompletedViewBtn");
   if (toggleCompletedBtn) toggleCompletedBtn.addEventListener("click", () => switchToMonitorTab("completed"));

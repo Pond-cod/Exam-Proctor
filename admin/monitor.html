@@ -6,17 +6,20 @@
   <title>Exam Proctor Studio - หน้าจอคุมสอบสด (Real-time Live Monitor)</title>
   <meta name="description" content="ระบบติดตามและคุมสอบแบบเรียลไทม์ ตรวจจับการสลับหน้าจอ ออกจากโหมดเต็มจอ และพฤติกรรมผิดปกติในการสอบ">
   <link rel="icon" type="image/png" href="../logo.png">
-  <link rel="stylesheet" href="../css/style.css?v=5.7">
+  <link rel="stylesheet" href="../css/style.css?v=6.1">
 </head>
 <body>
 
-  <!-- แถบเมนูด้านบนหลังบ้าน (Back-Office Navigation) -->
+  <!-- แถบเมนูด้านบนหลังบ้าน (Back-Office Minimal Navigation) -->
   <nav class="navbar">
     <div class="navbar-container">
-      <a href="rooms.html" class="brand">
+      <a href="rooms.html" class="brand" title="Exam Proctor Studio">
         <img src="../logo.png" alt="Exam Proctor Studio" class="brand-logo-img">
         <div>
-          <div class="brand-title">Exam Proctor Studio</div>
+          <div class="brand-title">
+            Exam Proctor
+            <span class="brand-live-dot">Live</span>
+          </div>
           <div class="brand-subtitle">ระบบบริหารจัดการห้องสอบและคุมสอบออนไลน์</div>
         </div>
       </a>
@@ -28,36 +31,36 @@
         <span class="hamburger-bar"></span>
       </button>
 
-      <!-- เมนูนำทางหลังบ้าน -->
+      <!-- เมนูนำทางหลังบ้านแบบกะทัดรัด -->
       <div class="nav-links" id="navLinksMenu">
-        <a href="create.html" class="nav-tab-btn">➕ สร้างห้องสอบ</a>
-        <a href="monitor.html" class="nav-tab-btn active">🖥️ หน้าจอคุมสอบสด</a>
-        <a href="rooms.html" class="nav-tab-btn">📁 จัดการห้องสอบ</a>
-        <a href="users.html" class="nav-tab-btn admin-only-nav-item">👥 จัดการผู้ใช้</a>
-        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">⚙️ ตั้งค่าระบบ</a>
+        <a href="create.html" class="nav-tab-btn">➕ สร้างห้อง</a>
+        <a href="monitor.html" class="nav-tab-btn active">🖥️ จอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn">📁 ห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">👥 ผู้ใช้งาน</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">⚙️ ตั้งค่า</a>
       </div>
 
       <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
       <div class="nav-role-box">
-        <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
-          <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
-          <span id="navUserNameDisplay" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"></span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span id="navRoleBadge" class="role-badge role-badge-user">ผู้คุมสอบ</span>
+          <span id="navUserNameDisplay" style="font-size: 12px; font-weight: 700; color: var(--text-primary);"></span>
         </div>
-        <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
-          🚪 ออกจากระบบ
-        </button>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
           🌐 หน้าบ้าน
         </a>
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
+          🚪 ออก
+        </button>
       </div>
     </div>
   </nav>
 
-  <main class="container">
+  <main class="container monitor-wide-container">
 
     <!-- หน้าจอคุมสอบสด (Real-time Monitor) -->
     <section id="monitorSection" class="view-section active">
-      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์โมเดิร์น -->
+      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์โมเดิร์น พร้อมรายละเอียดเชิงลึก -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-header-row">
@@ -72,13 +75,16 @@
             </div>
           </div>
           <div class="stat-value" id="statTotalStudents">0 คน</div>
-          <div class="stat-label">ผู้เข้าสอบทั้งหมด</div>
+          <div class="stat-progress-bar">
+            <div id="statTotalProgressFill" class="stat-progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="stat-sub-detail" id="statTotalSubDetail">กำลังสอบ 0% • ส่งแล้ว 0%</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-card-header-row">
             <span class="stat-badge stat-badge-emerald">
-              <span class="live-pulse-dot"></span> กำลังสอบอยู่
+              <span class="live-pulse-dot"></span> กำลังสอบสด (Active)
             </span>
             <div class="stat-icon-circle emerald">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -89,7 +95,10 @@
             </div>
           </div>
           <div class="stat-value" id="statActiveStudents" style="color: #047857;">0 คน</div>
-          <div class="stat-label">กำลังสอบอยู่ (Active)</div>
+          <div class="stat-progress-bar">
+            <div id="statActiveProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+          </div>
+          <div class="stat-sub-detail" id="statActiveSubDetail">🟢 กำลังติดตามความซื่อสัตย์สด</div>
         </div>
 
         <div class="stat-card">
@@ -104,7 +113,10 @@
             </div>
           </div>
           <div class="stat-value" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</div>
-          <div class="stat-label">ตรวจพบการแจ้งเตือน / สลับจอ</div>
+          <div class="stat-progress-bar">
+            <div id="statViolationsProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);"></div>
+          </div>
+          <div class="stat-sub-detail" id="statViolationsSubDetail">ตรวจพบในผู้สอบ 0 คน</div>
         </div>
 
         <div class="stat-card">
@@ -118,54 +130,69 @@
             </div>
           </div>
           <div class="stat-value" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</div>
-          <div class="stat-label">ส่งข้อสอบเรียบร้อยแล้ว</div>
+          <div class="stat-progress-bar">
+            <div id="statSubmittedProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);"></div>
+          </div>
+          <div class="stat-sub-detail" id="statSubmittedSubDetail">ส่งล่าสุด: -</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
-          <div class="card-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-            หน้าจอคุมสอบสด (Real-time Monitor)
+      <!-- แถบรายงานเหตุการณ์ด่วนล่าสุด (Live Incident Ticker Hub) -->
+      <div id="liveIncidentTicker" class="live-incident-ticker normal">
+        <div class="ticker-left">
+          <span class="ticker-badge" id="tickerBadge">🟢 สถานะปกติ</span>
+          <span class="ticker-text" id="tickerMessage">ระบบกำลังติดตามผู้เข้าสอบแบบเรียลไทม์ ผู้สอบทุกคนอยู่ในโหมดเต็มหน้าจออย่างซื่อสัตย์</span>
+        </div>
+        <div class="ticker-right">
+          <span class="ticker-time" id="tickerTime">ซิงค์ล่าสุด: กำลังเชื่อมต่อ...</span>
+        </div>
+      </div>
+
+      <!-- แถบสลับหมวดหลัก: ศูนย์คุมสอบสด VS คลังประวัติและรายงานย้อนหลัง -->
+      <div class="monitor-primary-nav">
+        <button id="primaryModeLiveBtn" class="primary-mode-tab active" type="button">
+          <span class="pulse-ring-dot"></span>
+          <span>🔴 ศูนย์คุมสอบสด (Live Proctoring)</span>
+          <span class="primary-count-pill" id="primaryLiveCountPill">0</span>
+        </button>
+        <button id="primaryModeArchiveBtn" class="primary-mode-tab" type="button">
+          <span>📁 คลังประวัติ & รายงานย้อนหลัง</span>
+          <span class="primary-count-pill secondary" id="primaryArchiveCountPill">0</span>
+        </button>
+      </div>
+
+      <!-- ส่วนที่ 1: ศูนย์คุมสอบสด (Live Proctoring Center) — เฉพาะสิ่งที่จำเป็นขณะคุมสอบ -->
+      <div id="liveProctorZone" class="monitor-zone-card card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span class="live-pulse-dot" style="width: 9px; height: 9px;"></span>
+              <span>จอภาพผู้สอบสด (Real-time Live Monitors)</span>
+            </div>
+            <div class="zone-subtitle-lead">แสดงเฉพาะนักเรียนที่กำลังทำข้อสอบอยู่ในห้องสอบขณะนี้</div>
           </div>
 
-          <!-- ตัวเลือกกรองห้องสอบในหน้าจอคุมสอบสด -->
+          <!-- ตัวเลือกกรองห้องสอบสด -->
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <select id="monitorRoomFilterSelect" class="form-control" style="min-width: 200px; max-width: 280px; font-size: 13px;">
+            <select id="monitorRoomFilterSelect" class="form-control" style="min-width: 210px; max-width: 280px; font-size: 13px;">
               <option value="all">ทุกห้องสอบ (All Rooms)</option>
             </select>
           </div>
 
+          <!-- เครื่องมือควบคุมจำเป็นขณะคุมสอบ -->
           <div class="card-actions-group">
             <span id="syncStatusText" style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">กำลังเชื่อมต่อ...</span>
+            <button id="toggleSoundBtn" type="button" class="btn btn-sound-modern" title="เปิด/ปิดเสียงแจ้งเตือนเมื่อพบการสลับหน้าจอ">
+              🔔 เสียงเตือน: เปิด
+            </button>
             <button id="refreshLogsBtn" class="btn btn-refresh-modern" title="รีเฟรชข้อมูลล่าสุด">🔄 รีเฟรช</button>
             <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบสอบใหม่</button>
-            <button id="testWebhookBtn" class="btn btn-webhook-modern admin-only-btn" title="ทดสอบส่งข้อมูลเข้า Google Sheets">⚡ ทดสอบ Webhook</button>
-            <button id="openSheetBtn" class="btn btn-sheet-modern admin-only-btn" title="เปิดหน้าต่าง Google Sheets">📊 เปิด Google Sheets</button>
           </div>
         </div>
 
-        <!-- แถบควบคุมและสลับมุมมอง -->
-        <div class="monitor-toolbar">
-          <!-- สลับ 3 หมวดการแสดงผล: จอสด VS ประวัติผู้ส่งข้อสอบแล้ว VS ตารางบันทึก -->
-          <div class="monitor-view-toggle">
-            <button id="toggleLiveViewBtn" class="view-toggle-btn active" type="button">
-              <span class="live-dot" style="margin-right: 6px;"></span>
-              จอคุมสอบสด (<span id="countLiveBadge">0</span>)
-            </button>
-            <button id="toggleCompletedViewBtn" class="view-toggle-btn" type="button">
-              📁 ประวัติผู้ส่งข้อสอบแล้ว (<span id="countCompletedBadge">0</span>)
-            </button>
-            <button id="toggleTableViewBtn" class="view-toggle-btn" type="button">
-              📋 บันทึกเหตุการณ์ทั้งหมด
-            </button>
-          </div>
-
-          <!-- ตัวกรองสถานะ -->
+        <!-- แถบเครื่องมือกรองด่วนสำหรับคุมสด -->
+        <div class="monitor-toolbar" style="margin-bottom: 16px;">
+          <!-- ตัวกรองสถานะสด -->
           <div class="filter-pills-row" id="monitorFilterPills">
             <button class="filter-pill active" data-filter="all">
               ทั้งหมด <span class="filter-count-badge" id="badgeFilterAll">0</span>
@@ -178,18 +205,19 @@
               เฉพาะวันนี้ <span class="filter-count-badge" id="badgeFilterToday">0</span>
             </button>
           </div>
+
+          <div style="flex: 1; min-width: 240px;">
+            <input 
+              type="text" 
+              id="searchLogInput" 
+              class="form-control" 
+              placeholder="🔍 ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
+              style="font-size: 13px;"
+            >
+          </div>
         </div>
 
-        <div style="margin-bottom: 18px;">
-          <input 
-            type="text" 
-            id="searchLogInput" 
-            class="form-control" 
-            placeholder="🔍 ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
-          >
-        </div>
-
-        <!-- 1. มุมมองจอภาพผู้สอบสด (Live Screens Grid — เฉพาะคนที่กำลังสอบอยู่ตอนนี้) -->
+        <!-- กริดจอภาพผู้สอบสด (เฉพาะคนที่กำลังสอบอยู่ตอนนี้) -->
         <div id="screensGridContainer">
           <div id="studentScreensGrid" class="screens-grid">
             <div class="screens-empty-state">
@@ -206,9 +234,37 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- 2. มุมมองประวัติผู้ส่งข้อสอบแล้ว (Completed / Archive Grid) -->
-        <div id="completedGridContainer" style="display: none;">
+      <!-- ส่วนที่ 2: คลังประวัติและรายงานย้อนหลัง (Archive & Intelligence Hub) -->
+      <div id="archiveZone" class="monitor-zone-card card" style="display: none;">
+        <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span>📁 คลังประวัติและการส่งข้อสอบ (Exam Archives & Audit Logs)</span>
+            </div>
+            <div class="zone-subtitle-lead">รวบรวมประวัตินักเรียนที่ส่งข้อสอบแล้ว แยกตามวันที่ และตารางบันทึกเหตุการณ์ทั้งหมด</div>
+          </div>
+
+          <!-- สวิตช์สลับมุมมองย่อยในคลังประวัติ -->
+          <div class="monitor-view-toggle">
+            <button id="toggleCompletedViewBtn" class="view-toggle-btn active" type="button">
+              📁 ประวัติผู้ส่งข้อสอบแล้ว (<span id="countCompletedBadge">0</span>)
+            </button>
+            <button id="toggleTableViewBtn" class="view-toggle-btn" type="button">
+              📋 บันทึกเหตุการณ์ทั้งหมด
+            </button>
+          </div>
+
+          <!-- เครื่องมือเชื่อมต่อ Cloud / Google Sheets -->
+          <div class="card-actions-group">
+            <button id="testWebhookBtn" class="btn btn-webhook-modern admin-only-btn" title="ทดสอบส่งข้อมูลเข้า Google Sheets">⚡ ทดสอบ Webhook</button>
+            <button id="openSheetBtn" class="btn btn-sheet-modern admin-only-btn" title="เปิดหน้าต่าง Google Sheets">📊 เปิด Google Sheets</button>
+          </div>
+        </div>
+
+        <!-- 2.1 มุมมองประวัติผู้ส่งข้อสอบแล้ว (Completed / Archive Grid) -->
+        <div id="completedGridContainer">
           <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
             <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
               📁 ประวัติผู้สอบที่ส่งข้อสอบเรียบร้อยแล้ว (<span id="completedHeaderCount">0</span> คน)
@@ -228,7 +284,7 @@
           </div>
         </div>
 
-        <!-- 3. มุมมองตารางประวัติ (Table View — บันทึกเหตุการณ์ทั้งหมด) -->
+        <!-- 2.2 มุมมองตารางประวัติเหตุการณ์ทั้งหมด (Table View) -->
         <div id="tableViewContainer" style="display: none;">
           <div class="table-responsive">
             <table class="log-table">
@@ -358,9 +414,9 @@
     </div>
   </div>
 
-  <script src="../js/shared/config.js?v=5.9"></script>
-  <script src="../js/backend/auth.js?v=5.9"></script>
-  <script src="../js/shared/common.js?v=5.9"></script>
-  <script src="../js/backend/monitor.js?v=6.0"></script>
+  <script src="../js/shared/config.js?v=6.1"></script>
+  <script src="../js/backend/auth.js?v=6.1"></script>
+  <script src="../js/shared/common.js?v=6.1"></script>
+  <script src="../js/backend/monitor.js?v=6.1"></script>
 </body>
 </html>
