@@ -123,14 +123,15 @@ function initExamFromUrl() {
     configData = decodeExamConfig(encodedParam);
   }
 
+  // รองรับทั้งพารามิเตอร์แบบสั้น (f, p, t, w) และแบบยาว (form, pass, title, webhook)
   if (!configData) {
-    const rawForm = urlParams.get("form");
+    const rawForm = urlParams.get("f") || urlParams.get("form");
     if (rawForm) {
       configData = {
-        title: urlParams.get("title") || "แบบทดสอบออนไลน์",
+        title: urlParams.get("t") || urlParams.get("title") || "แบบทดสอบออนไลน์",
         formUrl: rawForm,
-        webhookUrl: urlParams.get("webhook") || DEFAULT_WEBHOOK_URL,
-        adminPasscode: urlParams.get("pass") || DEFAULT_ADMIN_PASSCODE
+        webhookUrl: urlParams.get("w") || urlParams.get("webhook") || DEFAULT_WEBHOOK_URL,
+        adminPasscode: urlParams.get("p") || urlParams.get("pass") || DEFAULT_ADMIN_PASSCODE
       };
     }
   }

@@ -629,18 +629,27 @@ img, svg, video, canvas, iframe {
 
 .qr-image-wrapper {
   background: #ffffff;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid #cbd5e1;
-  box-shadow: var(--shadow-sm);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   line-height: 0;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 248px;
+  min-height: 248px;
 }
 
+.qr-image-wrapper canvas,
 .qr-image-wrapper img {
-  width: 120px;
-  height: 120px;
+  width: 220px !important;
+  height: 220px !important;
   display: block;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 /* ==========================================================================

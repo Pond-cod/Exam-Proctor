@@ -151,11 +151,19 @@
               <div id="examQrContainer"></div>
               <img id="examQrImage" src="" alt="Exam QR Code" style="display: none;">
             </div>
-            <div>
-              <strong style="display: block; margin-bottom: 4px; font-size: 14.5px; color: var(--text-primary);">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
-              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                เหมาะสำหรับการฉายขึ้นจอโปรเจกเตอร์ในห้องเรียน เพื่อให้นักเรียนที่ใช้อุปกรณ์พกพาหรือแท็บเล็ตสแกนเข้าทำข้อสอบได้ทันที
+            <div class="qr-info-content" style="flex: 1;">
+              <strong style="display: block; margin-bottom: 6px; font-size: 15.5px; color: var(--text-primary);">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
+              <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+                QR Code ถูกย่อข้อมูลให้กะทัดรัด คมชัด และสแกนติดง่ายบนสมาร์ตโฟน/แท็บเล็ตทุกรุ่น เหมาะสำหรับการฉายขึ้นจอโปรเจกเตอร์หรือพิมพ์ใส่กระดาษ
               </p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" id="zoomQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;">
+                  🔍 ขยายเต็มจอ (ฉายโปรเจกเตอร์)
+                </button>
+                <button type="button" id="downloadQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;">
+                  💾 บันทึกรูปภาพ QR
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -367,7 +375,30 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=3.5"></script>
-  <script src="js/admin.js?v=3.5"></script>
+  <!-- 4. Modal สำหรับฉาย QR Code ขึ้นจอโปรเจกเตอร์ขนาดใหญ่ -->
+  <div id="qrProjectorModal" class="custom-dialog-overlay">
+    <div class="custom-dialog-box" style="max-width: 480px; text-align: center; padding: 28px 20px;">
+      <h3 style="font-size: 19px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;" id="projectorExamTitle">แบบทดสอบออนไลน์</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+        สแกน QR Code ด้วยกล้องสมาร์ตโฟนหรือแท็บเล็ต เพื่อเข้าสู่ห้องสอบทันที
+      </p>
+      <div id="projectorQrWrapper" style="display: flex; justify-content: center; align-items: center; background: #ffffff; padding: 16px; border-radius: var(--radius-md); border: 2px solid #e2e8f0; width: fit-content; margin: 0 auto 16px; box-shadow: var(--shadow-md);">
+        <div id="projectorQrContainer"></div>
+      </div>
+      <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: var(--radius-sm); padding: 8px 16px; margin-bottom: 18px; display: inline-flex; align-items: center; gap: 10px;">
+        <span style="font-size: 12.5px; color: #1e40af; font-weight: 600;">รหัสผู้คุมสอบ (Passcode):</span>
+        <strong style="font-size: 18px; color: #1d4ed8; font-family: monospace; letter-spacing: 0.12em;" id="projectorPasscodeDisplay">------</strong>
+      </div>
+      <div>
+        <button type="button" id="closeProjectorBtn" class="btn btn-primary" style="min-width: 130px; font-size: 13.5px;">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/qrcode.min.js"></script>
+  <script src="js/config.js?v=3.6"></script>
+  <script src="js/admin.js?v=3.6"></script>
 </body>
 </html>

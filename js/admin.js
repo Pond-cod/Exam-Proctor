@@ -133,16 +133,65 @@ async function generateExamLink() {
       };
     }
 
-    // UX-05: สร้าง QR Code แบบ Client-side
+    // UX-05: สร้าง QR Code แบบ Client-side คมชัด ขนาด 220px
     const qrWrapper = document.getElementById("examQrContainer") || document.querySelector(".qr-image-wrapper");
     if (qrWrapper) {
-      generateQrCode(qrWrapper, fullExamUrl, 160);
-    } else {
-      const qrImg = document.getElementById("examQrImage");
-      if (qrImg) {
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullExamUrl)}`;
-        qrImg.style.display = "block";
-      }
+      generateQrCode(qrWrapper, fullExamUrl, 220);
+    }
+
+    // ปุ่มขยายเต็มจอสำหรับฉายโปรเจกเตอร์
+    const zoomQrBtn = document.getElementById("zoomQrBtn");
+    const projectorModal = document.getElementById("qrProjectorModal");
+    if (zoomQrBtn) {
+      zoomQrBtn.onclick = () => {
+        const projectorContainer = document.getElementById("projectorQrContainer");
+        const projectorTitle = document.getElementById("projectorExamTitle");
+        const projectorPasscode = document.getElementById("projectorPasscodeDisplay");
+
+        if (projectorTitle) projectorTitle.textContent = title;
+        if (projectorPasscode) projectorPasscode.textContent = passcode;
+        if (projectorContainer) {
+          generateQrCode(projectorContainer, fullExamUrl, 320);
+        }
+        if (projectorModal) {
+          projectorModal.classList.add("active");
+        }
+      };
+    }
+
+    // ปุ่มดาวน์โหลดรูปภาพ QR Code (.png)
+    const downloadQrBtn = document.getElementById("downloadQrBtn");
+    if (downloadQrBtn) {
+      downloadQrBtn.onclick = () => {
+        const canvas = qrWrapper ? qrWrapper.querySelector("canvas") : null;
+        const img = qrWrapper ? qrWrapper.querySelector("img") : null;
+        let dataUrl = "";
+        if (canvas) {
+          dataUrl = canvas.toDataURL("image/png");
+        } else if (img && img.src) {
+          dataUrl = img.src;
+        }
+
+        if (dataUrl) {
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = `Exam-QR-${title.replace(/[^a-zA-Z0-9ก-๙]/g, "_")}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } else {
+          showAlert("กำลังเตรียมรูปภาพ กรุณารอสักครู่แล้วลองอีกครั้ง", { type: "info" });
+        }
+      };
+    }
+
+    // ปุ่มปิด Modal โปรเจกเตอร์
+    const closeProjectorBtn = document.getElementById("closeProjectorBtn");
+    if (closeProjectorBtn && projectorModal) {
+      closeProjectorBtn.onclick = () => projectorModal.classList.remove("active");
+      projectorModal.onclick = (e) => {
+        if (e.target === projectorModal) projectorModal.classList.remove("active");
+      };
     }
 
     resultBox.classList.add("active");

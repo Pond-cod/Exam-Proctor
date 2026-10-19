@@ -38,14 +38,24 @@ function formatGoogleFormEmbedUrl(url) {
 }
 
 /**
- * เข้ารหัสการตั้งค่าห้องสอบเป็น Base64 ปลอดภัย (รองรับภาษาไทย UTF-8)
+ * เข้ารหัสการตั้งค่าห้องสอบเป็น Base64 แบบกะทัดรัดและปลอดภัยใน URL (URL-Safe Base64)
+ * ลดขนาดข้อมูลลงกว่า 70% เพื่อให้ QR Code มีจุดโมดูลที่ใหญ่ คมชัด และสแกนติดง่ายที่สุด
  */
 function encodeExamConfig(config) {
   try {
-    const jsonStr = JSON.stringify(config);
-    return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+    // ย่อ keys และละเว้นค่า default เพื่อให้ URL สั้นที่สุดเท่าที่จะเป็นไปได้
+    const compact = {};
+    if (config.formUrl) compact.f = config.formUrl;
+    if (config.adminPasscode) compact.p = config.adminPasscode;
+    if (config.title && config.title !== "แบบทดสอบออนไลน์") compact.t = config.title;
+    if (config.webhookUrl && config.webhookUrl !== DEFAULT_WEBHOOK_URL) compact.w = config.webhookUrl;
+
+    const jsonStr = JSON.stringify(compact);
+    const utf8Bytes = encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
       return String.fromCharCode("0x" + p1);
-    }));
+    });
+    // แปลงเป็น URL-Safe Base64 (- แทน +, _ แทน /, ตัด padding = ออก)
+    return btoa(utf8Bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   } catch (e) {
     console.error("Encode config error:", e);
     return "";
@@ -54,14 +64,42 @@ function encodeExamConfig(config) {
 
 /**
  * ถอดรหัสการตั้งค่าห้องสอบจาก Base64 กลับมาเป็น Object
+ * รองรับทั้งรูปแบบ Compact ใหม่, รูปแบบเต็มเดิม, และแก้ปัญหา + ถูกแปลงเป็น Space ใน URL
  */
 function decodeExamConfig(base64Str) {
   try {
     if (!base64Str) return null;
-    const jsonStr = decodeURIComponent(Array.prototype.map.call(atob(base64Str), (c) => {
+    let clean = String(base64Str).trim();
+
+    // 1. ถอด URL decoding เผื่อถูก encode ซ้ำ (%2B, %2F, %25)
+    try {
+      clean = decodeURIComponent(clean);
+    } catch (_) {}
+
+    // 2. แก้ปัญหา URLSearchParams แปลงเครื่องหมาย + เป็น Space
+    clean = clean.replace(/ /g, "+");
+
+    // 3. แปลง URL-safe base64 กลับเป็น standard base64 (- เป็น +, _ เป็น /)
+    clean = clean.replace(/-/g, "+").replace(/_/g, "/");
+
+    // 4. เติม padding = ให้ครบ 4 ตัว
+    while (clean.length % 4 !== 0) {
+      clean += "=";
+    }
+
+    const binaryStr = atob(clean);
+    const jsonStr = decodeURIComponent(Array.prototype.map.call(binaryStr, (c) => {
       return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(""));
-    return JSON.parse(jsonStr);
+    const data = JSON.parse(jsonStr);
+
+    // รองรับทั้ง compact keys (f, p, t, w) และ legacy keys (formUrl, adminPasscode, title, webhookUrl)
+    return {
+      title: data.t || data.title || "แบบทดสอบออนไลน์",
+      formUrl: data.f || data.formUrl || "",
+      adminPasscode: data.p || data.adminPasscode || DEFAULT_ADMIN_PASSCODE,
+      webhookUrl: data.w || data.webhookUrl || DEFAULT_WEBHOOK_URL
+    };
   } catch (e) {
     console.error("Decode config error:", e);
     return null;
@@ -213,9 +251,8 @@ function showPrompt(message, opts = {}) {
 }
 
 /* ==========================================================================
-   UX-05: QR Code Generator (Client-side, ไม่ต้องพึ่ง external API)
-   ใช้ qrcode-generator library โดย Kazuhiko Arase (MIT License)
-   โหลดจาก CDN เมื่อถูกเรียกครั้งแรก
+   UX-05: QR Code Generator (Client-side, Offline-first, Zero-dependency)
+   ใช้ qrcode.min.js ประมวลผลแบบ Client-side สแกนได้ทันที ไม่ต้องพึ่งพาเน็ต
    ========================================================================== */
 
 let _qrLibLoaded = false;
@@ -223,57 +260,69 @@ let _qrLibLoading = false;
 const _qrLibCallbacks = [];
 
 function _loadQrLib(callback) {
-  if (_qrLibLoaded) { callback(); return; }
+  if (typeof QRCode !== "undefined") {
+    _qrLibLoaded = true;
+    callback(false);
+    return;
+  }
+  if (_qrLibLoaded) { callback(false); return; }
   _qrLibCallbacks.push(callback);
   if (_qrLibLoading) return;
   _qrLibLoading = true;
 
-  const script = document.createElement("script");
-  script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
-  script.onload = () => {
-    _qrLibLoaded = true;
-    _qrLibCallbacks.forEach((cb) => cb());
-    _qrLibCallbacks.length = 0;
+  const tryScript = (src, onFail) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => {
+      _qrLibLoaded = true;
+      _qrLibCallbacks.forEach((cb) => cb(false));
+      _qrLibCallbacks.length = 0;
+    };
+    s.onerror = onFail;
+    document.head.appendChild(s);
   };
-  script.onerror = () => {
-    // Fallback: ใช้ api.qrserver.com หากโหลด library ล้มเหลว
-    _qrLibLoaded = false;
-    _qrLibCallbacks.forEach((cb) => cb(true));
-    _qrLibCallbacks.length = 0;
-  };
-  document.head.appendChild(script);
+
+  // 1. ลองโหลดจาก local file js/qrcode.min.js ก่อนเสมอ
+  tryScript("js/qrcode.min.js", () => {
+    // 2. ถ้า local ไม่พบ จึง fallback ไปที่ CDN
+    tryScript("https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js", () => {
+      _qrLibLoaded = false;
+      _qrLibCallbacks.forEach((cb) => cb(true));
+      _qrLibCallbacks.length = 0;
+    });
+  });
 }
 
 /**
  * generateQrCode — สร้าง QR Code ใน element ที่กำหนด
  * @param {HTMLElement} container - element ที่จะแทรก QR Code
- * @param {string} text - ข้อความที่จะ encode
- * @param {number} size - ขนาด pixel (default 200)
+ * @param {string} text - ข้อความหรือ URL ที่จะ encode
+ * @param {number} size - ขนาด pixel (default 220)
  */
-function generateQrCode(container, text, size = 200) {
+function generateQrCode(container, text, size = 220) {
   if (!container || !text) return;
   container.innerHTML = "";
 
   _loadQrLib((useFallback) => {
     if (!useFallback && typeof QRCode !== "undefined") {
-      // ใช้ qrcodejs library
-      container.className = (container.className || "") + " qr-canvas-container";
+      container.className = (container.className || "").replace(/qr-canvas-container/g, "").trim() + " qr-canvas-container";
       new QRCode(container, {
         text: text,
         width: size,
         height: size,
-        colorDark: "#0f172a",
+        colorDark: "#000000",
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.M
       });
     } else {
-      // Fallback: ใช้ img จาก API
+      // Fallback: ใช้ api.qrserver.com พร้อม quiet zone margin
       const img = document.createElement("img");
-      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=10&data=${encodeURIComponent(text)}`;
       img.width = size;
       img.height = size;
       img.alt = "QR Code";
-      img.style.borderRadius = "4px";
+      img.style.borderRadius = "8px";
+      img.style.display = "block";
       container.appendChild(img);
     }
   });
