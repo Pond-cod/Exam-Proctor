@@ -99,7 +99,7 @@ function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   const payload = {
     roomId: examConfig.roomId || "",
     roomTitle: examConfig.title,
-    studentId: studentId || "ไม่ระบุรหัส",
+    studentId: String(studentId || "ไม่ระบุรหัส").trim(),
     violation: violationText,
     violationCount: violationCount,
     timestamp: now.toISOString(),
@@ -567,7 +567,52 @@ function setupAntiCheatListeners() {
   }, true);
 }
 
-// Student Submit Confirmation — BUG-14: await webhook ก่อน reload, UX-02: showConfirm & showAlert
+function showCompletedScreen(reason = "ส่งข้อสอบสำเร็จ") {
+  const portalView = document.getElementById("examPortalView");
+  const activeView = document.getElementById("examActiveView");
+  const completedView = document.getElementById("examCompletedView");
+  const modal = document.getElementById("violationModal");
+
+  if (portalView) portalView.style.display = "none";
+  if (activeView) activeView.style.display = "none";
+  if (modal) modal.classList.remove("active");
+
+  const titleEl = document.getElementById("completedExamTitle");
+  const sIdEl = document.getElementById("completedStudentId");
+  const durEl = document.getElementById("completedDuration");
+  const subTimeEl = document.getElementById("completedSubmitTime");
+  const vCountEl = document.getElementById("completedViolationCount");
+
+  if (titleEl) titleEl.textContent = examConfig.title || "แบบทดสอบออนไลน์";
+  if (sIdEl) sIdEl.textContent = studentId || "-";
+  
+  const elapsedSecs = secondsElapsed || Math.floor((Date.now() - timerStartTime) / 1000);
+  const hrs = Math.floor(elapsedSecs / 3600);
+  const mins = Math.floor((elapsedSecs % 3600) / 60);
+  const secs = elapsedSecs % 60;
+  let durStr = "";
+  if (hrs > 0) durStr += `${hrs} ชม. `;
+  if (mins > 0 || hrs > 0) durStr += `${mins} นาที `;
+  durStr += `${secs} วินาที`;
+  if (durEl) durEl.textContent = durStr;
+
+  if (subTimeEl) subTimeEl.textContent = new Date().toLocaleTimeString("th-TH");
+  if (vCountEl) {
+    if (violationCount > 0) {
+      vCountEl.textContent = `เตือน ${violationCount} ครั้ง`;
+      vCountEl.style.color = "#dc2626";
+    } else {
+      vCountEl.textContent = "0 ครั้ง (ไม่พบความผิดปกติ)";
+      vCountEl.style.color = "#059669";
+    }
+  }
+
+  if (completedView) {
+    completedView.style.display = "flex";
+  }
+}
+
+// Student Submit Confirmation — BUG-14 & BUG-02: แสดงหน้าจอสำเร็จแทนการ reload
 async function handleStudentFinished() {
   const confirmed = await showConfirm(
     "คุณได้กดส่งคำตอบ (Submit) ใน Google Forms เรียบร้อยแล้วใช่หรือไม่?\n\nกดยืนยันเพื่อสิ้นสุดการสอบและปลดล็อกระบบ",
@@ -590,20 +635,15 @@ async function handleStudentFinished() {
       document.exitFullscreen().catch(() => {});
     }
 
-    // รอให้ webhook ส่งเสร็จก่อนค่อย reload
     try {
       sendAlertToWebhook("ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ปลดล็อกระบบ)");
     } catch (_) {}
-    await showAlert("บันทึกการส่งข้อสอบเรียบร้อยแล้ว ขอบคุณครับ", {
-      type: "success",
-      title: "ส่งข้อสอบสำเร็จ",
-      confirmText: "ตกลง"
-    });
-    window.location.reload();
+
+    showCompletedScreen("ส่งข้อสอบสำเร็จ");
   }
 }
 
-// Admin Force Stop / Unlock with Passcode — UX-02: showPrompt & showAlert
+// Admin Force Stop / Unlock with Passcode — UX-02 & BUG-02
 async function handleAdminUnlock() {
   const pass = await showPrompt("กรุณากรอกรหัสผ่านผู้คุมสอบ (Admin Passcode) เพื่อปลดล็อก:", {
     title: "ปลดล็อกโดยผู้คุมสอบ",
@@ -628,12 +668,8 @@ async function handleAdminUnlock() {
     try {
       sendAlertToWebhook("ผู้คุมสอบกรอกรหัสผ่านเพื่อปลดล็อกการสอบ");
     } catch (_) {}
-    await showAlert("ปลดล็อกระบบการสอบเรียบร้อยแล้ว", {
-      type: "success",
-      title: "ปลดล็อกสำเร็จ",
-      confirmText: "ตกลง"
-    });
-    window.location.reload();
+
+    showCompletedScreen("ปลดล็อกโดยผู้คุมสอบ");
   } else if (pass !== null) {
     await showAlert("รหัสผ่านผู้คุมสอบไม่ถูกต้อง", {
       type: "danger",

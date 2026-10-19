@@ -138,6 +138,52 @@
     </div>
   </div>
 
+  <!-- 4. หน้าจอแสดงผลเมื่อส่งข้อสอบสำเร็จ (Completed View) -->
+  <div id="examCompletedView" style="display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 24px 16px;">
+    <div class="portal-box" style="max-width: 480px; text-align: center; border: 2px solid #a7f3d0; background: rgba(255, 255, 255, 0.98);">
+      <div style="width: 72px; height: 72px; background: #ecfdf5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 2px solid #6ee7b7; font-size: 38px;">
+        ✅
+      </div>
+      <div class="badge badge-success" style="font-size: 13px; font-weight: 700; padding: 6px 14px; margin-bottom: 12px;">
+        ส่งข้อสอบเรียบร้อยแล้ว
+      </div>
+      <h2 style="font-size: 22px; font-weight: 800; color: #065f46; margin-bottom: 8px;" id="completedExamTitle">
+        บันทึกคำตอบสำเร็จ
+      </h2>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+        ข้อมูลการทำข้อสอบและความซื่อสัตย์ในการสอบของคุณถูกส่งไปยังผู้คุมสอบเรียบร้อยแล้ว
+      </p>
+
+      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: var(--radius-md); padding: 16px; text-align: left; margin-bottom: 24px; font-size: 13.5px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: var(--text-muted);">รหัสประจำตัว:</span>
+          <strong id="completedStudentId" style="color: var(--primary); font-family: monospace; font-size: 15px;">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: var(--text-muted);">เวลาที่ใช้สอบ:</span>
+          <strong id="completedDuration">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: var(--text-muted);">เวลาที่กดส่ง:</span>
+          <strong id="completedSubmitTime">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">จำนวนแจ้งเตือน:</span>
+          <strong id="completedViolationCount" style="color: #059669;">0 ครั้ง</strong>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <a href="index.html" class="btn btn-primary btn-block btn-lg" style="text-decoration: none; font-weight: 700;">
+          🎓 กลับสู่หน้าศูนย์รวมข้อสอบ
+        </a>
+        <button type="button" class="btn btn-secondary btn-block" onclick="window.close()" style="font-size: 13px;">
+          ปิดหน้าต่างนี้
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast แจ้งเตือนด่วน -->
   <div id="toastAlert" class="toast-alert"></div>
 

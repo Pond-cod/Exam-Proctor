@@ -20,13 +20,44 @@ let sessionCutoffTime = parseInt(localStorage.getItem("examSessionCutoff") || "0
 let adminLiveChannel = null;
 let soundAlertEnabled = localStorage.getItem("examMonitorSoundEnabled") !== "false";
 
+let cachedAudioCtx = null;
+function getAudioContext() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    if (!cachedAudioCtx) {
+      cachedAudioCtx = new AudioContextClass();
+    }
+    if (cachedAudioCtx.state === "suspended") {
+      cachedAudioCtx.resume().catch(() => {});
+    }
+    return cachedAudioCtx;
+  } catch (_) {
+    return null;
+  }
+}
+
+function setupAudioUnlock() {
+  const unlock = () => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
+    } catch (_) {}
+    document.removeEventListener("click", unlock);
+    document.removeEventListener("keydown", unlock);
+  };
+  document.addEventListener("click", unlock, { once: true });
+  document.addEventListener("keydown", unlock, { once: true });
+}
+
 // Audio Chime for Admin Monitor
 function playAdminChime() {
   if (!soundAlertEnabled) return;
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sine";
@@ -1484,6 +1515,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof requireAuth === "function" && !requireAuth()) return;
 
   setupMobileNavigation();
+  setupAudioUnlock();
   applyRoleUI();
 
   allRooms = getStoredRooms();

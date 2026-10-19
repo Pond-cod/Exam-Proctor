@@ -337,11 +337,22 @@ function renderRoomHistory() {
   });
 }
 
-// สลับสถานะเปิด/ปิดห้องสอบ (Toggle Open / Closed) — ทำได้ทั้ง Admin และ Teacher
+// สลับสถานะเปิด/ปิดห้องสอบ (Toggle Open / Closed) — ทำได้ทั้ง Admin และเจ้าของห้องสอบ
 async function toggleRoomStatus(roomId) {
   let rooms = getStoredRooms();
   const room = rooms.find(r => r.roomId === roomId);
   if (!room) return;
+
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
+
+  if (!isAdmin && !isRoomOwnedByUser(room, currentUser)) {
+    showAlert("คุณสามารถเปิด/ปิดได้เฉพาะห้องสอบที่คุณเป็นผู้สร้างเท่านั้น", {
+      type: "warning",
+      confirmText: "เข้าใจแล้ว"
+    });
+    return;
+  }
 
   const newStatus = room.status === "OPEN" ? "CLOSED" : "OPEN";
   room.status = newStatus;
@@ -457,6 +468,17 @@ async function handleSaveEditRoom() {
   let rooms = getStoredRooms();
   const idx = rooms.findIndex(r => r.roomId === roomId);
   if (idx === -1) return;
+
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
+
+  if (!isAdmin && !isRoomOwnedByUser(rooms[idx], currentUser)) {
+    showAlert("คุณสามารถแก้ไขได้เฉพาะห้องสอบที่คุณเป็นผู้สร้างเท่านั้น", {
+      type: "warning",
+      confirmText: "เข้าใจแล้ว"
+    });
+    return;
+  }
 
   const cleanForm = formatGoogleFormEmbedUrl(formUrl);
   const updatedRoom = {

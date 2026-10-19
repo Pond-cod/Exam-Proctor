@@ -151,16 +151,23 @@ function openUserModal(userId = null) {
     const user = users.find(u => u.userId === userId);
     if (!user) return;
 
-    if (titleEl) titleEl.textContent = "✏️ แก้ไขข้อมูลผู้ใช้งาน";
+    const isPrimaryAdmin = user.userId === "USR-ADMIN" || user.username === "admin";
+    if (titleEl) titleEl.textContent = isPrimaryAdmin ? "✏️ แก้ไขข้อมูลผู้ดูแลระบบหลัก (Master Admin)" : "✏️ แก้ไขข้อมูลผู้ใช้งาน";
     if (idInput) idInput.value = user.userId;
     if (usernameInput) {
       usernameInput.value = user.username || "";
       usernameInput.readOnly = true; // ห้ามแก้ Username หลัก
     }
     if (nameInput) nameInput.value = user.displayName || "";
-    if (roleSelect) roleSelect.value = user.role || "TEACHER";
+    if (roleSelect) {
+      roleSelect.value = isPrimaryAdmin ? USER_ROLES.ADMIN : (user.role || "TEACHER");
+      roleSelect.disabled = isPrimaryAdmin;
+    }
     if (passInput) passInput.value = user.passcode || "";
-    if (statusSelect) statusSelect.value = user.status || "ACTIVE";
+    if (statusSelect) {
+      statusSelect.value = isPrimaryAdmin ? "ACTIVE" : (user.status || "ACTIVE");
+      statusSelect.disabled = isPrimaryAdmin;
+    }
   } else {
     // โหมดเพิ่มใหม่ (Create)
     if (titleEl) titleEl.textContent = "➕ เพิ่มผู้ใช้งานใหม่";
@@ -170,9 +177,15 @@ function openUserModal(userId = null) {
       usernameInput.readOnly = false;
     }
     if (nameInput) nameInput.value = "";
-    if (roleSelect) roleSelect.value = "TEACHER";
+    if (roleSelect) {
+      roleSelect.value = "TEACHER";
+      roleSelect.disabled = false;
+    }
     if (passInput) passInput.value = Math.floor(10000000 + Math.random() * 90000000).toString();
-    if (statusSelect) statusSelect.value = "ACTIVE";
+    if (statusSelect) {
+      statusSelect.value = "ACTIVE";
+      statusSelect.disabled = false;
+    }
   }
 
   if (modal) modal.classList.add("active");
@@ -221,12 +234,13 @@ async function handleSaveUser() {
     // บันทึกแก้ไข
     const idx = users.findIndex(u => u.userId === userId);
     if (idx !== -1) {
+      const isPrimary = users[idx].userId === "USR-ADMIN" || users[idx].username === "admin";
       users[idx] = {
         ...users[idx],
         displayName: displayName || username,
-        role: role,
+        role: isPrimary ? USER_ROLES.ADMIN : role,
         passcode: passcode,
-        status: status,
+        status: isPrimary ? "ACTIVE" : status,
         updatedAt: new Date().toISOString()
       };
 

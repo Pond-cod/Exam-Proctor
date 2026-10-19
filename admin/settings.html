@@ -95,10 +95,10 @@
             <div class="form-hint">ข้อความนี้จะแสดงในแถบประกาศสีฟ้าด้านบนของหน้าแรกสำหรับนักเรียน (เว้นว่างได้หากไม่มีประกาศ)</div>
           </div>
 
-          <!-- 3. รหัสผ่าน 2 ระดับ -->
+          <!-- 3. รหัสผ่านผู้คุมสอบกลาง (Proctor Passcodes) -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="settingAdminPasscodeInput">3. Master Admin Passcode (รหัสแอดมิน) *</label>
+              <label class="form-label" for="settingAdminPasscodeInput">3. Master Admin Passcode (รหัสปลดล็อกห้องสอบระดับสูง) *</label>
               <input 
                 type="text" 
                 id="settingAdminPasscodeInput" 
@@ -108,11 +108,11 @@
                 required
                 style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #b91c1c; text-align: center;"
               >
-              <div class="form-hint" style="color: #991b1b;">รหัสผ่านระดับสูงสุดสำหรับเข้าถึงสิทธิ์ Admin</div>
+              <div class="form-hint" style="color: #991b1b;">รหัส 6 หลักสำหรับครู/แอดมินใช้ปลดล็อกหน้าจอสอบของนักเรียน</div>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="settingTeacherPasscodeInput">4. รหัสผ่านครูผู้สอนเริ่มต้น (Default Teacher Passcode) *</label>
+              <label class="form-label" for="settingTeacherPasscodeInput">4. รหัสผ่านผู้คุมสอบห้องเริ่มต้น (Default Proctor Passcode) *</label>
               <input 
                 type="text" 
                 id="settingTeacherPasscodeInput" 
@@ -122,8 +122,14 @@
                 required
                 style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #1d4ed8; text-align: center;"
               >
-              <div class="form-hint" style="color: #1e40af;">รหัสผ่านพื้นฐานสำหรับครูผู้สอนเข้าสู่ระบบหลังบ้าน</div>
+              <div class="form-hint" style="color: #1e40af;">รหัสผ่าน 6 หลักเริ่มต้นในการสร้างห้องสอบใหม่</div>
             </div>
+          </div>
+
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12.5px; color: #1e40af; margin-bottom: 16px; line-height: 1.5;">
+            <strong>🔐 หมายเหตุเกี่ยวกับรหัสผ่านเข้าสู่ระบบ (Staff Login):</strong><br>
+            รหัสผ่านสำหรับเข้าใช้งานระบบบุคลากร (ความยาวอย่างน้อย 8 ตัวอักษร) จะถูกจัดการแยกรายบุคคล สามารถเพิ่ม/แก้ไขได้ที่เมนู 
+            <a href="users.html" style="color: #1d4ed8; font-weight: 700; text-decoration: underline;">👥 จัดการผู้ใช้</a>
           </div>
 
           <!-- 4. Webhook & Google Sheets -->
