@@ -402,15 +402,14 @@ let adminLiveChannel = null;
 function setupLiveBroadcastListener() {
   try {
     if (typeof BroadcastChannel !== "undefined") {
-      if (adminLiveChannel) {
-        try { adminLiveChannel.close(); } catch (_) {}
+      if (!adminLiveChannel) {
+        adminLiveChannel = new BroadcastChannel("exam_proctor_bus");
+        adminLiveChannel.onmessage = (event) => {
+          if (event.data && event.data.type === "EXAM_EVENT" && event.data.payload) {
+            handleIncomingLiveEvent(event.data.payload);
+          }
+        };
       }
-      adminLiveChannel = new BroadcastChannel("exam_proctor_bus");
-      adminLiveChannel.onmessage = (event) => {
-        if (event.data && event.data.type === "EXAM_EVENT" && event.data.payload) {
-          handleIncomingLiveEvent(event.data.payload);
-        }
-      };
     }
   } catch (err) {
     console.warn("BroadcastChannel listener setup failed:", err);
@@ -425,6 +424,9 @@ function setupLiveBroadcastListener() {
     }
   });
 }
+
+// ลงทะเบียนทันทีที่โหลดสคริปต์
+setupLiveBroadcastListener();
 
 // ตรวจสอบว่าเป็นข้อมูลทดสอบระบบ (Test Ping / Curl / NodeTest) หรือไม่
 function isTestLogEntry(item) {
@@ -452,29 +454,68 @@ function handleIncomingLiveEvent(payload) {
   if (!payload || !payload.studentId) return;
   if (isTestLogEntry(payload)) return;
 
+  const sId = String(payload.studentId).trim();
+
+  // ป้องกันรายการซ้ำใน allLogs
   const exists = allLogs.some((l) => {
-    if (String(l.studentId) !== String(payload.studentId)) return false;
+    if (String(l.studentId) !== sId) return false;
     if (String(l.violation) !== String(payload.violation)) return false;
     if (l.timestamp && payload.timestamp && l.timestamp === payload.timestamp) return true;
     if (l.timestamp && payload.timestamp) {
       const diff = Math.abs(new Date(l.timestamp).getTime() - new Date(payload.timestamp).getTime());
-      if (diff < 800) return true;
+      if (diff < 500) return true;
     }
     return false;
   });
 
   if (!exists) {
     allLogs.push(payload);
-    recentLocalLiveEvents.push(payload);
-    if (recentLocalLiveEvents.length > 50) recentLocalLiveEvents.shift();
+  }
 
-    renderMonitorLogs();
-    playAdminChime();
+  recentLocalLiveEvents.push(payload);
+  if (recentLocalLiveEvents.length > 50) recentLocalLiveEvents.shift();
 
-    const syncStatus = document.getElementById("syncStatusText");
-    if (syncStatus) {
-      syncStatus.textContent = `⚡ อัปเดตสด: ${payload.studentId} (${new Date().toLocaleTimeString("th-TH")})`;
+  // อัปเดต studentsData ทันที (Instant 0ms UI update)
+  if (!studentsData[sId]) {
+    studentsData[sId] = {
+      studentId: sId,
+      logs: [payload],
+      violationCount: payload.violationCount || 0,
+      isStarted: true,
+      isSubmitted: false,
+      startTime: payload.time || payload.timestamp,
+      submitTime: null,
+      lastEventTime: payload.time,
+      lastEventIso: payload.timestamp,
+      lastEventText: payload.violation || "",
+      hasAlert: (payload.violationCount || 0) > 0,
+      isTestPing: false,
+      isOldDate: false,
+      isBeforeCutoff: false
+    };
+  } else {
+    const s = studentsData[sId];
+    if (payload.violationCount !== undefined && typeof payload.violationCount === "number" && payload.violationCount > s.violationCount) {
+      s.violationCount = payload.violationCount;
+    } else if (payload.violation && !payload.violation.includes("เริ่มเข้าทำข้อสอบ") && !payload.violation.includes("ส่งข้อสอบเรียบร้อย")) {
+      s.violationCount++;
     }
+    s.hasAlert = s.violationCount > 0;
+    s.lastEventText = payload.violation || s.lastEventText;
+    s.lastEventTime = payload.time || s.lastEventTime;
+    s.lastEventIso = payload.timestamp || s.lastEventIso;
+    if (payload.violation && payload.violation.includes("ส่งข้อสอบเรียบร้อย")) {
+      s.isSubmitted = true;
+      s.submitTime = payload.time || payload.timestamp;
+    }
+  }
+
+  renderMonitorLogs();
+  playAdminChime();
+
+  const syncStatus = document.getElementById("syncStatusText");
+  if (syncStatus) {
+    syncStatus.textContent = `⚡ อัปเดตสด: ${sId} (${new Date().toLocaleTimeString("th-TH")})`;
   }
 }
 
@@ -610,6 +651,13 @@ function renderMonitorLogs() {
       // พฤติกรรมละเมิดกฎ (ไม่นับ Test Ping / Test Entry)
       s.violationCount++;
       totalViolationsCount++;
+    }
+
+    // หาก item มีระบุ violationCount ตัวเลขล่าสุดมาด้วย ให้อัปเดตเป็นค่าสูงสุด
+    if (item.violationCount && typeof item.violationCount === "number" && item.violationCount > s.violationCount) {
+      const diff = item.violationCount - s.violationCount;
+      s.violationCount = item.violationCount;
+      totalViolationsCount += diff;
     }
 
     s.lastEventTime = itemTime;

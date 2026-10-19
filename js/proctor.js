@@ -48,21 +48,20 @@ function playWarningBeep() {
 }
 
 let proctorLiveChannel = null;
-function getProctorLiveChannel() {
-  if (!proctorLiveChannel && typeof BroadcastChannel !== "undefined") {
-    try {
-      proctorLiveChannel = new BroadcastChannel("exam_proctor_bus");
-    } catch (_) {}
+try {
+  if (typeof BroadcastChannel !== "undefined") {
+    proctorLiveChannel = new BroadcastChannel("exam_proctor_bus");
   }
-  return proctorLiveChannel;
-}
+} catch (_) {}
 
-// ส่งสัญญาณ Real-time ตรงไปยัง Admin Monitor ทันที 0ms (ไม่ close channel)
+// ส่งสัญญาณ Real-time ตรงไปยัง Admin Monitor ทันที 0ms (Persistent Channel + Storage fallback)
 function broadcastLocalEvent(payload) {
   try {
-    const ch = getProctorLiveChannel();
-    if (ch) {
-      ch.postMessage({ type: "EXAM_EVENT", payload });
+    if (!proctorLiveChannel && typeof BroadcastChannel !== "undefined") {
+      proctorLiveChannel = new BroadcastChannel("exam_proctor_bus");
+    }
+    if (proctorLiveChannel) {
+      proctorLiveChannel.postMessage({ type: "EXAM_EVENT", payload });
     }
   } catch (err) {
     console.warn("BroadcastChannel error:", err);
@@ -71,10 +70,13 @@ function broadcastLocalEvent(payload) {
     localStorage.setItem("exam_live_event", JSON.stringify({
       ...payload,
       _rand: Math.random(),
-      _t: Date.now()
+      _time: Date.now()
     }));
   } catch (_) {}
 }
+
+let lastCloudSendTime = 0;
+let lastCloudViolationText = "";
 
 // Send Webhook Alert to Google Apps Script / Google Sheets & Direct Local Real-time
 async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
@@ -84,6 +86,7 @@ async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   const payload = {
     studentId: studentId || "ไม่ระบุรหัส",
     violation: violationText,
+    violationCount: violationCount,
     timestamp: now.toISOString(),
     time: now.toLocaleTimeString("th-TH"),
     date: now.toLocaleDateString("th-TH"),
@@ -91,33 +94,42 @@ async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
     formTitle: examConfig.title
   };
 
-  // 1. ส่งสัญญาณตรงแบบ Instant Real-Time ทันที (0ms) สำหรับเบราว์เซอร์เดียวกัน
+  // 1. ส่งสัญญาณตรงแบบ Instant Real-Time ทันที (0ms) สำหรับหน้าจอคุมสอบสด
   broadcastLocalEvent(payload);
 
-  // 2. ส่งขึ้น Cloud Google Sheets Webhook ด้วย navigator.sendBeacon (ทำงานแม้หน้าต่างหลุดโฟกัส)
+  // 2. ป้องกันการ flood Google Apps Script:
+  // สำหรับการแจ้งเตือนพฤติกรรมเดิมซ้ำๆ (เช่น หลุดโฟกัสต่อเนื่อง) ให้ส่งขึ้น Cloud ทุกๆ 3.5 วินาที
+  // แต่ถ้าเป็นเริ่มสอบ, ส่งข้อสอบ, หรือข้อความใหม่ ให้ส่งขึ้น Cloud ทันที
+  const isStartOrEnd = violationText.includes("เริ่มเข้าทำข้อสอบ") || violationText.includes("ส่งข้อสอบเรียบร้อย");
+  const isNewViolation = violationText !== lastCloudViolationText;
+  const nowMs = Date.now();
+  if (!isStartOrEnd && !isNewViolation && (nowMs - lastCloudSendTime < 3500)) {
+    return;
+  }
+  lastCloudSendTime = nowMs;
+  lastCloudViolationText = violationText;
+
   const payloadStr = JSON.stringify(payload);
-  let beaconSent = false;
+
+  // 3. ส่งขึ้น Cloud Google Sheets Webhook ด้วย fetch (mode: no-cors + keepalive)
+  try {
+    fetch(examConfig.webhookUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: payloadStr,
+      keepalive: true
+    }).catch(() => {});
+  } catch (err) {
+    console.warn("Fetch Webhook failed:", err);
+  }
+
+  // 4. ส่งสำรองด้วย sendBeacon
   try {
     if (navigator.sendBeacon) {
-      const blob = new Blob([payloadStr], { type: "text/plain;charset=utf-8" });
-      beaconSent = navigator.sendBeacon(examConfig.webhookUrl, blob);
+      navigator.sendBeacon(examConfig.webhookUrl, payloadStr);
     }
   } catch (_) {}
-
-  // 3. Fallback: ส่งด้วย fetch (mode: no-cors + keepalive)
-  if (!beaconSent) {
-    try {
-      await fetch(examConfig.webhookUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: payloadStr,
-        keepalive: true
-      });
-    } catch (err) {
-      console.warn("Webhook fetch fallback failed:", err);
-    }
-  }
 }
 
 // Debounce Violation Alerts & Trigger Modal Warning at Student Screen
