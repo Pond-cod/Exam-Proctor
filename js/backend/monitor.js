@@ -630,11 +630,21 @@ function renderMonitorLogs() {
   });
 
   // --- 1. สถิติและตัวชี้วัดสำหรับ 🔴 ศูนย์คุมสอบสด (Live Proctoring Center) ---
-  const liveRecentSubmitted = completedStudents.filter(s => !s.isOldDate && !s.isBeforeCutoff);
-  const totalLiveSession = liveStudents.length + liveRecentSubmitted.length;
+  // การ์ดและตัวชี้วัดในแท็บนี้ ต้องแสดงเฉพาะเหตุการณ์สดที่กำลังเกิดขึ้น ณ ขณะนี้เท่านั้น
   const totalActive = liveStudents.length;
-  const liveViolationsCount = liveStudents.reduce((sum, s) => sum + (s.violationCount || 0), 0) + 
-                              liveRecentSubmitted.reduce((sum, s) => sum + (s.violationCount || 0), 0);
+
+  // ผู้ที่เพิ่งส่งในรอบสด: จะนับเฉพาะเมื่อมีรอบสดกำลังเปิดสอบอยู่ และมีการตัดรอบ sessionCutoffTime เท่านั้น
+  let liveRecentSubmitted = [];
+  if (totalActive > 0 && sessionCutoffTime > 0) {
+    liveRecentSubmitted = completedStudents.filter(s => {
+      const submitMs = s.submitTime ? parseLogTimestampMs({ time: s.submitTime, timestamp: s.submitTime }) : 0;
+      return submitMs >= sessionCutoffTime;
+    });
+  }
+
+  const totalLiveSession = totalActive + liveRecentSubmitted.length;
+  // การแจ้งเตือนสลับจอสด: ต้องนับเฉพาะคนที่กำลังสอบสดอยู่ขณะนี้เท่านั้น (ไม่นำประวัติคนที่ส่งข้อสอบแล้วมาปน)
+  const liveViolationsCount = liveStudents.reduce((sum, s) => sum + (s.violationCount || 0), 0);
   const unacknowledgedLiveCount = liveStudents.filter(s => s.hasActiveAlert).length;
   const activePercent = totalLiveSession > 0 ? Math.round((totalActive / totalLiveSession) * 100) : 0;
   const liveCompletedPercent = totalLiveSession > 0 ? Math.round((liveRecentSubmitted.length / totalLiveSession) * 100) : 0;
@@ -657,7 +667,7 @@ function renderMonitorLogs() {
 
   const violationsProgressFill = document.getElementById("statViolationsProgressFill");
   const violationsSubDetail = document.getElementById("statViolationsSubDetail");
-  const liveAlertStudentsCount = liveStudents.filter(s => s.hasAlert).length + liveRecentSubmitted.filter(s => s.hasAlert).length;
+  const liveAlertStudentsCount = liveStudents.filter(s => s.hasAlert).length;
   const liveAlertPercent = totalLiveSession > 0 ? Math.round((liveAlertStudentsCount / totalLiveSession) * 100) : 0;
   if (violationsProgressFill) violationsProgressFill.style.width = `${liveAlertPercent}%`;
   if (violationsSubDetail) {
@@ -1042,10 +1052,9 @@ function renderSelectedCategoryGrid(query) {
   const countBadge = document.getElementById("monitorCategoryCountBadge");
   if (!container) return;
 
-  const allList = Object.values(studentsData).filter(s => !s.isTestPing);
-  const totalCombined = allList.length;
-  const alertStudents = allList.filter(s => s.hasAlert || s.violationCount > 0);
-  const totalAlert = alertStudents.length;
+  const liveAlertStudents = liveStudents.filter(s => s.hasAlert || s.violationCount > 0);
+  const totalCombined = Object.values(studentsData).filter(s => !s.isTestPing).length;
+  const totalAlert = Object.values(studentsData).filter(s => !s.isTestPing && (s.hasAlert || s.violationCount > 0)).length;
   const totalCompleted = completedStudents.length;
 
   let pool = [];
@@ -1055,30 +1064,23 @@ function renderSelectedCategoryGrid(query) {
   let emptyDesc = "";
 
   switch (selectedMonitorCategory) {
-    case "all":
-      pool = allList;
-      categoryTitle = "ผู้เข้าสอบทั้งหมด (All Examinees)";
-      categoryIcon = "👥";
-      emptyTitle = "ยังไม่มีข้อมูลผู้เข้าสอบ";
-      emptyDesc = "ยังไม่พบข้อมูลผู้เข้าสอบในระบบหรือห้องสอบที่เลือก";
-      break;
-
     case "alert":
-      pool = alertStudents;
-      categoryTitle = "ผู้เข้าสอบที่พบการแจ้งเตือนสลับจอ (Violations Detected)";
+      pool = liveAlertStudents;
+      categoryTitle = "ผู้สอบสดที่พบการแจ้งเตือนสลับจอ (Live Violations)";
       categoryIcon = "⚠️";
-      emptyTitle = "✅ ไม่พบการแจ้งเตือนสลับหน้าจอ";
-      emptyDesc = "ผู้เข้าสอบทุกคนอยู่ในโหมดเต็มหน้าจอและทำข้อสอบด้วยความซื่อสัตย์";
+      emptyTitle = "✅ ไม่พบการแจ้งเตือนสด";
+      emptyDesc = "ผู้เข้าสอบสดทุกคนอยู่ในโหมดเต็มหน้าจอและทำข้อสอบด้วยความซื่อสัตย์";
       break;
 
     case "completed":
-      pool = completedStudents;
-      categoryTitle = "ผู้ที่ส่งข้อสอบเรียบร้อยแล้ว (Submitted Examinees)";
+      pool = liveRecentSubmitted;
+      categoryTitle = "ผู้ที่ส่งข้อสอบแล้วในรอบสด (Submitted in Live Session)";
       categoryIcon = "🏆";
-      emptyTitle = "ยังไม่มีผู้ส่งข้อสอบ";
-      emptyDesc = "เมื่อมีนักเรียนกดส่งข้อสอบ รายชื่อจะปรากฏที่นี่";
+      emptyTitle = "ยังไม่มีผู้ส่งข้อสอบในรอบสด";
+      emptyDesc = "ประวัติผู้ที่ส่งข้อสอบทั้งหมดจะถูกจัดเก็บไว้ใน '📁 คลังประวัติ & รายงานย้อนหลัง'";
       break;
 
+    case "all":
     case "live":
     default:
       pool = liveStudents;
@@ -1092,7 +1094,7 @@ function renderSelectedCategoryGrid(query) {
   // อัปเดตส่วนหัวของจอคุมสอบสด
   if (titleText) titleText.textContent = categoryTitle;
   if (iconEl) {
-    if (selectedMonitorCategory === "live") {
+    if (selectedMonitorCategory === "live" || selectedMonitorCategory === "all") {
       iconEl.className = "live-pulse-dot";
       iconEl.style.display = "inline-block";
       iconEl.textContent = "";
@@ -1128,7 +1130,7 @@ function renderSelectedCategoryGrid(query) {
     }
   }
 
-  // กรณีไม่มีข้อมูล ให้แสดง Empty State พร้อมปุ่มคลิกไปหมวดอื่นที่มีข้อมูล
+  // กรณีไม่มีข้อมูล ให้แสดง Empty State พร้อมปุ่มคลิกไปคลังประวัติหากมีข้อมูลในระบบ
   if (filtered.length === 0) {
     container.innerHTML = `
       <div class="screens-empty-state compact-empty-state">
@@ -1142,19 +1144,14 @@ function renderSelectedCategoryGrid(query) {
         <p style="font-size: 12.5px; color: var(--text-secondary); max-width: 440px; margin: 0 auto 12px; line-height: 1.5;">
           ${escapeHtml(emptyDesc)}
         </p>
-        ${totalCombined > 0 && selectedMonitorCategory === "live" ? `
+        ${totalCompleted > 0 && pool.length === 0 ? `
           <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-            <button type="button" class="btn btn-sm btn-outline-primary" id="btnEmptyViewAll" style="font-size: 12px; padding: 4px 12px; border-radius: 99px;">
-              👥 ดูผู้เข้าสอบทั้งหมด (${totalCombined} คน)
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btnEmptyViewArchive" style="font-size: 12px; padding: 5px 14px; border-radius: 99px;">
+              📁 ดูคลังประวัติผู้ส่งข้อสอบแล้ว (${totalCompleted} คน)
             </button>
             ${totalAlert > 0 ? `
-              <button type="button" class="btn btn-sm btn-outline-danger" id="btnEmptyViewAlert" style="font-size: 12px; padding: 4px 12px; border-radius: 99px; color: #dc2626; border-color: #fecaca; background: #fff1f2;">
-                ⚠️ ดูผู้ที่ถูกแจ้งเตือน (${totalAlert} คน)
-              </button>
-            ` : ""}
-            ${totalCompleted > 0 ? `
-              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnEmptyViewCompleted" style="font-size: 12px; padding: 4px 12px; border-radius: 99px;">
-                🏆 ดูผู้ที่ส่งข้อสอบแล้ว (${totalCompleted} คน)
+              <button type="button" class="btn btn-sm btn-outline-danger" id="btnEmptyViewArchiveAlert" style="font-size: 12px; padding: 5px 14px; border-radius: 99px; color: #dc2626; border-color: #fecaca; background: #fff1f2;">
+                ⚠️ ดูประวัติการแจ้งเตือน (${totalAlert} คน)
               </button>
             ` : ""}
           </div>
@@ -1162,12 +1159,13 @@ function renderSelectedCategoryGrid(query) {
       </div>
     `;
 
-    const btnAll = document.getElementById("btnEmptyViewAll");
-    if (btnAll) btnAll.addEventListener("click", () => selectMonitorCategory("all"));
-    const btnAlert = document.getElementById("btnEmptyViewAlert");
-    if (btnAlert) btnAlert.addEventListener("click", () => selectMonitorCategory("alert"));
-    const btnComp = document.getElementById("btnEmptyViewCompleted");
-    if (btnComp) btnComp.addEventListener("click", () => selectMonitorCategory("completed"));
+    const btnArchive = document.getElementById("btnEmptyViewArchive");
+    if (btnArchive) btnArchive.addEventListener("click", () => switchPrimaryMonitorMode("archive"));
+    const btnArchiveAlert = document.getElementById("btnEmptyViewArchiveAlert");
+    if (btnArchiveAlert) btnArchiveAlert.addEventListener("click", () => {
+      switchPrimaryMonitorMode("archive");
+      selectArchiveCategory("alert");
+    });
 
     return;
   }
