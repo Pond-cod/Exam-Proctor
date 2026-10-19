@@ -1,8 +1,12 @@
 /**
  * Admin Studio & Monitor Engine for index.html (Web App)
+ * Exam Proctor Studio v5.2
  */
 
 let allLogs = [];
+let allRooms = [];
+let currentRole = localStorage.getItem("examProctorRole") || USER_ROLES.USER;
+let currentEntryRoom = null;
 let previousViolationCount = 0;
 let monitorInterval = null;
 
@@ -26,6 +30,148 @@ function playAdminChime() {
   } catch (e) {}
 }
 
+/* ==========================================================================
+   0. Role System Management (Admin VS User/Teacher)
+   ========================================================================== */
+
+function applyRoleUI() {
+  const badge = document.getElementById("navRoleBadge");
+  const toggleBtn = document.getElementById("toggleRoleBtn");
+  const isAdmin = currentRole === USER_ROLES.ADMIN;
+
+  if (badge) {
+    if (isAdmin) {
+      badge.textContent = "ผู้ดูแลระบบ (Admin) 🛡️";
+      badge.className = "role-badge role-badge-admin";
+    } else {
+      badge.textContent = "ครูผู้สอน / ผู้คุมสอบ";
+      badge.className = "role-badge role-badge-user";
+    }
+  }
+
+  if (toggleBtn) {
+    toggleBtn.textContent = isAdmin ? "ออกจาก Admin 🚪" : "เข้าสู่ระบบ Admin 🔑";
+    toggleBtn.title = isAdmin ? "คลิกเพื่อสลับกลับเป็นสิทธิ์ครูผู้สอน" : "คลิกเพื่อเข้าสู่ระบบ Admin ด้วยรหัสผ่าน";
+  }
+
+  // ควบคุมการแสดงผลของฟิลด์และปุ่มเฉพาะ Admin
+  document.querySelectorAll(".admin-only-btn, .admin-only-field").forEach((el) => {
+    el.style.display = isAdmin ? "" : "none";
+  });
+
+  // อัปเดตปุ่มจัดการในหน้าประวัติห้องสอบ
+  renderRoomHistory();
+}
+
+function setupRoleAuth() {
+  const toggleBtn = document.getElementById("toggleRoleBtn");
+  const modal = document.getElementById("adminLoginModal");
+  const closeBtn = document.getElementById("closeAdminLoginModalBtn");
+  const cancelBtn = document.getElementById("cancelAdminLoginBtn");
+  const confirmBtn = document.getElementById("confirmAdminLoginBtn");
+  const passInput = document.getElementById("adminLoginPasscodeInput");
+  const errBox = document.getElementById("adminLoginError");
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      if (currentRole === USER_ROLES.ADMIN) {
+        // ออกจากสิทธิ์ Admin กลับสู่ User ปกติ
+        currentRole = USER_ROLES.USER;
+        localStorage.setItem("examProctorRole", currentRole);
+        applyRoleUI();
+        showAlert("ออกจากสิทธิ์ผู้ดูแลระบบ (Admin) เรียบร้อยแล้ว", {
+          type: "info",
+          title: "สลับสิทธิ์สำเร็จ",
+          confirmText: "ตกลง"
+        });
+      } else {
+        // เปิด Modal กรอกรหัสผ่าน Admin
+        if (passInput) passInput.value = "";
+        if (errBox) errBox.style.display = "none";
+        if (modal) modal.classList.add("active");
+        setTimeout(() => { if (passInput) passInput.focus(); }, 100);
+      }
+    });
+  }
+
+  const closeModal = () => {
+    if (modal) modal.classList.remove("active");
+  };
+
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+  if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+  const doLogin = () => {
+    const val = (passInput ? passInput.value : "").trim();
+    if (val === MASTER_ADMIN_PASSCODE) {
+      currentRole = USER_ROLES.ADMIN;
+      localStorage.setItem("examProctorRole", currentRole);
+      closeModal();
+      applyRoleUI();
+      showAlert("ยินดีต้อนรับสู่โหมดผู้ดูแลระบบ (Admin) คุณสามารถจัดการ ลบ แก้ไขห้องสอบ และตั้งค่าระบบได้", {
+        type: "success",
+        title: "เข้าสู่ระบบ Admin สำเร็จ",
+        confirmText: "เข้าใช้งาน"
+      });
+    } else {
+      if (errBox) errBox.style.display = "block";
+      if (passInput) {
+        passInput.select();
+        passInput.focus();
+      }
+    }
+  };
+
+  if (confirmBtn) confirmBtn.addEventListener("click", doLogin);
+  if (passInput) {
+    passInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doLogin();
+      if (e.key === "Escape") closeModal();
+    });
+  }
+}
+
+/* ==========================================================================
+   1. Populate Dropdowns (หมวดหมู่วิชา และ ระดับชั้น)
+   ========================================================================== */
+
+function populateDropdowns() {
+  const categorySelects = [
+    document.getElementById("examCategorySelect"),
+    document.getElementById("editRoomCategorySelect")
+  ];
+  const categoryFilters = [
+    document.getElementById("portalCategoryFilter"),
+    document.getElementById("historyCategoryFilter")
+  ];
+  const gradeSelects = [
+    document.getElementById("examGradeSelect"),
+    document.getElementById("editRoomGradeSelect")
+  ];
+  const gradeFilter = document.getElementById("historyGradeFilter");
+
+  categorySelects.forEach((sel) => {
+    if (!sel) return;
+    sel.innerHTML = SUBJECT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  });
+
+  categoryFilters.forEach((sel) => {
+    if (!sel) return;
+    sel.innerHTML = `<option value="all">ทุกกลุ่มสาระ / หมวดหมู่</option>` +
+      SUBJECT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  });
+
+  gradeSelects.forEach((sel) => {
+    if (!sel) return;
+    sel.innerHTML = GRADE_LEVELS.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+  });
+
+  if (gradeFilter) {
+    gradeFilter.innerHTML = `<option value="all">ทุกระดับชั้น</option>` +
+      GRADE_LEVELS.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+  }
+}
+
 // 1. Navigation Tab Switching
 function setupTabNavigation() {
   const tabs = document.querySelectorAll(".nav-tab-btn");
@@ -41,6 +187,11 @@ function setupTabNavigation() {
       const targetSec = document.getElementById(targetId);
       if (targetSec) targetSec.classList.add("active");
 
+      // หากสลับมาหน้า Portal ให้อัปเดตรายการห้องสอบ
+      if (targetId === "portalSection") {
+        renderPortalRooms();
+      }
+
       // หากสลับมาหน้า Monitor ให้ดึงข้อมูลทันที
       if (targetId === "monitorSection") {
         fetchMonitorLogs();
@@ -53,22 +204,41 @@ function setupTabNavigation() {
           monitorInterval = null;
         }
       }
+
+      // หากสลับมาหน้าประวัติ ให้เรนเดอร์ใหม่
+      if (targetId === "historySection") {
+        renderRoomHistory();
+      }
     });
   });
 }
 
-// 2. Sub-site Link Generator — UX-01: Loading state, UX-02: showAlert, UX-05: client-side QR
+/* ==========================================================================
+   2. Sub-site Link Generator & Dual Passcodes
+   ========================================================================== */
+
 async function generateExamLink() {
   const title = (document.getElementById("examTitleInput").value || "").trim() || "แบบทดสอบออนไลน์";
   const rawFormUrl = (document.getElementById("examFormUrlInput").value || "").trim();
   const webhookUrl = (document.getElementById("examWebhookInput").value || "").trim() || DEFAULT_WEBHOOK_URL;
+  const category = (document.getElementById("examCategorySelect") ? document.getElementById("examCategorySelect").value : "").trim() || "ทั่วไป (General)";
+  const gradeLevel = (document.getElementById("examGradeSelect") ? document.getElementById("examGradeSelect").value : "").trim() || "ไม่ระบุ (All / Not Specified)";
+  const status = (document.getElementById("examStatusSelect") ? document.getElementById("examStatusSelect").value : "OPEN") || "OPEN";
   
-  // รหัสผ่านผู้คุมสอบ: สุ่มตัวเลข 6 หลักเสมอ (หากเว้นว่างหรือไม่ครบ 6 หลัก ให้สุ่ม 6 หลักใหม่ทันที)
-  let passcode = (document.getElementById("examPasscodeInput").value || "").trim();
-  if (!passcode || !/^\d{6}$/.test(passcode)) {
-    passcode = generateRandomPasscode();
+  // รหัสเข้าห้องสอบสำหรับนักเรียน 6 หลัก
+  let entryCode = (document.getElementById("examEntryCodeInput").value || "").trim();
+  if (!entryCode || !/^\d{6}$/.test(entryCode)) {
+    entryCode = generateEntryCode();
+    const entryInputEl = document.getElementById("examEntryCodeInput");
+    if (entryInputEl) entryInputEl.value = entryCode;
+  }
+
+  // รหัสผ่านผู้คุมสอบ 6 หลัก
+  let adminPasscode = (document.getElementById("examPasscodeInput").value || "").trim();
+  if (!adminPasscode || !/^\d{6}$/.test(adminPasscode)) {
+    adminPasscode = generateRandomPasscode();
     const passInputEl = document.getElementById("examPasscodeInput");
-    if (passInputEl) passInputEl.value = passcode;
+    if (passInputEl) passInputEl.value = adminPasscode;
   }
 
   if (!rawFormUrl) {
@@ -81,30 +251,36 @@ async function generateExamLink() {
     return;
   }
 
-  // UX-01: Loading State บนปุ่มสร้างลิงก์
+  // Loading State บนปุ่มสร้างลิงก์
   const generateBtn = document.getElementById("generateLinkBtn");
   const origBtnContent = generateBtn ? generateBtn.innerHTML : "";
   if (generateBtn) {
     generateBtn.disabled = true;
     generateBtn.classList.add("is-loading");
-    generateBtn.innerHTML = `<span class="btn-spinner"></span> กำลังสร้างห้องสอบและสร้างรหัส QR...`;
+    generateBtn.innerHTML = `<span class="btn-spinner"></span> กำลังสร้างห้องสอบและบันทึกลงระบบ...`;
   }
 
   try {
     const cleanFormUrl = formatGoogleFormEmbedUrl(rawFormUrl);
+    const roomId = "RM-" + Math.floor(100000 + Math.random() * 900000);
 
     const roomConfig = {
+      roomId: roomId,
       title: title,
+      category: category,
+      gradeLevel: gradeLevel,
       formUrl: cleanFormUrl,
+      status: status,
+      entryCode: entryCode,
+      adminPasscode: adminPasscode,
       webhookUrl: webhookUrl,
-      adminPasscode: passcode,
       createdAt: new Date().toISOString()
     };
 
     // เข้ารหัส Base64
     const encodedData = encodeExamConfig(roomConfig);
 
-    // สร้างลิงก์ห้องสอบ Sub-link
+    // สร้างลิงก์ห้องสอบ Sub-link (ส่งเฉพาะ data เพื่อความกระชับ)
     const baseUrl = new URL("exam.html", window.location.href);
     baseUrl.searchParams.set("data", encodedData);
     const fullExamUrl = baseUrl.toString();
@@ -113,19 +289,30 @@ async function generateExamLink() {
     const resultBox = document.getElementById("linkResultBox");
     const linkDisplay = document.getElementById("generatedLinkDisplay");
     const testOpenBtn = document.getElementById("testOpenLinkBtn");
+    const entryCodeDisplay = document.getElementById("generatedEntryCodeDisplay");
+    const copyEntryCodeBtn = document.getElementById("copyEntryCodeBtn");
     const passcodeDisplay = document.getElementById("generatedPasscodeDisplay");
     const copyPasscodeBtn = document.getElementById("copyPasscodeBtn");
 
     linkDisplay.value = fullExamUrl;
     testOpenBtn.href = fullExamUrl;
     
-    // แสดงรหัสผ่านผู้คุมสอบ 6 หลักในกล่องผลลัพธ์
-    if (passcodeDisplay) {
-      passcodeDisplay.textContent = passcode;
+    // แสดงรหัสผ่าน 2 ระดับในกล่องผลลัพธ์
+    if (entryCodeDisplay) entryCodeDisplay.textContent = entryCode;
+    if (copyEntryCodeBtn) {
+      copyEntryCodeBtn.onclick = () => {
+        navigator.clipboard.writeText(entryCode).then(() => {
+          const orig = copyEntryCodeBtn.textContent;
+          copyEntryCodeBtn.textContent = "คัดลอกรหัสแล้ว!";
+          setTimeout(() => { copyEntryCodeBtn.textContent = orig; }, 2000);
+        });
+      };
     }
+
+    if (passcodeDisplay) passcodeDisplay.textContent = adminPasscode;
     if (copyPasscodeBtn) {
       copyPasscodeBtn.onclick = () => {
-        navigator.clipboard.writeText(passcode).then(() => {
+        navigator.clipboard.writeText(adminPasscode).then(() => {
           const orig = copyPasscodeBtn.textContent;
           copyPasscodeBtn.textContent = "คัดลอกรหัสแล้ว!";
           setTimeout(() => { copyPasscodeBtn.textContent = orig; }, 2000);
@@ -133,7 +320,7 @@ async function generateExamLink() {
       };
     }
 
-    // UX-05: สร้าง QR Code แบบ Client-side คมชัด ขนาด 220px
+    // สร้าง QR Code แบบ Client-side คมชัด ขนาด 220px
     const qrWrapper = document.getElementById("examQrContainer") || document.querySelector(".qr-image-wrapper");
     if (qrWrapper) {
       generateQrCode(qrWrapper, fullExamUrl, 220);
@@ -146,10 +333,12 @@ async function generateExamLink() {
       zoomQrBtn.onclick = () => {
         const projectorContainer = document.getElementById("projectorQrContainer");
         const projectorTitle = document.getElementById("projectorExamTitle");
+        const projectorEntry = document.getElementById("projectorEntryCodeDisplay");
         const projectorPasscode = document.getElementById("projectorPasscodeDisplay");
 
         if (projectorTitle) projectorTitle.textContent = title;
-        if (projectorPasscode) projectorPasscode.textContent = passcode;
+        if (projectorEntry) projectorEntry.textContent = entryCode;
+        if (projectorPasscode) projectorPasscode.textContent = adminPasscode;
         if (projectorContainer) {
           generateQrCode(projectorContainer, fullExamUrl, 320);
         }
@@ -197,15 +386,15 @@ async function generateExamLink() {
     resultBox.classList.add("active");
     resultBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-    // บันทึกประวัติลง LocalStorage
+    // บันทึกประวัติลง LocalStorage และส่งไปยัง Google Sheets
     saveRoomToHistory(roomConfig, fullExamUrl);
 
-    // สุ่มรหัสผ่าน 6 หลักใหม่เตรียมไว้ในช่องกรอกสำหรับการสร้างห้องสอบใหม่ครั้งถัดไปเสมอ
+    // สุ่มรหัสใหม่ทั้งสองชุดเตรียมไว้สำหรับรอบถัดไป
     setTimeout(() => {
-      const passInput = document.getElementById("examPasscodeInput");
-      if (passInput) {
-        passInput.value = generateRandomPasscode();
-      }
+      const eInput = document.getElementById("examEntryCodeInput");
+      const pInput = document.getElementById("examPasscodeInput");
+      if (eInput) eInput.value = generateEntryCode();
+      if (pInput) pInput.value = generateRandomPasscode();
     }, 1200);
   } finally {
     setTimeout(() => {
@@ -218,79 +407,648 @@ async function generateExamLink() {
   }
 }
 
-// บันทึกประวัติห้องสอบ
-function saveRoomToHistory(roomConfig, fullUrl) {
+/* ==========================================================================
+   3. Room Storage & CRUD Engine (Relational Local + Cloud)
+   ========================================================================== */
+
+function getStoredRooms() {
   try {
-    let history = JSON.parse(localStorage.getItem("examRoomsHistory") || "[]");
-    history = history.filter((r) => r.fullUrl !== fullUrl);
-    history.unshift({
-      title: roomConfig.title,
-      formUrl: roomConfig.formUrl,
-      adminPasscode: roomConfig.adminPasscode,
-      createdAt: new Date().toLocaleString("th-TH"),
-      fullUrl: fullUrl
-    });
-    history = history.slice(0, 10);
-    localStorage.setItem("examRoomsHistory", JSON.stringify(history));
-    renderRoomHistory();
-  } catch (e) {}
+    return JSON.parse(localStorage.getItem("examRoomsHistory") || "[]");
+  } catch (_) {
+    return [];
+  }
 }
 
-// แสดงรายการประวัติห้องสอบที่เคยสร้าง
+function setStoredRooms(rooms) {
+  try {
+    localStorage.setItem("examRoomsHistory", JSON.stringify(rooms));
+  } catch (_) {}
+}
+
+// บันทึกประวัติห้องสอบใหม่ลงทั้ง Local และ Google Sheets
+function saveRoomToHistory(roomConfig, fullUrl) {
+  try {
+    let history = getStoredRooms();
+    const newRoom = {
+      roomId: roomConfig.roomId || ("RM-" + Math.floor(100000 + Math.random() * 900000)),
+      title: roomConfig.title,
+      category: roomConfig.category || "ทั่วไป (General)",
+      gradeLevel: roomConfig.gradeLevel || "ไม่ระบุ (All / Not Specified)",
+      formUrl: roomConfig.formUrl,
+      examUrl: fullUrl,
+      entryCode: roomConfig.entryCode || generateEntryCode(),
+      adminPasscode: roomConfig.adminPasscode || generateRandomPasscode(),
+      status: roomConfig.status || "OPEN",
+      createdBy: currentRole === USER_ROLES.ADMIN ? "Admin" : "Teacher",
+      createdAt: new Date().toLocaleString("th-TH")
+    };
+
+    history = history.filter((r) => r.roomId !== newRoom.roomId && r.examUrl !== fullUrl);
+    history.unshift(newRoom);
+    history = history.slice(0, 50); // เก็บ 50 รายการล่าสุด
+    setStoredRooms(history);
+    allRooms = history;
+
+    // ส่งคำขอสร้างห้องสอบไปยัง Google Apps Script
+    syncRoomToCloud("createRoom", newRoom);
+
+    renderRoomHistory();
+    renderPortalRooms();
+    updateMonitorRoomFilterDropdown();
+  } catch (e) {
+    console.error("saveRoomToHistory error:", e);
+  }
+}
+
+// ซิงค์การสร้าง/แก้ไข/ลบห้องสอบไปยัง Google Apps Script
+function syncRoomToCloud(action, roomData) {
+  const webhookInput = document.getElementById("examWebhookInput");
+  const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || DEFAULT_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  const payload = {
+    action: action,
+    ...roomData
+  };
+
+  try {
+    fetch(webhookUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).catch((err) => console.warn("Cloud sync room failed:", err));
+  } catch (_) {}
+}
+
+// ดึงรายการห้องสอบทั้งหมดจาก Google Sheets มาประสานกับข้อมูลในเครื่อง
+async function fetchCloudRooms() {
+  const webhookInput = document.getElementById("examWebhookInput");
+  const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || DEFAULT_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  try {
+    const url = new URL(webhookUrl);
+    url.searchParams.set("action", "getAllRooms");
+    const res = await fetch(url.toString());
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json && json.status === "success" && Array.isArray(json.data)) {
+      const cloudRooms = json.data;
+      const localRooms = getStoredRooms();
+      const map = new Map();
+
+      // เอาห้องจาก Cloud เป็นฐาน
+      cloudRooms.forEach((r) => {
+        if (r.roomId) map.set(r.roomId, r);
+      });
+      // ผสานห้องจาก Local ที่อาจยังซิงค์ไม่เสร็จ
+      localRooms.forEach((r) => {
+        if (r.roomId && !map.has(r.roomId)) {
+          map.set(r.roomId, r);
+        }
+      });
+
+      allRooms = Array.from(map.values());
+      setStoredRooms(allRooms);
+      renderRoomHistory();
+      renderPortalRooms();
+      updateMonitorRoomFilterDropdown();
+    }
+  } catch (err) {
+    console.warn("fetchCloudRooms error:", err);
+  }
+}
+
+// สลับสถานะเปิด/ปิดห้องสอบ (Toggle Open / Closed) — ทำได้ทั้ง Admin และ Teacher
+async function toggleRoomStatus(roomId) {
+  let rooms = getStoredRooms();
+  const room = rooms.find(r => r.roomId === roomId);
+  if (!room) return;
+
+  const newStatus = room.status === "OPEN" ? "CLOSED" : "OPEN";
+  room.status = newStatus;
+  setStoredRooms(rooms);
+  allRooms = rooms;
+
+  syncRoomToCloud("toggleRoomStatus", { roomId, status: newStatus });
+
+  renderRoomHistory();
+  renderPortalRooms();
+
+  const msg = newStatus === "OPEN" 
+    ? `เปิดรับนักเรียนเข้าสอบวิชา "${room.title}" เรียบร้อยแล้ว` 
+    : `ปิดห้องสอบวิชา "${room.title}" ชั่วคราวแล้ว`;
+  showAlert(msg, { type: "info", confirmText: "ตกลง" });
+}
+
+// ลบห้องสอบ — เฉพาะ Role Admin เท่านั้น
+async function deleteRoom(roomId) {
+  if (currentRole !== USER_ROLES.ADMIN) {
+    showAlert("คุณต้องมีสิทธิ์ผู้ดูแลระบบ (Admin) เท่านั้นจึงจะสามารถลบห้องสอบได้", {
+      type: "warning",
+      confirmText: "เข้าใจแล้ว"
+    });
+    return;
+  }
+
+  let rooms = getStoredRooms();
+  const room = rooms.find(r => r.roomId === roomId);
+  if (!room) return;
+
+  const confirmed = await showConfirm(
+    `คุณแน่ใจหรือไม่ว่าต้องการลบห้องสอบ "${room.title}" (รหัส: ${roomId})?\n\nการกระทำนี้จะนำห้องสอบออกจากระบบและหน้ารวมข้อสอบทันที`,
+    {
+      title: "ยืนยันการลบห้องสอบ",
+      confirmText: "ลบห้องสอบ",
+      cancelText: "ยกเลิก",
+      confirmClass: "danger",
+      icon: "🗑️"
+    }
+  );
+
+  if (confirmed) {
+    rooms = rooms.filter(r => r.roomId !== roomId);
+    setStoredRooms(rooms);
+    allRooms = rooms;
+
+    syncRoomToCloud("deleteRoom", { roomId });
+
+    renderRoomHistory();
+    renderPortalRooms();
+    updateMonitorRoomFilterDropdown();
+
+    showAlert("ลบห้องสอบเรียบร้อยแล้ว", { type: "success", confirmText: "ตกลง" });
+  }
+}
+
+// เปิด Modal แก้ไขข้อมูลห้องสอบ — เฉพาะ Role Admin
+function openEditRoomModal(roomId) {
+  if (currentRole !== USER_ROLES.ADMIN) {
+    showAlert("คุณต้องมีสิทธิ์ผู้ดูแลระบบ (Admin) เท่านั้นจึงจะสามารถแก้ไขห้องสอบได้", {
+      type: "warning",
+      confirmText: "เข้าใจแล้ว"
+    });
+    return;
+  }
+
+  const room = allRooms.find(r => r.roomId === roomId) || getStoredRooms().find(r => r.roomId === roomId);
+  if (!room) return;
+
+  const modal = document.getElementById("editRoomModal");
+  const subEl = document.getElementById("editRoomSubtitle");
+  const idInput = document.getElementById("editRoomIdInput");
+  const titleInput = document.getElementById("editRoomTitleInput");
+  const catSel = document.getElementById("editRoomCategorySelect");
+  const gradeSel = document.getElementById("editRoomGradeSelect");
+  const formInput = document.getElementById("editRoomFormUrlInput");
+  const statusSel = document.getElementById("editRoomStatusSelect");
+  const entryInput = document.getElementById("editRoomEntryCodeInput");
+  const passInput = document.getElementById("editRoomAdminPasscodeInput");
+
+  if (subEl) subEl.textContent = `รหัสห้อง: ${room.roomId}`;
+  if (idInput) idInput.value = room.roomId;
+  if (titleInput) titleInput.value = room.title || "";
+  if (catSel) catSel.value = room.category || "ทั่วไป (General)";
+  if (gradeSel) gradeSel.value = room.gradeLevel || "ไม่ระบุ (All / Not Specified)";
+  if (formInput) formInput.value = room.formUrl || "";
+  if (statusSel) statusSel.value = room.status || "OPEN";
+  if (entryInput) entryInput.value = room.entryCode || "";
+  if (passInput) passInput.value = room.adminPasscode || "";
+
+  if (modal) modal.classList.add("active");
+}
+
+// บันทึกการแก้ไขห้องสอบ
+async function handleSaveEditRoom() {
+  const roomId = (document.getElementById("editRoomIdInput").value || "").trim();
+  const title = (document.getElementById("editRoomTitleInput").value || "").trim();
+  const category = (document.getElementById("editRoomCategorySelect").value || "").trim();
+  const gradeLevel = (document.getElementById("editRoomGradeSelect").value || "").trim();
+  const formUrl = (document.getElementById("editRoomFormUrlInput").value || "").trim();
+  const status = (document.getElementById("editRoomStatusSelect").value || "OPEN").trim();
+  const entryCode = (document.getElementById("editRoomEntryCodeInput").value || "").trim();
+  const adminPasscode = (document.getElementById("editRoomAdminPasscodeInput").value || "").trim();
+
+  if (!title || !formUrl) {
+    showAlert("กรุณากรอกชื่อวิชาและลิงก์ Google Forms ให้ครบถ้วน", { type: "warning" });
+    return;
+  }
+
+  let rooms = getStoredRooms();
+  const idx = rooms.findIndex(r => r.roomId === roomId);
+  if (idx === -1) return;
+
+  const cleanForm = formatGoogleFormEmbedUrl(formUrl);
+  const updatedRoom = {
+    ...rooms[idx],
+    title,
+    category,
+    gradeLevel,
+    formUrl: cleanForm,
+    status,
+    entryCode,
+    adminPasscode,
+    updatedAt: new Date().toLocaleString("th-TH")
+  };
+
+  // สร้างลิงก์ใหม่ด้วย config ที่อัปเดต
+  const encoded = encodeExamConfig(updatedRoom);
+  const baseUrl = new URL("exam.html", window.location.href);
+  baseUrl.searchParams.set("data", encoded);
+  updatedRoom.examUrl = baseUrl.toString();
+
+  rooms[idx] = updatedRoom;
+  setStoredRooms(rooms);
+  allRooms = rooms;
+
+  syncRoomToCloud("updateRoom", updatedRoom);
+
+  const modal = document.getElementById("editRoomModal");
+  if (modal) modal.classList.remove("active");
+
+  renderRoomHistory();
+  renderPortalRooms();
+  updateMonitorRoomFilterDropdown();
+
+  showAlert("บันทึกการแก้ไขข้อมูลห้องสอบเรียบร้อยแล้ว", { type: "success" });
+}
+
+/* ==========================================================================
+   4. Render Room History & Management (แท็บ จัดการห้องสอบ)
+   ========================================================================== */
+
 function renderRoomHistory() {
   const container = document.getElementById("historyRoomsList");
   if (!container) return;
 
-  try {
-    const history = JSON.parse(localStorage.getItem("examRoomsHistory") || "[]");
-    if (history.length === 0) {
-      container.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; padding: 12px 0;">ยังไม่มีประวัติการสร้างห้องสอบ</div>`;
-      return;
-    }
+  const searchQuery = (document.getElementById("historySearchInput") ? document.getElementById("historySearchInput").value : "").trim().toLowerCase();
+  const categoryFilter = (document.getElementById("historyCategoryFilter") ? document.getElementById("historyCategoryFilter").value : "all") || "all";
+  const gradeFilter = (document.getElementById("historyGradeFilter") ? document.getElementById("historyGradeFilter").value : "all") || "all";
+  const statusFilter = (document.getElementById("historyStatusFilter") ? document.getElementById("historyStatusFilter").value : "all") || "all";
 
-    // BUG-12: ใช้ data-url attribute แทน inline onclick เพื่อป้องกัน XSS
-    container.innerHTML = history.map((room, idx) => `
-      <div style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow-sm); flex-wrap: wrap;">
-        <div style="overflow: hidden; min-width: 200px; flex: 1;">
-          <strong style="display: block; font-size: 14.5px; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(room.title)}</strong>
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
-            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">สร้างเมื่อ: ${escapeHtml(room.createdAt)}</span>
-            ${room.adminPasscode ? `<span class="badge badge-primary" style="font-family: monospace; letter-spacing: 0.05em; font-size: 11.5px;">รหัสคุมสอบ: ${escapeHtml(room.adminPasscode)}</span>` : ""}
+  const rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
+
+  if (rooms.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
+        <div style="font-size: 42px; margin-bottom: 10px;">📋</div>
+        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">ยังไม่มีข้อมูลห้องสอบ</h4>
+        <p style="font-size: 13px;">สร้างห้องสอบแรกของคุณได้ที่แท็บ "➕ สร้างห้องสอบ"</p>
+      </div>
+    `;
+    return;
+  }
+
+  const filtered = rooms.filter((r) => {
+    if (searchQuery && !String(r.title || "").toLowerCase().includes(searchQuery) && !String(r.roomId || "").toLowerCase().includes(searchQuery)) {
+      return false;
+    }
+    if (categoryFilter !== "all" && r.category !== categoryFilter) {
+      return false;
+    }
+    if (gradeFilter !== "all" && r.gradeLevel !== gradeFilter) {
+      return false;
+    }
+    if (statusFilter !== "all" && r.status !== statusFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+        <p style="font-size: 14px;">ไม่พบห้องสอบที่ตรงกับเงื่อนไขการค้นหา</p>
+      </div>
+    `;
+    return;
+  }
+
+  const isAdmin = currentRole === USER_ROLES.ADMIN;
+
+  container.innerHTML = filtered.map((r) => {
+    const isOpen = r.status === "OPEN";
+    const statusBadge = isOpen
+      ? `<span class="badge badge-success" style="font-weight: 700;">🟢 กำลังเปิดสอบ (OPEN)</span>`
+      : `<span class="badge badge-neutral" style="font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca;">🔴 ปิดห้องสอบ (CLOSED)</span>`;
+
+    return `
+      <div class="room-mgmt-card" style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+          <div style="flex: 1; min-width: 240px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+              <strong style="font-size: 16px; color: var(--text-primary);">${escapeHtml(r.title)}</strong>
+              ${statusBadge}
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px;">
+              <span class="badge badge-neutral" style="font-size: 11.5px;">📁 ${escapeHtml(r.category || "ทั่วไป")}</span>
+              <span class="badge badge-neutral" style="font-size: 11.5px;">🎓 ${escapeHtml(r.gradeLevel || "ไม่ระบุ")}</span>
+              <span style="font-size: 12px; color: var(--text-muted);">รหัสห้อง: <code>${escapeHtml(r.roomId || "-")}</code></span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <!-- สลับเปิด/ปิดสถานะสอบ (ทุกคนทำได้) -->
+            <button 
+              type="button" 
+              class="btn ${isOpen ? "btn-secondary" : "btn-success"} btn-toggle-status" 
+              data-room-id="${escapeHtml(r.roomId)}" 
+              style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+              title="${isOpen ? "คลิกเพื่อปิดห้องสอบชั่วคราว" : "คลิกเพื่อเปิดรับนักเรียนเข้าสอบ"}"
+            >
+              ${isOpen ? "⏸️ พักการสอบ" : "▶️ เปิดรับเข้าสอบ"}
+            </button>
+
+            <!-- คัดลอกลิงก์ -->
+            <button 
+              type="button" 
+              class="btn btn-secondary btn-copy-room-link" 
+              data-url="${escapeHtml(r.examUrl)}" 
+              style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+            >
+              📋 คัดลอกลิงก์
+            </button>
+
+            <!-- แสดง QR Code -->
+            <button 
+              type="button" 
+              class="btn btn-secondary btn-show-room-qr" 
+              data-room-id="${escapeHtml(r.roomId)}" 
+              style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+            >
+              🔍 QR Code
+            </button>
+
+            <!-- แก้ไข (เฉพาะ Admin) -->
+            ${isAdmin ? `
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-edit-room" 
+                data-room-id="${escapeHtml(r.roomId)}" 
+                style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+              >
+                ✏️ แก้ไข
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-danger btn-delete-room" 
+                data-room-id="${escapeHtml(r.roomId)}" 
+                style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+              >
+                🗑️ ลบ
+              </button>
+            ` : ""}
           </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary history-copy-btn" data-url="${escapeHtml(room.fullUrl)}" style="min-height: 38px; padding: 6px 14px; font-size: 13px;">คัดลอก</button>
-          <a class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;" href="${escapeHtml(room.fullUrl)}" target="_blank" rel="noopener noreferrer">เปิดดู</a>
+
+        <!-- แถบแสดงรหัส 2 รูปแบบ -->
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; background: var(--bg-subtle); padding: 8px 14px; border-radius: var(--radius-sm); align-items: center;">
+          <div style="font-size: 12.5px;">
+            <span style="color: #1e40af; font-weight: 700;">🎓 รหัสเข้าสอบนักเรียน:</span>
+            <code style="font-size: 15px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.entryCode || "-")}</code>
+          </div>
+          <div style="font-size: 12.5px; border-left: 1.5px solid #cbd5e1; padding-left: 12px;">
+            <span style="color: #991b1b; font-weight: 700;">🔒 รหัสคุมสอบ (Passcode):</span>
+            <code style="font-size: 15px; font-weight: 800; color: #b91c1c; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.adminPasscode || "-")}</code>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-left: auto;">
+            สร้างเมื่อ: ${escapeHtml(r.createdAt || "-")}
+          </div>
         </div>
       </div>
-    `).join("");
+    `;
+  }).join("");
 
-    // Event delegation แทน inline onclick (BUG-12 fix)
-    container.querySelectorAll(".history-copy-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const url = btn.getAttribute("data-url");
-        if (url) {
-          navigator.clipboard.writeText(url).then(() => {
-            const orig = btn.textContent;
-            btn.textContent = "คัดลอกแล้ว";
-            setTimeout(() => { btn.textContent = orig; }, 2000);
-          });
-        }
-      });
-    });
-  } catch (e) {}
+  // ผูก Event Listeners สำหรับปุ่มในการ์ดห้องสอบ
+  container.querySelectorAll(".btn-copy-room-link").forEach((btn) => {
+    btn.onclick = () => {
+      const url = btn.getAttribute("data-url");
+      if (url) {
+        navigator.clipboard.writeText(url).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = "คัดลอกแล้ว!";
+          setTimeout(() => { btn.textContent = orig; }, 2000);
+        });
+      }
+    };
+  });
+
+  container.querySelectorAll(".btn-show-room-qr").forEach((btn) => {
+    btn.onclick = () => {
+      const roomId = btn.getAttribute("data-room-id");
+      const room = allRooms.find(r => r.roomId === roomId) || getStoredRooms().find(r => r.roomId === roomId);
+      if (!room) return;
+
+      const projectorModal = document.getElementById("qrProjectorModal");
+      const projectorContainer = document.getElementById("projectorQrContainer");
+      const projectorTitle = document.getElementById("projectorExamTitle");
+      const projectorEntry = document.getElementById("projectorEntryCodeDisplay");
+      const projectorPasscode = document.getElementById("projectorPasscodeDisplay");
+
+      if (projectorTitle) projectorTitle.textContent = room.title;
+      if (projectorEntry) projectorEntry.textContent = room.entryCode || "------";
+      if (projectorPasscode) projectorPasscode.textContent = room.adminPasscode || "------";
+      if (projectorContainer) {
+        generateQrCode(projectorContainer, room.examUrl, 320);
+      }
+      if (projectorModal) projectorModal.classList.add("active");
+    };
+  });
+
+  container.querySelectorAll(".btn-toggle-status").forEach((btn) => {
+    btn.onclick = () => {
+      const roomId = btn.getAttribute("data-room-id");
+      if (roomId) toggleRoomStatus(roomId);
+    };
+  });
+
+  container.querySelectorAll(".btn-edit-room").forEach((btn) => {
+    btn.onclick = () => {
+      const roomId = btn.getAttribute("data-room-id");
+      if (roomId) openEditRoomModal(roomId);
+    };
+  });
+
+  container.querySelectorAll(".btn-delete-room").forEach((btn) => {
+    btn.onclick = () => {
+      const roomId = btn.getAttribute("data-room-id");
+      if (roomId) deleteRoom(roomId);
+    };
+  });
 }
 
-// เปลี่ยนจาก inline onclick เป็น global function คงสตาเดิมไว้เพื่อ compatibility แต่ใน renderRoomHistory ใช้ data-attribute แทน (BUG-12)
-window.copySpecificUrl = function(url) {
-  navigator.clipboard.writeText(url).then(() => {
-    showAlert("คัดลอกลิงก์ห้องสอบเรียบร้อยแล้ว สามารถนำไปส่งให้นักเรียนได้ทันที", {
-      type: "success",
-      title: "คัดลอกสำเร็จ",
-      confirmText: "ตกลง"
-    });
+/* ==========================================================================
+   5. Student Exam Portal (หน้ารวมแบบทดสอบออนไลน์ - สำหรับนักเรียน ไม่ต้อง Login)
+   ========================================================================== */
+
+function renderPortalRooms() {
+  const container = document.getElementById("portalRoomsGrid");
+  if (!container) return;
+
+  const searchQuery = (document.getElementById("portalSearchInput") ? document.getElementById("portalSearchInput").value : "").trim().toLowerCase();
+  const categoryFilter = (document.getElementById("portalCategoryFilter") ? document.getElementById("portalCategoryFilter").value : "all") || "all";
+
+  const rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
+  // หน้ารวมข้อสอบแสดงเฉพาะห้องที่เปิดรับอยู่เท่านั้น (status === "OPEN")
+  const activeRooms = rooms.filter(r => r.status === "OPEN");
+
+  if (activeRooms.length === 0) {
+    container.innerHTML = `
+      <div class="portal-empty-state" style="grid-column: 1 / -1; padding: 48px 16px;">
+        <div style="font-size: 48px; margin-bottom: 10px;">🏖️</div>
+        <h3 style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">ขณะนี้ยังไม่มีห้องสอบที่เปิดรับ</h3>
+        <p style="font-size: 13.5px; color: var(--text-muted); max-width: 400px; margin: 0 auto;">
+          กรุณารอครูผู้สอนเปิดรับนักเรียนเข้าสอบ หรือสอบถามรหัสเข้าห้องสอบจากครูผู้คุมสอบ
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  const filtered = activeRooms.filter((r) => {
+    if (searchQuery && !String(r.title || "").toLowerCase().includes(searchQuery) && !String(r.gradeLevel || "").toLowerCase().includes(searchQuery)) {
+      return false;
+    }
+    if (categoryFilter !== "all" && r.category !== categoryFilter) {
+      return false;
+    }
+    return true;
   });
-};
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="portal-empty-state" style="grid-column: 1 / -1; padding: 36px 16px;">
+        <p style="font-size: 14px; color: var(--text-muted);">ไม่พบห้องสอบที่ตรงกับคำค้นหาของคุณ</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map((r) => `
+    <div class="portal-room-card">
+      <div class="portal-card-badges">
+        <span class="badge badge-primary" style="font-size: 11px;">${escapeHtml(r.category || "ทั่วไป")}</span>
+        <span class="badge badge-neutral" style="font-size: 11px;">${escapeHtml(r.gradeLevel || "ทุกระดับชั้น")}</span>
+      </div>
+      <h3 class="portal-card-title">${escapeHtml(r.title)}</h3>
+      <div class="portal-card-meta">
+        <span class="live-dot" style="width: 7px; height: 7px; background: #059669; border-radius: 50%; display: inline-block;"></span>
+        <span>เปิดรับนักเรียนเข้าสอบ</span>
+      </div>
+      <button 
+        type="button" 
+        class="btn btn-primary btn-block portal-enter-btn" 
+        data-room-id="${escapeHtml(r.roomId)}"
+        style="margin-top: 14px; font-weight: 700;"
+      >
+        🚀 เข้าสู่ห้องสอบ
+      </button>
+    </div>
+  `).join("");
+
+  // ผูกปุ่มเข้าสู่ห้องสอบ
+  container.querySelectorAll(".portal-enter-btn").forEach((btn) => {
+    btn.onclick = () => {
+      const roomId = btn.getAttribute("data-room-id");
+      const room = activeRooms.find(r => r.roomId === roomId);
+      if (room) openRoomEntryModal(room);
+    };
+  });
+}
+
+// เปิด Modal ให้นักเรียนกรอกรหัสนักเรียน + รหัสเข้าห้องสอบ 6 หลัก
+function openRoomEntryModal(room) {
+  currentEntryRoom = room;
+  const modal = document.getElementById("roomEntryModal");
+  const titleEl = document.getElementById("entryModalRoomTitle");
+  const catEl = document.getElementById("entryModalRoomCategory");
+  const errEl = document.getElementById("entryErrorMessage");
+  const sidInput = document.getElementById("entryStudentIdInput");
+  const passInput = document.getElementById("entryPasscodeInput");
+
+  if (titleEl) titleEl.textContent = room.title;
+  if (catEl) catEl.textContent = `${room.category || "ทั่วไป"} • ${room.gradeLevel || ""}`;
+  if (errEl) errEl.style.display = "none";
+  if (sidInput) {
+    sidInput.value = "";
+  }
+  if (passInput) passInput.value = "";
+
+  if (modal) modal.classList.add("active");
+  setTimeout(() => { if (sidInput) sidInput.focus(); }, 100);
+}
+
+// ตรวจสอบข้อมูลและเริ่มสอบจาก Portal
+function handleConfirmRoomEntry() {
+  if (!currentEntryRoom) return;
+
+  const sidInput = document.getElementById("entryStudentIdInput");
+  const passInput = document.getElementById("entryPasscodeInput");
+  const errEl = document.getElementById("entryErrorMessage");
+
+  const studentId = (sidInput ? sidInput.value : "").trim();
+  const enteredPass = (passInput ? passInput.value : "").trim();
+
+  if (!studentId || !/^\d+$/.test(studentId)) {
+    if (errEl) {
+      errEl.textContent = "กรุณากรอกรหัสประจำตัวนักเรียนเป็นตัวเลขเท่านั้น";
+      errEl.style.display = "block";
+    }
+    if (sidInput) sidInput.focus();
+    return;
+  }
+
+  // ตรวจสอบรหัสเข้าห้องสอบ 6 หลัก
+  const expectedPass = String(currentEntryRoom.entryCode || "").trim();
+  if (expectedPass && enteredPass !== expectedPass) {
+    if (errEl) {
+      errEl.textContent = "รหัสเข้าห้องสอบ 6 หลักไม่ถูกต้อง กรุณาตรวจสอบกับครูผู้คุมสอบ";
+      errEl.style.display = "block";
+    }
+    if (passInput) {
+      passInput.select();
+      passInput.focus();
+    }
+    return;
+  }
+
+  // ข้อมูลถูกต้อง -> ปิด Modal และเปิดหน้า exam.html พร้อมพารามิเตอร์
+  const modal = document.getElementById("roomEntryModal");
+  if (modal) modal.classList.remove("active");
+
+  const encoded = encodeExamConfig(currentEntryRoom);
+  const examUrl = new URL("exam.html", window.location.href);
+  examUrl.searchParams.set("data", encoded);
+  examUrl.searchParams.set("sid", studentId);
+  examUrl.searchParams.set("entry", enteredPass);
+
+  // เปิดหน้าสอบ
+  window.open(examUrl.toString(), "_blank");
+}
+
+/* ==========================================================================
+   6. Live Monitor Room Filtering Dropdown
+   ========================================================================== */
+
+function updateMonitorRoomFilterDropdown() {
+  const sel = document.getElementById("monitorRoomFilterSelect");
+  if (!sel) return;
+
+  const currentVal = sel.value || "all";
+  const rooms = allRooms.length > 0 ? allRooms : getStoredRooms();
+
+  let html = `<option value="all">ทุกห้องสอบ (All Rooms)</option>`;
+  rooms.forEach((r) => {
+    html += `<option value="${escapeHtml(r.roomId)}">${escapeHtml(r.title)} (${escapeHtml(r.roomId)})</option>`;
+  });
+  sel.innerHTML = html;
+  if (rooms.some(r => r.roomId === currentVal)) {
+    sel.value = currentVal;
+  } else {
+    sel.value = "all";
+  }
+}
 
 let currentMonitorTab = "live"; // "live" | "completed" | "table"
 let currentFilter = "all"; // "all" | "alert" | "today"
@@ -603,9 +1361,20 @@ function renderMonitorLogs() {
   });
 
   const nowMs = Date.now();
-  const oneDayMs = 20 * 60 * 60 * 1000; // 20 ชั่วโมง สำหรับตรวจจับวันก่อนหน้า
+  const selectedRoomFilter = (document.getElementById("monitorRoomFilterSelect") ? document.getElementById("monitorRoomFilterSelect").value : "all") || "all";
+  const targetRoom = allRooms.find(r => r.roomId === selectedRoomFilter);
 
   sortedLogs.forEach((item) => {
+    if (selectedRoomFilter !== "all") {
+      const itemRoomId = item.roomId || "";
+      const itemTitle = item.roomTitle || item.formTitle || "";
+      const matchesId = itemRoomId && itemRoomId === selectedRoomFilter;
+      const matchesTitle = targetRoom && itemTitle && (itemTitle === targetRoom.title || itemTitle.includes(targetRoom.title));
+      if (!matchesId && !matchesTitle) {
+        return; // ข้าม log ที่ไม่ได้อยู่ในห้องสอบที่เลือก
+      }
+    }
+
     const sId = String(item.studentId !== undefined && item.studentId !== null ? item.studentId : "ไม่ระบุรหัส").trim();
     const isTestEntry = isTestLogEntry(item);
 
@@ -1239,26 +2008,50 @@ function setupMobileNavigation() {
 document.addEventListener("DOMContentLoaded", () => {
   setupMobileNavigation();
   setupTabNavigation();
+  populateDropdowns();
+  setupRoleAuth();
+  applyRoleUI();
+
+  // ดึงข้อมูลห้องสอบจากทั้ง Local และ Cloud
+  allRooms = getStoredRooms();
+  renderPortalRooms();
   renderRoomHistory();
+  updateMonitorRoomFilterDropdown();
+  fetchCloudRooms();
 
   const webhookInput = document.getElementById("examWebhookInput");
   if (webhookInput && !webhookInput.value) {
     webhookInput.value = DEFAULT_WEBHOOK_URL;
   }
+
+  // กำหนดรหัส 6 หลักเริ่มต้นทั้งสองชุด
+  const entryInput = document.getElementById("examEntryCodeInput");
+  if (entryInput) {
+    entryInput.value = generateEntryCode();
+  }
   const passInput = document.getElementById("examPasscodeInput");
   if (passInput) {
-    // กำหนดให้เป็นตัวเลข 6 หลักแบบสุ่มเสมอเมื่อโหลดหน้า
     passInput.value = generateRandomPasscode();
   }
 
-  // ปุ่มคลิกเพื่อสุ่มรหัสผ่าน 6 หลักใหม่
+  // ปุ่มสุ่มรหัสเข้าสอบนักเรียนใหม่ 6 หลัก
+  const randomEntryBtn = document.getElementById("randomEntryCodeBtn");
+  if (randomEntryBtn) {
+    randomEntryBtn.addEventListener("click", () => {
+      if (entryInput) {
+        entryInput.value = generateEntryCode();
+        entryInput.focus();
+      }
+    });
+  }
+
+  // ปุ่มสุ่มรหัสผ่านผู้คุมสอบใหม่ 6 หลัก
   const randomPassBtn = document.getElementById("randomPasscodeBtn");
   if (randomPassBtn) {
     randomPassBtn.addEventListener("click", () => {
-      const pInput = document.getElementById("examPasscodeInput");
-      if (pInput) {
-        pInput.value = generateRandomPasscode();
-        pInput.focus();
+      if (passInput) {
+        passInput.value = generateRandomPasscode();
+        passInput.focus();
       }
     });
   }
@@ -1279,6 +2072,97 @@ document.addEventListener("DOMContentLoaded", () => {
           setTimeout(() => { copyBtn.innerHTML = originalText; }, 2000);
         });
       }
+    });
+  }
+
+  // --- Student Portal Events ---
+  const portalRefreshBtn = document.getElementById("portalRefreshBtn");
+  if (portalRefreshBtn) {
+    portalRefreshBtn.addEventListener("click", () => {
+      fetchCloudRooms();
+      showAlert("รีเฟรชรายการห้องสอบเรียบร้อยแล้ว", { type: "info" });
+    });
+  }
+
+  const portalSearchInput = document.getElementById("portalSearchInput");
+  if (portalSearchInput) {
+    portalSearchInput.addEventListener("input", renderPortalRooms);
+  }
+
+  const portalCategoryFilter = document.getElementById("portalCategoryFilter");
+  if (portalCategoryFilter) {
+    portalCategoryFilter.addEventListener("change", renderPortalRooms);
+  }
+
+  const confirmEntryBtn = document.getElementById("confirmEntryBtn");
+  if (confirmEntryBtn) {
+    confirmEntryBtn.addEventListener("click", handleConfirmRoomEntry);
+  }
+
+  const entryPassInput = document.getElementById("entryPasscodeInput");
+  if (entryPassInput) {
+    entryPassInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleConfirmRoomEntry();
+    });
+  }
+
+  const closeEntryBtn = document.getElementById("closeEntryModalBtn");
+  const cancelEntryBtn = document.getElementById("cancelEntryModalBtn");
+  const roomEntryModal = document.getElementById("roomEntryModal");
+  const closeEntryModal = () => {
+    if (roomEntryModal) roomEntryModal.classList.remove("active");
+  };
+  if (closeEntryBtn) closeEntryBtn.addEventListener("click", closeEntryModal);
+  if (cancelEntryBtn) cancelEntryBtn.addEventListener("click", closeEntryModal);
+
+  // --- Room Management (History) Events ---
+  const historyRefreshBtn = document.getElementById("historyRefreshBtn");
+  if (historyRefreshBtn) {
+    historyRefreshBtn.addEventListener("click", () => {
+      fetchCloudRooms();
+      showAlert("รีเฟรชข้อมูลห้องสอบทั้งหมดเรียบร้อยแล้ว", { type: "info" });
+    });
+  }
+
+  const historySearchInput = document.getElementById("historySearchInput");
+  if (historySearchInput) {
+    historySearchInput.addEventListener("input", renderRoomHistory);
+  }
+
+  const historyCategoryFilter = document.getElementById("historyCategoryFilter");
+  if (historyCategoryFilter) {
+    historyCategoryFilter.addEventListener("change", renderRoomHistory);
+  }
+
+  const historyGradeFilter = document.getElementById("historyGradeFilter");
+  if (historyGradeFilter) {
+    historyGradeFilter.addEventListener("change", renderRoomHistory);
+  }
+
+  const historyStatusFilter = document.getElementById("historyStatusFilter");
+  if (historyStatusFilter) {
+    historyStatusFilter.addEventListener("change", renderRoomHistory);
+  }
+
+  const saveEditRoomBtn = document.getElementById("saveEditRoomBtn");
+  if (saveEditRoomBtn) {
+    saveEditRoomBtn.addEventListener("click", handleSaveEditRoom);
+  }
+
+  const editRoomModal = document.getElementById("editRoomModal");
+  const closeEditModal = () => {
+    if (editRoomModal) editRoomModal.classList.remove("active");
+  };
+  const closeEditBtn = document.getElementById("closeEditRoomModalBtn");
+  const cancelEditBtn = document.getElementById("cancelEditRoomBtn");
+  if (closeEditBtn) closeEditBtn.addEventListener("click", closeEditModal);
+  if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeEditModal);
+
+  // --- Monitor Room Filter ---
+  const monitorRoomFilter = document.getElementById("monitorRoomFilterSelect");
+  if (monitorRoomFilter) {
+    monitorRoomFilter.addEventListener("change", () => {
+      renderMonitorLogs();
     });
   }
 
@@ -1308,6 +2192,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const origText = refreshLogsBtn.textContent;
       refreshLogsBtn.textContent = "กำลังซิงค์...";
       fetchMonitorLogs();
+      fetchCloudRooms();
       setTimeout(() => {
         refreshLogsBtn.disabled = false;
         refreshLogsBtn.textContent = origText;
@@ -1412,6 +2297,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeStudentDetail();
+      closeEntryModal();
+      closeEditModal();
     }
   });
 

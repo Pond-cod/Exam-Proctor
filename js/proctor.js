@@ -96,6 +96,8 @@ function sendAlertToWebhook(violationText, isSeverityHigh = false) {
 
   const now = new Date();
   const payload = {
+    roomId: examConfig.roomId || "",
+    roomTitle: examConfig.title,
     studentId: studentId || "ไม่ระบุรหัส",
     violation: violationText,
     violationCount: violationCount,
@@ -229,6 +231,8 @@ function updateTimer() {
   }
 }
 
+let isEntryCodePreVerified = false;
+
 // Initialize & Load Parameters from URL
 function initExamFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -240,25 +244,33 @@ function initExamFromUrl() {
     configData = decodeExamConfig(encodedParam);
   }
 
-  // รองรับทั้งพารามิเตอร์แบบสั้น (f, p, t, w) และแบบยาว (form, pass, title, webhook)
+  // รองรับทั้งพารามิเตอร์แบบสั้น (f, p, t, w, e, r) และแบบยาว (form, pass, title, webhook, entry, room)
   if (!configData) {
     const rawForm = urlParams.get("f") || urlParams.get("form");
     if (rawForm) {
       configData = {
+        roomId: urlParams.get("r") || urlParams.get("room") || "",
         title: urlParams.get("t") || urlParams.get("title") || "แบบทดสอบออนไลน์",
         formUrl: rawForm,
         webhookUrl: urlParams.get("w") || urlParams.get("webhook") || DEFAULT_WEBHOOK_URL,
-        adminPasscode: urlParams.get("p") || urlParams.get("pass") || DEFAULT_ADMIN_PASSCODE
+        adminPasscode: urlParams.get("p") || urlParams.get("pass") || DEFAULT_ADMIN_PASSCODE,
+        entryCode: urlParams.get("e") || urlParams.get("entry") || "",
+        category: urlParams.get("c") || urlParams.get("cat") || "ทั่วไป",
+        gradeLevel: urlParams.get("g") || urlParams.get("grade") || "ไม่ระบุ"
       };
     }
   }
 
   if (configData && configData.formUrl) {
     examConfig = {
+      roomId: configData.roomId || "",
       title: configData.title || "แบบทดสอบออนไลน์",
       formUrl: formatGoogleFormEmbedUrl(configData.formUrl),
       webhookUrl: configData.webhookUrl || DEFAULT_WEBHOOK_URL,
-      adminPasscode: configData.adminPasscode || DEFAULT_ADMIN_PASSCODE
+      adminPasscode: configData.adminPasscode || DEFAULT_ADMIN_PASSCODE,
+      entryCode: configData.entryCode || "",
+      category: configData.category || "ทั่วไป",
+      gradeLevel: configData.gradeLevel || "ไม่ระบุ"
     };
 
     document.title = `${examConfig.title} - ระบบคุมสอบออนไลน์`;
@@ -266,6 +278,29 @@ function initExamFromUrl() {
     if (titleEl) titleEl.textContent = examConfig.title;
     const headerTitleEl = document.getElementById("headerExamTitle");
     if (headerTitleEl) headerTitleEl.textContent = examConfig.title;
+
+    // ตรวจสอบ Student ID ที่ส่งมาล่วงหน้าจาก Portal
+    const sidParam = urlParams.get("sid") || urlParams.get("studentId");
+    if (sidParam) {
+      const studentInput = document.getElementById("studentIdInput");
+      if (studentInput) {
+        studentInput.value = sidParam;
+        studentInput.readOnly = true;
+        studentInput.style.backgroundColor = "var(--bg-subtle)";
+      }
+    }
+
+    // ตรวจสอบ Entry Code ที่ส่งมาล่วงหน้าจาก Portal
+    const entryParam = urlParams.get("entry") || urlParams.get("entryCode");
+    if (examConfig.entryCode) {
+      if (entryParam && String(entryParam).trim() === String(examConfig.entryCode).trim()) {
+        isEntryCodePreVerified = true;
+      } else {
+        // แสดงช่องกรอก Entry Code ให้นักเรียนกรอกเอง
+        const entryCodeGroup = document.getElementById("portalEntryCodeGroup");
+        if (entryCodeGroup) entryCodeGroup.style.display = "block";
+      }
+    }
   } else {
     const manualBox = document.getElementById("manualFormBox");
     if (manualBox) manualBox.style.display = "block";
@@ -366,6 +401,30 @@ async function startExam() {
       return;
     }
     examConfig.formUrl = formatGoogleFormEmbedUrl(manualVal);
+  }
+
+  // ตรวจสอบรหัสเข้าห้องสอบ (Entry Code) กรณีที่ห้องสอบกำหนดไว้ และยังไม่ได้ verify มาจาก Portal
+  if (examConfig.entryCode && !isEntryCodePreVerified) {
+    const entryInput = document.getElementById("examRoomEntryCodeInput");
+    const enteredCode = (entryInput ? entryInput.value : "").trim();
+    if (!enteredCode) {
+      await showAlert("กรุณากรอกรหัสเข้าห้องสอบ 6 หลักที่ได้รับจากครูผู้สอน", {
+        type: "warning",
+        title: "กรุณาระบุรหัสเข้าห้องสอบ",
+        confirmText: "ตกลง"
+      });
+      if (entryInput) entryInput.focus();
+      return;
+    }
+    if (enteredCode !== String(examConfig.entryCode).trim()) {
+      await showAlert("รหัสเข้าห้องสอบ 6 หลักไม่ถูกต้อง กรุณาตรวจสอบกับครูผู้คุมสอบ", {
+        type: "danger",
+        title: "รหัสเข้าสอบผิดพลาด",
+        confirmText: "ลองใหม่"
+      });
+      if (entryInput) entryInput.focus();
+      return;
+    }
   }
 
   studentId = studentVal;

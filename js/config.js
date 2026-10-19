@@ -27,6 +27,59 @@ function generateRandomPasscode() {
 const DEFAULT_ADMIN_PASSCODE = generateRandomPasscode();
 
 /**
+ * นิยาม Role สิทธิ์การใช้งานระบบ
+ */
+const USER_ROLES = {
+  ADMIN: "admin", // ผู้ดูแลระบบ (จัดการห้องสอบทั้งหมด, ลบ, แก้ไข, ตั้งค่า Webhook/Google Sheets, รีเซ็ตจอสด)
+  USER: "user"    // ครูผู้คุมสอบ (สร้างห้องสอบใหม่, เปิด/ปิดรับนักเรียน, ดูหน้าจอคุมสอบสด)
+};
+
+/**
+ * รหัสผ่านกลางสำหรับ Role Admin (ค่าเริ่มต้น 999888)
+ */
+const MASTER_ADMIN_PASSCODE = "999888";
+
+/**
+ * หมวดหมู่วิชา (Subject Categories)
+ */
+const SUBJECT_CATEGORIES = [
+  "ทั่วไป (General)",
+  "คณิตศาสตร์ (Mathematics)",
+  "วิทยาศาสตร์และเทคโนโลยี (Science & Tech)",
+  "ภาษาไทย (Thai Language)",
+  "ภาษาต่างประเทศ (Foreign Languages)",
+  "สังคมศึกษา ศาสนา และวัฒนธรรม (Social Studies)",
+  "สุขศึกษาและพลศึกษา (Health & PE)",
+  "ศิลปะและดนตรี (Arts & Music)",
+  "การงานอาชีพ (Career & Technology)",
+  "อื่นๆ (Other)"
+];
+
+/**
+ * ระดับชั้นการศึกษา (Grade Levels)
+ */
+const GRADE_LEVELS = [
+  "ไม่ระบุ (All / Not Specified)",
+  "ประถมศึกษาปีที่ 1-3 (Grade 1-3)",
+  "ประถมศึกษาปีที่ 4-6 (Grade 4-6)",
+  "มัธยมศึกษาปีที่ 1 (Grade 7)",
+  "มัธยมศึกษาปีที่ 2 (Grade 8)",
+  "มัธยมศึกษาปีที่ 3 (Grade 9)",
+  "มัธยมศึกษาปีที่ 4 (Grade 10)",
+  "มัธยมศึกษาปีที่ 5 (Grade 11)",
+  "มัธยมศึกษาปีที่ 6 (Grade 12)",
+  "ปวช. / ปวส. (Vocational)",
+  "อุดมศึกษา / บุคคลทั่วไป (University / Adult)"
+];
+
+/**
+ * สุ่มรหัสเข้าห้องสอบสำหรับนักเรียน 6 หลัก
+ */
+function generateEntryCode() {
+  return generateRandomPasscode();
+}
+
+/**
  * ปรับแต่งและแปลง URL ของ Google Forms ให้พร้อมสำหรับการ Embed ใน Iframe
  */
 function formatGoogleFormEmbedUrl(url) {
@@ -58,9 +111,13 @@ function encodeExamConfig(config) {
   try {
     // ย่อ keys และละเว้นค่า default เพื่อให้ URL สั้นที่สุดเท่าที่จะเป็นไปได้
     const compact = {};
+    if (config.roomId) compact.r = config.roomId;
     if (config.formUrl) compact.f = config.formUrl;
     if (config.adminPasscode) compact.p = config.adminPasscode;
+    if (config.entryCode) compact.e = config.entryCode;
     if (config.title && config.title !== "แบบทดสอบออนไลน์") compact.t = config.title;
+    if (config.category && config.category !== "ทั่วไป (General)") compact.c = config.category;
+    if (config.gradeLevel && config.gradeLevel !== "ไม่ระบุ (All / Not Specified)") compact.g = config.gradeLevel;
     if (config.webhookUrl && config.webhookUrl !== DEFAULT_WEBHOOK_URL) compact.w = config.webhookUrl;
 
     const jsonStr = JSON.stringify(compact);
@@ -106,11 +163,15 @@ function decodeExamConfig(base64Str) {
     }).join(""));
     const data = JSON.parse(jsonStr);
 
-    // รองรับทั้ง compact keys (f, p, t, w) และ legacy keys (formUrl, adminPasscode, title, webhookUrl)
+    // รองรับทั้ง compact keys (r, f, p, e, t, c, g, w) และ legacy keys
     return {
+      roomId: data.r || data.roomId || "",
       title: data.t || data.title || "แบบทดสอบออนไลน์",
       formUrl: data.f || data.formUrl || "",
       adminPasscode: data.p || data.adminPasscode || DEFAULT_ADMIN_PASSCODE,
+      entryCode: data.e || data.entryCode || "",
+      category: data.c || data.category || "ทั่วไป (General)",
+      gradeLevel: data.g || data.gradeLevel || "ไม่ระบุ (All / Not Specified)",
       webhookUrl: data.w || data.webhookUrl || DEFAULT_WEBHOOK_URL
     };
   } catch (e) {

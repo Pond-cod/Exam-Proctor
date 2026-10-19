@@ -45,6 +45,24 @@
         >
       </div>
 
+      <!-- กล่องกรอกรหัสเข้าห้องสอบ 6 หลัก (กรณีที่ไม่ได้ส่งผ่านมาจาก Portal) -->
+      <div class="form-group" id="portalEntryCodeGroup" style="text-align: left; display: none;">
+        <label class="form-label" for="examRoomEntryCodeInput">รหัสเข้าห้องสอบ 6 หลัก (จากครูผู้สอน) *</label>
+        <input 
+          type="text" 
+          id="examRoomEntryCodeInput" 
+          class="form-control" 
+          inputmode="numeric" 
+          maxlength="6"
+          placeholder="กรอกรหัส 6 หลัก เช่น 842109"
+          autocomplete="off"
+          style="font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 0.15em; text-align: center; color: var(--primary);"
+        >
+        <div class="form-hint" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">
+          สอบถามรหัสผ่านเข้าห้องสอบ 6 หลักนี้ได้จากครูผู้คุมสอบ
+        </div>
+      </div>
+
       <button id="startExamBtn" class="btn btn-primary btn-block btn-lg">
         เข้าสู่ห้องสอบ (เปิดเต็มหน้าจอ)
       </button>
@@ -122,7 +140,7 @@
   <div id="toastAlert" class="toast-alert"></div>
 
   <!-- โหลดสคริปต์ -->
-  <script src="js/config.js?v=5.1"></script>
-  <script src="js/proctor.js?v=5.1"></script>
+  <script src="js/config.js?v=5.2"></script>
+  <script src="js/proctor.js?v=5.2"></script>
 </body>
 </html>
