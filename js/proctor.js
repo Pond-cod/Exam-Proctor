@@ -14,6 +14,7 @@ let isExamActive = false;
 let isExamSubmitted = false;
 let violationCount = 0;
 let timerInterval = null;
+let timerStartTime = 0; // BUG-13: ใช้ Date.now() เป็น reference แทน counter
 let secondsElapsed = 0;
 
 // Audio Beep Warning
@@ -95,12 +96,13 @@ function showToastAlert(msg) {
   }, 4000);
 }
 
-// Format Timer
+// Format Timer — ใช้ Date.now() เป็น reference เพื่อความแม่นยำ (BUG-13)
 function updateTimer() {
-  secondsElapsed++;
-  const hrs = Math.floor(secondsElapsed / 3600);
-  const mins = Math.floor((secondsElapsed % 3600) / 60);
-  const secs = secondsElapsed % 60;
+  const elapsed = Math.floor((Date.now() - timerStartTime) / 1000);
+  secondsElapsed = elapsed;
+  const hrs = Math.floor(elapsed / 3600);
+  const mins = Math.floor((elapsed % 3600) / 60);
+  const secs = elapsed % 60;
   const timerEl = document.getElementById("examTimer");
   if (timerEl) {
     timerEl.textContent = 
@@ -152,18 +154,26 @@ function initExamFromUrl() {
   }
 }
 
-// Start Exam
-function startExam() {
+// Start Exam — UX-02: ใช้ showAlert แทน alert()
+async function startExam() {
   const studentInput = document.getElementById("studentIdInput");
   const studentVal = (studentInput ? studentInput.value : "").trim();
 
   if (!studentVal) {
-    alert("กรุณากรอกรหัสประจำตัวนักเรียนก่อนเริ่มสอบ");
+    await showAlert("กรุณากรอกรหัสประจำตัวนักเรียนก่อนเริ่มสอบ", {
+      type: "warning",
+      title: "ข้อมูลไม่ครบถ้วน",
+      confirmText: "ตกลง"
+    });
     if (studentInput) studentInput.focus();
     return;
   }
   if (!/^\d+$/.test(studentVal)) {
-    alert("รหัสประจำตัวนักเรียนต้องเป็นตัวเลขเท่านั้น (0-9)");
+    await showAlert("รหัสประจำตัวนักเรียนต้องเป็นตัวเลขเท่านั้น (0-9)", {
+      type: "warning",
+      title: "รูปแบบรหัสไม่ถูกต้อง",
+      confirmText: "แก้ไขข้อมูล"
+    });
     if (studentInput) studentInput.focus();
     return;
   }
@@ -172,7 +182,11 @@ function startExam() {
     const manualInput = document.getElementById("manualFormUrl");
     const manualVal = (manualInput ? manualInput.value : "").trim();
     if (!manualVal) {
-      alert("ยังไม่ได้ระบุลิงก์ข้อสอบ Google Forms");
+      await showAlert("ยังไม่ได้ระบุลิงก์ข้อสอบ Google Forms", {
+        type: "warning",
+        title: "ไม่พบข้อสอบ",
+        confirmText: "ตกลง"
+      });
       if (manualInput) manualInput.focus();
       return;
     }
@@ -197,6 +211,7 @@ function startExam() {
 
   requestBrowserFullscreen();
 
+  timerStartTime = Date.now(); // BUG-13: บันทึกเวลาเริ่ม
   secondsElapsed = 0;
   clearInterval(timerInterval);
   timerInterval = setInterval(updateTimer, 1000);
@@ -283,10 +298,20 @@ function setupAntiCheatListeners() {
   }, true);
 }
 
-// Student Submit Confirmation
-function handleStudentFinished() {
-  const confirmMsg = "คุณได้กดส่งคำตอบ (Submit) ใน Google Forms เรียบร้อยแล้วใช่หรือไม่?\n\nกดยืนยันเพื่อสิ้นสุดการสอบและปลดล็อกระบบ";
-  if (confirm(confirmMsg)) {
+// Student Submit Confirmation — BUG-14: await webhook ก่อน reload, UX-02: showConfirm & showAlert
+async function handleStudentFinished() {
+  const confirmed = await showConfirm(
+    "คุณได้กดส่งคำตอบ (Submit) ใน Google Forms เรียบร้อยแล้วใช่หรือไม่?\n\nกดยืนยันเพื่อสิ้นสุดการสอบและปลดล็อกระบบ",
+    {
+      title: "ยืนยันการส่งข้อสอบ",
+      confirmText: "ยืนยันส่งข้อสอบ",
+      cancelText: "ยังทำไม่เสร็จ",
+      confirmClass: "success",
+      icon: "📝"
+    }
+  );
+
+  if (confirmed) {
     isExamSubmitted = true;
     isExamActive = false;
     clearInterval(timerInterval);
@@ -295,15 +320,31 @@ function handleStudentFinished() {
       document.exitFullscreen().catch(() => {});
     }
 
-    sendAlertToWebhook("ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ปลดล็อกระบบ)");
-    alert("บันทึกการส่งข้อสอบเรียบร้อยแล้ว ขอบคุณครับ");
+    // รอให้ webhook ส่งเสร็จก่อนค่อย reload (BUG-14)
+    try {
+      await sendAlertToWebhook("ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ปลดล็อกระบบ)");
+    } catch (_) {}
+    await showAlert("บันทึกการส่งข้อสอบเรียบร้อยแล้ว ขอบคุณครับ", {
+      type: "success",
+      title: "ส่งข้อสอบสำเร็จ",
+      confirmText: "ตกลง"
+    });
     window.location.reload();
   }
 }
 
-// Admin Force Stop / Unlock with Passcode
-function handleAdminUnlock() {
-  const pass = prompt("กรุณากรอกรหัสผ่านผู้คุมสอบ (Admin Passcode) เพื่อปลดล็อก:");
+// Admin Force Stop / Unlock with Passcode — UX-02: showPrompt & showAlert
+async function handleAdminUnlock() {
+  const pass = await showPrompt("กรุณากรอกรหัสผ่านผู้คุมสอบ (Admin Passcode) เพื่อปลดล็อก:", {
+    title: "ปลดล็อกโดยผู้คุมสอบ",
+    inputType: "password",
+    inputPlaceholder: "กรอกรหัสผ่าน เช่น 1234",
+    confirmText: "ปลดล็อก",
+    cancelText: "ยกเลิก",
+    confirmClass: "primary",
+    icon: "🔒"
+  });
+
   if (pass === examConfig.adminPasscode) {
     isExamSubmitted = true;
     isExamActive = false;
@@ -313,11 +354,22 @@ function handleAdminUnlock() {
       document.exitFullscreen().catch(() => {});
     }
 
-    sendAlertToWebhook("ผู้คุมสอบกรอกรหัสผ่านเพื่อปลดล็อกการสอบ");
-    alert("ปลดล็อกระบบการสอบเรียบร้อยแล้ว");
+    // BUG-14: await ก่อน reload
+    try {
+      await sendAlertToWebhook("ผู้คุมสอบกรอกรหัสผ่านเพื่อปลดล็อกการสอบ");
+    } catch (_) {}
+    await showAlert("ปลดล็อกระบบการสอบเรียบร้อยแล้ว", {
+      type: "success",
+      title: "ปลดล็อกสำเร็จ",
+      confirmText: "ตกลง"
+    });
     window.location.reload();
   } else if (pass !== null) {
-    alert("รหัสผ่านผู้คุมสอบไม่ถูกต้อง");
+    await showAlert("รหัสผ่านผู้คุมสอบไม่ถูกต้อง", {
+      type: "danger",
+      title: "รหัสผ่านผิดพลาด",
+      confirmText: "ลองใหม่"
+    });
   }
 }
 

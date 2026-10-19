@@ -102,18 +102,25 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // ดึงข้อมูล 100 แถวล่าสุด เพื่อความรวดเร็ว
-    const startRow = Math.max(2, lastRow - 99);
+    // BUG-11: เพิ่ม limit เป็น 200 แถว และ sort ตาม timestamp เพื่อให้ Timeline ถูกต้อง
+    const startRow = Math.max(2, lastRow - 199);
     const numRows = lastRow - startRow + 1;
     const values = sheet.getRange(startRow, 1, numRows, 5).getValues();
 
-    const logs = values.map((row) => ({
-      time: row[0],
-      studentId: row[1],
-      violation: row[2],
-      severity: row[3],
-      timestamp: row[4]
-    }));
+    const logs = values
+      .map((row) => ({
+        time: row[0],
+        studentId: row[1],
+        violation: row[2],
+        severity: row[3],
+        timestamp: row[4]
+      }))
+      // Sort ตาม ISO timestamp จากเก่าไปใหม่ (เพื่อให้ admin.js เรียง timeline ถูกต้อง)
+      .sort((a, b) => {
+        const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return tA - tB;
+      });
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",

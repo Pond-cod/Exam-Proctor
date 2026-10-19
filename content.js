@@ -45,14 +45,16 @@ function initProctoring() {
     handleExamSubmittedSuccessfully();
     return;
   }
+  // ตั้ง flag ก่อน async callback เพื่อป้องกัน Race Condition (BUG-05)
   if (isProctoringActive) return;
+  isProctoringActive = true;
 
   chrome.storage.local.get(["isExamActive", "studentId", "secretToken"], (data) => {
     if (!data.isExamActive || isExamCompleted || isSubmissionCompletedPage()) {
+      isProctoringActive = false; // rollback flag ถ้าไม่ผ่านเงื่อนไข
       if (isSubmissionCompletedPage()) handleExamSubmittedSuccessfully();
       return;
     }
-    isProctoringActive = true;
 
     // ลบแท่งเริ่มสอบ launcher banner หากมีอยู่
     const launcher = document.getElementById("exam-proctor-launcher");
@@ -189,6 +191,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!isSubmissionCompletedPage()) {
       initProctoring();
       sendResponse({ activated: true });
+    } else {
+      // BUG-04: ต้อง sendResponse ทุกกรณีเพื่อไม่ให้ channel hang
+      sendResponse({ activated: false, reason: "submission_completed" });
     }
   }
   return true;

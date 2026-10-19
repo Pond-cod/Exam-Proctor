@@ -57,56 +57,85 @@ function setupTabNavigation() {
   });
 }
 
-// 2. Sub-site Link Generator
-function generateExamLink() {
+// 2. Sub-site Link Generator — UX-01: Loading state, UX-02: showAlert, UX-05: client-side QR
+async function generateExamLink() {
   const title = (document.getElementById("examTitleInput").value || "").trim() || "แบบทดสอบออนไลน์";
   const rawFormUrl = (document.getElementById("examFormUrlInput").value || "").trim();
   const webhookUrl = (document.getElementById("examWebhookInput").value || "").trim() || DEFAULT_WEBHOOK_URL;
   const passcode = (document.getElementById("examPasscodeInput").value || "").trim() || DEFAULT_ADMIN_PASSCODE;
 
   if (!rawFormUrl) {
-    alert("กรุณาระบุลิงก์ Google Forms ก่อนสร้างห้องสอบ");
+    await showAlert("กรุณาระบุลิงก์ Google Forms ก่อนสร้างห้องสอบ", {
+      type: "warning",
+      title: "ข้อมูลไม่ครบถ้วน",
+      confirmText: "เข้าใจแล้ว"
+    });
     document.getElementById("examFormUrlInput").focus();
     return;
   }
 
-  const cleanFormUrl = formatGoogleFormEmbedUrl(rawFormUrl);
-
-  const roomConfig = {
-    title: title,
-    formUrl: cleanFormUrl,
-    webhookUrl: webhookUrl,
-    adminPasscode: passcode,
-    createdAt: new Date().toISOString()
-  };
-
-  // เข้ารหัส Base64
-  const encodedData = encodeExamConfig(roomConfig);
-
-  // สร้างลิงก์ห้องสอบ Sub-link
-  const baseUrl = new URL("exam.html", window.location.href);
-  baseUrl.searchParams.set("data", encodedData);
-  const fullExamUrl = baseUrl.toString();
-
-  // แสดงผลลัพธ์
-  const resultBox = document.getElementById("linkResultBox");
-  const linkDisplay = document.getElementById("generatedLinkDisplay");
-  const testOpenBtn = document.getElementById("testOpenLinkBtn");
-  const qrImg = document.getElementById("examQrImage");
-
-  linkDisplay.value = fullExamUrl;
-  testOpenBtn.href = fullExamUrl;
-
-  // สร้าง QR Code ผ่าน API มาตรฐาน
-  if (qrImg) {
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullExamUrl)}`;
+  // UX-01: Loading State บนปุ่มสร้างลิงก์
+  const generateBtn = document.getElementById("generateLinkBtn");
+  const origBtnContent = generateBtn ? generateBtn.innerHTML : "";
+  if (generateBtn) {
+    generateBtn.disabled = true;
+    generateBtn.classList.add("is-loading");
+    generateBtn.innerHTML = `<span class="btn-spinner"></span> กำลังสร้างห้องสอบและสร้างรหัส QR...`;
   }
 
-  resultBox.classList.add("active");
-  resultBox.scrollIntoView({ behavior: "smooth" });
+  try {
+    const cleanFormUrl = formatGoogleFormEmbedUrl(rawFormUrl);
 
-  // บันทึกประวัติลง LocalStorage
-  saveRoomToHistory(roomConfig, fullExamUrl);
+    const roomConfig = {
+      title: title,
+      formUrl: cleanFormUrl,
+      webhookUrl: webhookUrl,
+      adminPasscode: passcode,
+      createdAt: new Date().toISOString()
+    };
+
+    // เข้ารหัส Base64
+    const encodedData = encodeExamConfig(roomConfig);
+
+    // สร้างลิงก์ห้องสอบ Sub-link
+    const baseUrl = new URL("exam.html", window.location.href);
+    baseUrl.searchParams.set("data", encodedData);
+    const fullExamUrl = baseUrl.toString();
+
+    // แสดงผลลัพธ์
+    const resultBox = document.getElementById("linkResultBox");
+    const linkDisplay = document.getElementById("generatedLinkDisplay");
+    const testOpenBtn = document.getElementById("testOpenLinkBtn");
+
+    linkDisplay.value = fullExamUrl;
+    testOpenBtn.href = fullExamUrl;
+
+    // UX-05: สร้าง QR Code แบบ Client-side
+    const qrWrapper = document.getElementById("examQrContainer") || document.querySelector(".qr-image-wrapper");
+    if (qrWrapper) {
+      generateQrCode(qrWrapper, fullExamUrl, 160);
+    } else {
+      const qrImg = document.getElementById("examQrImage");
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullExamUrl)}`;
+        qrImg.style.display = "block";
+      }
+    }
+
+    resultBox.classList.add("active");
+    resultBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    // บันทึกประวัติลง LocalStorage
+    saveRoomToHistory(roomConfig, fullExamUrl);
+  } finally {
+    setTimeout(() => {
+      if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.classList.remove("is-loading");
+        generateBtn.innerHTML = origBtnContent;
+      }
+    }, 350);
+  }
 }
 
 // บันทึกประวัติห้องสอบ
@@ -138,24 +167,44 @@ function renderRoomHistory() {
       return;
     }
 
-    container.innerHTML = history.map((room) => `
+    // BUG-12: ใช้ data-url attribute แทน inline onclick เพื่อป้องกัน XSS
+    container.innerHTML = history.map((room, idx) => `
       <div style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow-sm); flex-wrap: wrap;">
         <div style="overflow: hidden; min-width: 200px; flex: 1;">
           <strong style="display: block; font-size: 14.5px; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(room.title)}</strong>
           <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">สร้างเมื่อ: ${escapeHtml(room.createdAt)}</span>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;" onclick="copySpecificUrl('${escapeHtml(room.fullUrl)}')">คัดลอก</button>
-          <a class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;" href="${escapeHtml(room.fullUrl)}" target="_blank">เปิดดู</a>
+          <button class="btn btn-secondary history-copy-btn" data-url="${escapeHtml(room.fullUrl)}" style="min-height: 38px; padding: 6px 14px; font-size: 13px;">คัดลอก</button>
+          <a class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;" href="${escapeHtml(room.fullUrl)}" target="_blank" rel="noopener noreferrer">เปิดดู</a>
         </div>
       </div>
     `).join("");
+
+    // Event delegation แทน inline onclick (BUG-12 fix)
+    container.querySelectorAll(".history-copy-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const url = btn.getAttribute("data-url");
+        if (url) {
+          navigator.clipboard.writeText(url).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = "คัดลอกแล้ว";
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+          });
+        }
+      });
+    });
   } catch (e) {}
 }
 
+// เปลี่ยนจาก inline onclick เป็น global function คงสตาเดิมไว้เพื่อ compatibility แต่ใน renderRoomHistory ใช้ data-attribute แทน (BUG-12)
 window.copySpecificUrl = function(url) {
   navigator.clipboard.writeText(url).then(() => {
-    alert("คัดลอกลิงก์ห้องสอบเรียบร้อยแล้ว");
+    showAlert("คัดลอกลิงก์ห้องสอบเรียบร้อยแล้ว สามารถนำไปส่งให้นักเรียนได้ทันที", {
+      type: "success",
+      title: "คัดลอกสำเร็จ",
+      confirmText: "ตกลง"
+    });
   });
 };
 
@@ -177,13 +226,17 @@ function escapeHtml(str) {
 
 // 3. Real-time Admin Monitor Logs Fetcher
 function fetchMonitorLogs() {
-  const webhookUrl = (document.getElementById("examWebhookInput").value || "").trim() || DEFAULT_WEBHOOK_URL;
+  const webhookInput = document.getElementById("examWebhookInput");
+  const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || DEFAULT_WEBHOOK_URL;
   const syncStatus = document.getElementById("syncStatusText");
 
   if (!webhookUrl) return;
 
   fetch(webhookUrl)
-    .then((res) => res.json())
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
     .then((resData) => {
       let fetchedList = [];
       if (Array.isArray(resData)) {
@@ -195,12 +248,20 @@ function fetchMonitorLogs() {
       }
 
       allLogs = fetchedList;
-      renderMonitorLogs();
-      if (syncStatus) {
-        syncStatus.textContent = `ซิงค์ล่าสุด: ${new Date().toLocaleTimeString("th-TH")}`;
+      try {
+        renderMonitorLogs();
+        if (syncStatus) {
+          syncStatus.textContent = `ซิงค์ล่าสุด: ${new Date().toLocaleTimeString("th-TH")}`;
+        }
+      } catch (renderErr) {
+        console.error("Render error in monitor:", renderErr);
+        if (syncStatus) {
+          syncStatus.textContent = `ข้อมูล: ${allLogs.length} รายการ`;
+        }
       }
     })
     .catch((err) => {
+      console.warn("Fetch monitor logs error:", err);
       if (syncStatus) syncStatus.textContent = `ขาดการเชื่อมต่อ Webhook`;
     });
 }
@@ -222,7 +283,7 @@ function renderMonitorLogs() {
   let totalViolationsCount = 0;
 
   allLogs.forEach((item) => {
-    const sId = (item.studentId || "ไม่ระบุรหัส").trim();
+    const sId = String(item.studentId !== undefined && item.studentId !== null ? item.studentId : "ไม่ระบุรหัส").trim();
     if (!studentsData[sId]) {
       studentsData[sId] = {
         studentId: sId,
@@ -240,10 +301,10 @@ function renderMonitorLogs() {
     const s = studentsData[sId];
     s.logs.push(item);
 
-    const text = item.violation || "";
+    const text = String(item.violation || "");
     const isStart = text.includes("เริ่มเข้าทำข้อสอบ");
     const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
-    const itemTime = item.time || item.timestamp || "";
+    const itemTime = String(item.time || item.timestamp || "");
 
     if (isStart) {
       s.isStarted = true;
@@ -309,8 +370,8 @@ function renderScreensGrid(query) {
   // กรองตามคำค้นหา
   let filtered = allStudents.filter((s) => {
     if (!query) return true;
-    const matchId = s.studentId.toLowerCase().includes(query);
-    const matchLog = s.logs.some((l) => (l.violation || "").toLowerCase().includes(query));
+    const matchId = String(s.studentId != null ? s.studentId : "").toLowerCase().includes(query);
+    const matchLog = s.logs.some((l) => String(l.violation || "").toLowerCase().includes(query));
     return matchId || matchLog;
   });
 
@@ -324,19 +385,29 @@ function renderScreensGrid(query) {
   }
 
   if (filtered.length === 0) {
-    let emptyMsg = "ยังไม่มีข้อมูลจอภาพผู้สอบ";
-    if (query) emptyMsg = `ไม่พบข้อมูลจอภาพที่ตรงกับ "${escapeHtml(query)}"`;
-    else if (currentFilter === "alert") emptyMsg = "ไม่มีจอภาพที่พบการแจ้งเตือนในขณะนี้";
-    else if (currentFilter === "submitted") emptyMsg = "ยังไม่มีผู้สอบส่งข้อสอบ";
+    let emptyTitle = "ยังไม่มีข้อมูลจอภาพผู้สอบ";
+    let emptyDesc = "ระบบกำลังรอสัญญาณจากเครื่องนักเรียน เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอจะปรากฏขึ้นที่นี่โดยอัตโนมัติ";
+    if (query) {
+      emptyTitle = `ไม่พบข้อมูลที่ตรงกับ "${escapeHtml(query)}"`;
+      emptyDesc = "ลองค้นหาด้วยรหัสประจำตัวอื่น หรือกดปุ่มรีเฟรชเพื่อดึงข้อมูลล่าสุด";
+    } else if (currentFilter === "alert") {
+      emptyTitle = "ยอดเยี่ยม! ไม่พบการแจ้งเตือนพฤติกรรม";
+      emptyDesc = "ไม่มีเครื่องนักเรียนใดที่ตรวจพบการสลับแท็บ ย่อหน้าจอ หรือกดคีย์ลัดในขณะนี้";
+    } else if (currentFilter === "submitted") {
+      emptyTitle = "ยังไม่มีผู้สอบส่งข้อสอบ";
+      emptyDesc = "เมื่อนักเรียนกดส่งแบบฟอร์ม Google Forms สถานะจะเปลี่ยนเป็นส่งข้อสอบแล้ว";
+    }
 
     gridContainer.innerHTML = `
-      <div class="screens-empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <div class="screens-empty-state" style="padding: 44px 20px; background: #ffffff; border: 2px dashed #cbd5e1; border-radius: var(--radius-lg); text-align: center;">
+        <div class="monitor-live-badge"><span class="live-dot"></span> ระบบคุมสอบสดพร้อมทำงาน</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 48px; height: 48px; color: var(--primary); margin: 0 auto 12px; display: block; opacity: 0.85;">
           <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
           <line x1="8" y1="21" x2="16" y2="21"></line>
           <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
-        <p>${emptyMsg}</p>
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${emptyTitle}</h3>
+        <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 420px; margin: 0 auto; line-height: 1.6;">${emptyDesc}</p>
       </div>
     `;
     return;
@@ -376,8 +447,9 @@ function renderScreensGrid(query) {
     const lastEventShort = s.lastEventText ? escapeHtml(s.lastEventText) : "กำลังทำข้อสอบอย่างต่อเนื่อง";
     const updateTime = s.lastEventTime || "-";
 
+    // BUG-03: ใช้ data-student-id attribute แทน inline onclick เพื่อป้องกัน XSS
     return `
-      <div class="${cardClass}" onclick="openStudentDetail('${escapeHtml(s.studentId)}')">
+      <div class="${cardClass}" data-student-id="${escapeHtml(s.studentId)}">
         <!-- Card Header -->
         <div class="screen-card-header">
           <div class="screen-card-identity">
@@ -428,6 +500,14 @@ function renderScreensGrid(query) {
       </div>
     `;
   }).join("");
+
+  // BUG-03: เพิ่ม event delegation แทน inline onclick
+  gridContainer.querySelectorAll(".student-screen-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const sid = card.getAttribute("data-student-id");
+      if (sid) openStudentDetail(sid);
+    });
+  });
 }
 
 // เรนเดอร์มุมมองตารางประวัติ (Table View)
@@ -437,10 +517,13 @@ function renderTableLogs(query) {
 
   const filtered = allLogs.filter((item) => {
     if (!query) return true;
+    const sIdStr = String(item.studentId != null ? item.studentId : "").toLowerCase();
+    const textStr = String(item.violation || "").toLowerCase();
+    const timeStr = String(item.time || item.timestamp || "").toLowerCase();
     return (
-      (item.studentId && item.studentId.toLowerCase().includes(query)) ||
-      (item.violation && item.violation.toLowerCase().includes(query)) ||
-      (item.time && item.time.toLowerCase().includes(query))
+      sIdStr.includes(query) ||
+      textStr.includes(query) ||
+      timeStr.includes(query)
     );
   });
 
@@ -596,17 +679,24 @@ function copyStudentHistory() {
   });
 
   navigator.clipboard.writeText(textReport).then(() => {
-    alert(`คัดลอกประวัติเหตุการณ์ของรหัส ${s.studentId} เรียบร้อยแล้ว`);
+    showAlert(`คัดลอกประวัติเหตุการณ์ของรหัส ${s.studentId} เรียบร้อยแล้ว`, {
+      type: "success",
+      title: "คัดลอกรายงานสำเร็จ",
+      confirmText: "ตกลง"
+    });
   });
 }
 
-// ทดสอบส่งสัญญาณ Webhook Ping
+// ทดสอบส่งสัญญาณ Webhook Ping — UX-01: Loading state, UX-02: showAlert
 async function testWebhookPing() {
   const webhookUrl = (document.getElementById("examWebhookInput").value || "").trim() || DEFAULT_WEBHOOK_URL;
   const testBtn = document.getElementById("testWebhookBtn");
 
-  testBtn.disabled = true;
-  testBtn.textContent = "กำลังทดสอบ...";
+  if (testBtn) {
+    testBtn.disabled = true;
+    testBtn.classList.add("is-loading");
+    testBtn.innerHTML = `<span class="btn-spinner"></span> กำลังทดสอบ...`;
+  }
 
   const payload = {
     studentId: "ทดสอบระบบ (Test Ping)",
@@ -624,13 +714,24 @@ async function testWebhookPing() {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
-    alert(`ส่งข้อความทดสอบสำเร็จ (Status: ${res.status})\nสามารถตรวจดูผลใน Google Sheets ได้ทันที`);
+    await showAlert(`ส่งข้อความทดสอบสำเร็จ (Status: ${res.status})\nสามารถตรวจดูผลใน Google Sheets ได้ทันที`, {
+      type: "success",
+      title: "เชื่อมต่อ Webhook สำเร็จ",
+      confirmText: "ยอดเยี่ยม"
+    });
     fetchMonitorLogs();
   } catch (err) {
-    alert(`เกิดข้อผิดพลาดในการเชื่อมต่อ: ${err.message}`);
+    await showAlert(`เกิดข้อผิดพลาดในการเชื่อมต่อ:\n${err.message}`, {
+      type: "danger",
+      title: "เชื่อมต่อ Webhook ล้มเหลว",
+      confirmText: "ปิด"
+    });
   } finally {
-    testBtn.disabled = false;
-    testBtn.textContent = "ทดสอบ Webhook";
+    if (testBtn) {
+      testBtn.disabled = false;
+      testBtn.classList.remove("is-loading");
+      testBtn.textContent = "ทดสอบ Webhook";
+    }
   }
 }
 

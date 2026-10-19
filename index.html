@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exam Proctor Studio - ระบบสร้างห้องสอบและคุมสอบออนไลน์</title>
   <meta name="description" content="ระบบสร้างลิงก์ห้องสอบและคุมสอบออนไลน์ระดับสถานศึกษา ครอบ Google Forms พร้อมระบบตรวจสอบความซื่อสัตย์ในการสอบ">
-  <link rel="stylesheet" href="css/style.css?v=3.2">
+  <link rel="stylesheet" href="css/style.css?v=3.5">
 </head>
 <body>
 
@@ -83,6 +83,7 @@
                 id="examWebhookInput" 
                 class="form-control" 
                 placeholder="https://script.google.com/macros/s/.../exec"
+                value="https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec"
               >
               <div class="form-hint">บันทึกข้อมูลและประวัติการสอบลงใน Google Sheets โดยตรง</div>
             </div>
@@ -97,6 +98,10 @@
                 value="1234"
               >
               <div class="form-hint">ใช้สำหรับครูผู้คุมสอบในการปลดล็อกหน้าจอเครื่องนักเรียนในกรณีฉุกเฉิน</div>
+              <!-- BUG-08: แจ้งเตือนเรื่อง Security ของ Passcode ใน URL -->
+              <div class="form-hint" style="color: #b45309; background: #fef3c7; border-radius: 6px; padding: 6px 10px; margin-top: 6px; font-size: 12px;">
+                ⚠️ <strong>หมายเหตุความปลอดภัย:</strong> รหัสผ่านนี้ถูก encode ใน URL ลิงก์ห้องสอบ (Base64) — ไม่ใช่การเข้ารหัสที่ปลอดภัย ควรใช้รหัสที่เปลี่ยนในแต่ละครั้งสอบ ห้ามใช้รหัสเดิมซ้ำกับระบบอื่น
+              </div>
             </div>
           </div>
 
@@ -120,8 +125,9 @@
 
           <!-- QR Code สำหรับสแกน -->
           <div class="qr-code-box">
-            <div class="qr-image-wrapper">
-              <img id="examQrImage" src="" alt="Exam QR Code">
+            <div class="qr-image-wrapper" id="examQrWrapper">
+              <div id="examQrContainer"></div>
+              <img id="examQrImage" src="" alt="Exam QR Code" style="display: none;">
             </div>
             <div>
               <strong style="display: block; margin-bottom: 4px; font-size: 14.5px; color: var(--text-primary);">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
@@ -339,7 +345,7 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=3.2"></script>
-  <script src="js/admin.js?v=3.2"></script>
+  <script src="js/config.js?v=3.5"></script>
+  <script src="js/admin.js?v=3.5"></script>
 </body>
 </html>

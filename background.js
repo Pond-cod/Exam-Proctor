@@ -81,12 +81,17 @@ async function sendAlertToAdmin(violationDetail, isSeverityHigh = false, customS
   }
 }
 
-// ตัวแปรกันการยิงแจ้งเตือนรัวเกินไป (Debounce / Rate Limit 2 วินาที)
-let lastAlertTime = 0;
+// ตัวแปรกันการยิงแจ้งเตือนรัวเกินไป (Per-type Debounce — BUG-07 fix)
+// ใช้ Map แยกตามประเภท violation แทน global timer เดียว
+// ทำให้ violation แต่ละประเภทมี debounce โดยไม่กระทบกัน
+const lastAlertTimeMap = {};
 function debouncedAlert(message, minIntervalMs = 2000) {
   const now = Date.now();
-  if (now - lastAlertTime >= minIntervalMs) {
-    lastAlertTime = now;
+  // ใช้ message ร้อยตัวแรก 50 ตัวอักขระเป็น key เพื่อ grouping violation ประเภทเดียวกัน
+  const key = String(message).substring(0, 50);
+  const lastTime = lastAlertTimeMap[key] || 0;
+  if (now - lastTime >= minIntervalMs) {
+    lastAlertTimeMap[key] = now;
     sendAlertToAdmin(message);
   }
 }

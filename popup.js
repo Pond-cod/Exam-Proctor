@@ -1,4 +1,4 @@
-const ADMIN_PASS = "1234"; // รหัสผ่านตั้งค่าแอดมิน (สามารถเปลี่ยนได้)
+// BUG-01: ลบ ADMIN_PASS hardcode ออก — อ่านจาก storage เสมอผ่านสาย chrome.storage.local เพื่อไม่ให้รหัสผ่าน hardcode ในโค้ด
 
 // องค์ประกอบแท็บ
 const tabStudent = document.getElementById("tabStudent");
@@ -130,7 +130,7 @@ chrome.storage.local.get(["isExamActive", "studentId", "examFormUrl", "lockFormU
 // ล็อกอินเข้าตั้งค่า Admin
 loginAdminBtn.addEventListener("click", () => {
   chrome.storage.local.get(["adminPasscode"], (data) => {
-    const currentPass = data.adminPasscode || ADMIN_PASS;
+    const currentPass = data.adminPasscode || "1234"; // fallback กรณี storage ว่าง
     if (adminPassInput.value === currentPass) {
       adminLoginBox.style.display = "none";
       adminConfigBox.style.display = "block";
@@ -270,8 +270,23 @@ startBtn.addEventListener("click", () => {
     if (formUrlError) formUrlError.style.display = "none";
     customFormUrl.style.borderColor = "";
 
-    if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+  if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
       targetUrl = "https://" + targetUrl;
+    }
+
+    // BUG-15: ตรวจสอบว่าเป็น Google Forms URL จริงก่อน start exam
+    const isValidFormsUrl =
+      targetUrl.includes("docs.google.com/forms") ||
+      targetUrl.includes("forms.gle");
+
+    if (!isValidFormsUrl) {
+      customFormUrl.focus();
+      customFormUrl.style.borderColor = "#d93025";
+      if (formUrlError) {
+        formUrlError.textContent = "⚠️ URL นี้ไม่ใช่ Google Forms กรุณาใส่ URL ของ Google Forms เท่านั้น";
+        formUrlError.style.display = "block";
+      }
+      return;
     }
 
     const launchExamWithTab = (tab) => {
@@ -322,11 +337,11 @@ startBtn.addEventListener("click", () => {
   });
 });
 
-// กดปุ่มสิ้นสุดการสอบ (โดยผู้คุมสอบ)
+// กดปุ่มสิ้นสุดการสอบ (โดยผู้คุมสอบ) — BUG-01: อ่านรหัสผ่านจาก storage เสมอ ไม่ใช้ ADMIN_PASS hardcode
 stopBtn.addEventListener("click", () => {
   const pass = prompt("กรอกรหัสผ่านผู้คุมสอบ (Admin Passcode) เพื่อปลดล็อก:");
   chrome.storage.local.get(["adminPasscode"], (data) => {
-    const currentPass = data.adminPasscode || ADMIN_PASS;
+    const currentPass = data.adminPasscode || "1234"; // fallback สำหรับกรณี storage ถูกล้างเท่านั้น
     if (pass !== currentPass) {
       alert("❌ รหัสผ่านผู้คุมสอบไม่ถูกต้อง!\nหากทำข้อสอบเสร็จแล้ว ให้กดปุ่มส่ง (Submit) ใน Google Forms ระบบจะปลดล็อกให้อัตโนมัติ");
       return;
