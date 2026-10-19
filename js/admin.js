@@ -292,10 +292,13 @@ window.copySpecificUrl = function(url) {
   });
 };
 
-let currentViewMode = "grid"; // "grid" | "table"
-let currentFilter = "all"; // "all" | "alert" | "active" | "submitted"
+let currentMonitorTab = "live"; // "live" | "completed" | "table"
+let currentFilter = "all"; // "all" | "alert" | "today"
 let studentsData = {};
+let liveStudents = [];
+let completedStudents = [];
 let activeModalStudentId = null;
+let sessionCutoffTime = parseInt(localStorage.getItem("examSessionCutoff") || "0", 10);
 
 // Escape HTML helper
 function escapeHtml(str) {
@@ -329,6 +332,66 @@ function formatDisplayTime(timeStr, isoTimestamp) {
     } catch (_) {}
   }
   return s;
+}
+
+// ดึงค่าเวลาในรูป Timestamp (ms) จาก log item อย่างแม่นยำ รองรับทั้ง ISO, date, time
+function parseLogTimestampMs(item) {
+  if (!item) return null;
+  if (item.timestamp) {
+    const t = new Date(item.timestamp).getTime();
+    if (!isNaN(t) && t > 1000000000) return t;
+  }
+  if (item.date) {
+    const parts = String(item.date).split(/[\/\-]/);
+    if (parts.length === 3) {
+      let d, m, y;
+      if (parts[0].length === 4) {
+        [y, m, d] = parts.map(Number);
+      } else {
+        [d, m, y] = parts.map(Number);
+      }
+      if (y > 2400) y -= 543;
+      const timeParts = String(item.time || "0:0:0").split(":");
+      const hours = parseInt(timeParts[0] || "0", 10);
+      const mins = parseInt(timeParts[1] || "0", 10);
+      const secs = parseInt(timeParts[2] || "0", 10);
+      const dt = new Date(y, m - 1, d, hours, mins, secs);
+      if (!isNaN(dt.getTime())) return dt.getTime();
+    }
+  }
+  if (item.time && String(item.time).includes("/")) {
+    const tStr = String(item.time).trim();
+    const [dPart, timePart] = tStr.split(" ");
+    if (dPart) {
+      const parts = dPart.split("/");
+      if (parts.length === 3) {
+        let [d, m, y] = parts.map(Number);
+        if (y > 2400) y -= 543;
+        const timeParts = String(timePart || "0:0:0").split(":");
+        const hours = parseInt(timeParts[0] || "0", 10);
+        const mins = parseInt(timeParts[1] || "0", 10);
+        const secs = parseInt(timeParts[2] || "0", 10);
+        const dt = new Date(y, m - 1, d, hours, mins, secs);
+        if (!isNaN(dt.getTime())) return dt.getTime();
+      }
+    }
+  }
+  return null;
+}
+
+// อัปเดตตัวเลข badge บน filter pills ให้สอดคล้องกับแท็บที่กำลังดู
+function updateFilterBadges() {
+  const badgeAll = document.getElementById("badgeFilterAll");
+  const badgeAlert = document.getElementById("badgeFilterAlert");
+  const badgeToday = document.getElementById("badgeFilterToday");
+
+  const activePool = currentMonitorTab === "live"
+    ? liveStudents
+    : (currentMonitorTab === "completed" ? completedStudents : Object.values(studentsData).filter(s => !s.isTestPing));
+
+  if (badgeAll) badgeAll.textContent = activePool.length;
+  if (badgeAlert) badgeAlert.textContent = activePool.filter(s => s.hasAlert).length;
+  if (badgeToday) badgeToday.textContent = activePool.filter(s => !s.isOldDate).length;
 }
 
 // 3. Real-time Admin Monitor Logs Fetcher
@@ -382,19 +445,23 @@ function renderMonitorLogs() {
 
   const badgeAll = document.getElementById("badgeFilterAll");
   const badgeAlert = document.getElementById("badgeFilterAlert");
-  const badgeActive = document.getElementById("badgeFilterActive");
-  const badgeSubmitted = document.getElementById("badgeFilterSubmitted");
+  const badgeToday = document.getElementById("badgeFilterToday");
+  const countLiveBadge = document.getElementById("countLiveBadge");
+  const countCompletedBadge = document.getElementById("countCompletedBadge");
+  const completedHeaderCount = document.getElementById("completedHeaderCount");
 
-  // จัดกลุ่มข้อมูลตามรหัสนักเรียน (studentId)
   studentsData = {};
   let totalViolationsCount = 0;
 
   // เรียงลำดับ logs ตามเวลาจากเก่าไปใหม่ เพื่อประมวลผล Timeline และแยกแยะเซสชันการสอบ
   const sortedLogs = [...allLogs].sort((a, b) => {
-    const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-    const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    const tA = parseLogTimestampMs(a) || 0;
+    const tB = parseLogTimestampMs(b) || 0;
     return tA - tB;
   });
+
+  const nowMs = Date.now();
+  const oneDayMs = 20 * 60 * 60 * 1000; // 20 ชั่วโมง สำหรับตรวจจับวันก่อนหน้า
 
   sortedLogs.forEach((item) => {
     const sId = String(item.studentId !== undefined && item.studentId !== null ? item.studentId : "ไม่ระบุรหัส").trim();
@@ -406,10 +473,14 @@ function renderMonitorLogs() {
         isStarted: false,
         isSubmitted: false,
         startTime: null,
+        submitTime: null,
         lastEventTime: null,
         lastEventIso: null,
         lastEventText: "",
-        hasAlert: false
+        hasAlert: false,
+        isTestPing: sId.includes("ทดสอบ") || sId.toLowerCase().includes("test ping"),
+        isOldDate: false,
+        isBeforeCutoff: false
       };
     }
 
@@ -424,14 +495,14 @@ function renderMonitorLogs() {
 
     if (isStart) {
       s.isStarted = true;
-      // หากนักเรียนเริ่มสอบใหม่หลังจากเคยส่งข้อสอบไปแล้ว -> รีเซ็ตเป็นเซสชันใหม่ทันที
       s.isSubmitted = false;
       s.violationCount = 0;
       s.startTime = itemTime || itemIso;
     } else if (isEnd) {
       s.isSubmitted = true;
-    } else {
-      // พฤติกรรมละเมิดกฎ
+      s.submitTime = itemTime || itemIso;
+    } else if (!s.isTestPing) {
+      // พฤติกรรมละเมิดกฎ (ไม่นับ Test Ping)
       s.violationCount++;
       totalViolationsCount++;
     }
@@ -439,29 +510,59 @@ function renderMonitorLogs() {
     s.lastEventTime = itemTime;
     s.lastEventIso = itemIso;
     s.lastEventText = text;
+
+    // ตรวจสอบว่าเป็นประวัติของวันก่อนหน้า หรือเกิดก่อนการกดตัดรอบสอบใหม่หรือไม่
+    const logDateMs = parseLogTimestampMs(item);
+    if (logDateMs !== null && !isNaN(logDateMs)) {
+      if (nowMs - logDateMs > oneDayMs) {
+        s.isOldDate = true;
+      }
+      if (sessionCutoffTime > 0 && logDateMs < sessionCutoffTime) {
+        s.isBeforeCutoff = true;
+      }
+    }
   });
 
-  // ประมวลผลสถานะเตือน Alert สำหรับแต่ละจอ
-  const studentList = Object.values(studentsData);
-  studentList.forEach((s) => {
-    // จอที่มีการแจ้งเตือน = ตรวจพบพฤติกรรมผิดกฎ ไม่ว่าจะกำลังสอบหรือส่งข้อสอบแล้ว ผู้คุมสอบต้องเห็นการแจ้งเตือนเสมอ!
+  // คัดกรองนักเรียนจริง (ตัด Test Ping ออกจากสถิติผู้เข้าสอบ)
+  const allList = Object.values(studentsData).filter(s => !s.isTestPing);
+  allList.forEach((s) => {
     s.hasAlert = s.violationCount > 0;
   });
 
-  const totalStudents = studentList.length;
-  const submittedStudents = studentList.filter((s) => s.isSubmitted).length;
-  const activeStudents = studentList.filter((s) => !s.isSubmitted).length;
-  const alertStudents = studentList.filter((s) => s.hasAlert).length;
+  // จอสด (Live) = ยังไม่ได้ส่งข้อสอบ และ ไม่ใช่ประวัติวันก่อนหน้า และ ไม่ใช่ประวัติก่อนตัดรอบ
+  liveStudents = allList.filter((s) => !s.isSubmitted && !s.isOldDate && !s.isBeforeCutoff);
 
-  if (totalStudentsEl) totalStudentsEl.textContent = `${totalStudents} คน`;
-  if (activeStudentsEl) activeStudentsEl.textContent = `${activeStudents} คน`;
+  // ประวัติย้อนหลัง (Completed) = ส่งข้อสอบแล้ว หรือเป็นประวัติของรอบก่อนหน้า/วันก่อนหน้า
+  completedStudents = allList.filter((s) => s.isSubmitted || s.isOldDate || s.isBeforeCutoff);
+
+  // เรียงประวัติย้อนหลัง: เอาคนที่ส่งล่าสุดขึ้นก่อน
+  completedStudents.sort((a, b) => {
+    const lastA = a.logs[a.logs.length - 1];
+    const lastB = b.logs[b.logs.length - 1];
+    const tA = parseLogTimestampMs(lastA) || 0;
+    const tB = parseLogTimestampMs(lastB) || 0;
+    return tB - tA;
+  });
+
+  const totalActive = liveStudents.length;
+  const totalCompleted = completedStudents.length;
+  const totalCombined = allList.length;
+
+  if (totalStudentsEl) totalStudentsEl.textContent = `${totalCombined} คน`;
+  if (activeStudentsEl) activeStudentsEl.textContent = `${totalActive} คน`;
   if (totalViolationsEl) totalViolationsEl.textContent = `${totalViolationsCount} ครั้ง`;
-  if (totalSubmittedEl) totalSubmittedEl.textContent = `${submittedStudents} คน`;
+  if (totalSubmittedEl) totalSubmittedEl.textContent = `${totalCompleted} คน`;
 
-  if (badgeAll) badgeAll.textContent = totalStudents;
-  if (badgeAlert) badgeAlert.textContent = alertStudents;
-  if (badgeActive) badgeActive.textContent = activeStudents;
-  if (badgeSubmitted) badgeSubmitted.textContent = submittedStudents;
+  if (countLiveBadge) countLiveBadge.textContent = totalActive;
+  if (countCompletedBadge) countCompletedBadge.textContent = totalCompleted;
+  if (completedHeaderCount) completedHeaderCount.textContent = totalCompleted;
+
+  const clearCutoffBtn = document.getElementById("clearCutoffBtn");
+  if (clearCutoffBtn) {
+    clearCutoffBtn.style.display = sessionCutoffTime > 0 ? "inline-flex" : "none";
+  }
+
+  updateFilterBadges();
 
   // เล่นเสียงเตือนเมื่อพบเหตุการณ์ผิดปกติใหม่
   if (totalViolationsCount > previousViolationCount && previousViolationCount > 0) {
@@ -469,8 +570,9 @@ function renderMonitorLogs() {
   }
   previousViolationCount = totalViolationsCount;
 
-  // เรนเดอร์ทั้ง 2 มุมมอง (Screens Grid และ Table)
-  renderScreensGrid(query);
+  // เรนเดอร์ทั้ง 3 ส่วน
+  renderLiveScreensGrid(query);
+  renderCompletedScreensGrid(query);
   renderTableLogs(query);
 
   // หากเปิด Modal ค้างไว้ ให้อัปเดตข้อมูลข้างในแบบ Real-time ด้วย
@@ -479,158 +581,100 @@ function renderMonitorLogs() {
   }
 }
 
-// เรนเดอร์มุมมองแยกดูของแต่ละจอ (Screens Grid)
-function renderScreensGrid(query) {
-  const gridContainer = document.getElementById("studentScreensGrid");
-  if (!gridContainer) return;
+// เรนเดอร์การ์ดจำลองหน้าจอสด (HTML Generator)
+function renderStudentCardHtml(s, isCompletedView) {
+  let cardClass = "student-screen-card";
+  let statusBadge = "";
+  let statusText = "🟢 ปกติ";
 
-  const allStudents = Object.values(studentsData);
-
-  // กรองตามคำค้นหา
-  let filtered = allStudents.filter((s) => {
-    if (!query) return true;
-    const matchId = String(s.studentId != null ? s.studentId : "").toLowerCase().includes(query);
-    const matchLog = s.logs.some((l) => String(l.violation || "").toLowerCase().includes(query));
-    return matchId || matchLog;
-  });
-
-  // กรองตามแท็บสถานะ
-  if (currentFilter === "alert") {
-    filtered = filtered.filter((s) => s.hasAlert);
-  } else if (currentFilter === "active") {
-    filtered = filtered.filter((s) => !s.isSubmitted);
-  } else if (currentFilter === "submitted") {
-    filtered = filtered.filter((s) => s.isSubmitted);
-  }
-
-  if (filtered.length === 0) {
-    let emptyTitle = "ยังไม่มีข้อมูลจอภาพผู้สอบ";
-    let emptyDesc = "ระบบกำลังรอสัญญาณจากเครื่องนักเรียน เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอจะปรากฏขึ้นที่นี่โดยอัตโนมัติ";
-    if (query) {
-      emptyTitle = `ไม่พบข้อมูลที่ตรงกับ "${escapeHtml(query)}"`;
-      emptyDesc = "ลองค้นหาด้วยรหัสประจำตัวอื่น หรือกดปุ่มรีเฟรชเพื่อดึงข้อมูลล่าสุด";
-    } else if (currentFilter === "alert") {
-      emptyTitle = "ยอดเยี่ยม! ไม่พบการแจ้งเตือนพฤติกรรม";
-      emptyDesc = "ไม่มีเครื่องนักเรียนใดที่ตรวจพบการสลับแท็บ ย่อหน้าจอ หรือกดคีย์ลัดในขณะนี้";
-    } else if (currentFilter === "submitted") {
-      emptyTitle = "ยังไม่มีผู้สอบส่งข้อสอบ";
-      emptyDesc = "เมื่อนักเรียนกดส่งแบบฟอร์ม Google Forms สถานะจะเปลี่ยนเป็นส่งข้อสอบแล้ว";
-    }
-
-    gridContainer.innerHTML = `
-      <div class="screens-empty-state" style="padding: 44px 20px; background: #ffffff; border: 2px dashed #cbd5e1; border-radius: var(--radius-lg); text-align: center;">
-        <div class="monitor-live-badge"><span class="live-dot"></span> ระบบคุมสอบสดพร้อมทำงาน</div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 48px; height: 48px; color: var(--primary); margin: 0 auto 12px; display: block; opacity: 0.85;">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-          <line x1="8" y1="21" x2="16" y2="21"></line>
-          <line x1="12" y1="17" x2="12" y2="21"></line>
-        </svg>
-        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${emptyTitle}</h3>
-        <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 420px; margin: 0 auto; line-height: 1.6;">${emptyDesc}</p>
-      </div>
+  if (!s.isSubmitted && s.hasAlert) {
+    cardClass += " has-alert";
+    statusBadge = `
+      <span class="badge badge-danger">
+        <span class="radar-beacon" style="margin-right: 4px;"></span>
+        เตือน ${s.violationCount} ครั้ง
+      </span>
     `;
-    return;
+    statusText = `⚠️ ผิดปกติ ${s.violationCount} ครั้ง`;
+  } else if (s.isSubmitted && s.hasAlert) {
+    cardClass += " has-alert-submitted";
+    statusBadge = `
+      <span class="badge badge-warning" style="background: #f59e0b; color: #ffffff; border-color: #d97706; font-weight: 700;">
+        <span class="radar-beacon" style="margin-right: 4px; background: #ffffff;"></span>
+        ส่งแล้ว (ผิด ${s.violationCount} ครั้ง)
+      </span>
+    `;
+    statusText = `⚠️ ส่งแล้ว (ผิดกฎ ${s.violationCount} ครั้ง)`;
+  } else if (s.isSubmitted) {
+    cardClass += " is-submitted";
+    statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
+    statusText = `ส่งข้อสอบแล้ว (ปกติ)`;
+  } else {
+    cardClass += " is-active-normal";
+    statusBadge = `<span class="badge badge-primary">กำลังสอบ</span>`;
+    statusText = `กำลังทำข้อสอบ`;
   }
 
-  // เรียงลำดับ: จอที่กำลังสั่น/แจ้งเตือน (hasAlert) ขึ้นมาก่อน เพื่อให้ผู้คุมสอบมองเห็นทันที
-  filtered.sort((a, b) => {
-    if (a.hasAlert && !b.hasAlert) return -1;
-    if (!a.hasAlert && b.hasAlert) return 1;
-    return b.logs.length - a.logs.length;
-  });
+  const lastEventShort = s.lastEventText ? escapeHtml(s.lastEventText) : (isCompletedView ? "ส่งข้อสอบเรียบร้อยแล้ว" : "กำลังทำข้อสอบอย่างต่อเนื่อง");
+  const updateTime = formatDisplayTime(isCompletedView ? (s.submitTime || s.lastEventTime) : s.lastEventTime, s.lastEventIso);
 
-  gridContainer.innerHTML = filtered.map((s) => {
-    let cardClass = "student-screen-card";
-    let statusBadge = "";
-    let statusText = "🟢 ปกติ";
-
-    if (!s.isSubmitted && s.hasAlert) {
-      cardClass += " has-alert";
-      statusBadge = `
-        <span class="badge badge-danger">
-          <span class="radar-beacon" style="margin-right: 4px;"></span>
-          เตือน ${s.violationCount} ครั้ง
-        </span>
-      `;
-      statusText = `⚠️ ผิดปกติ ${s.violationCount} ครั้ง`;
-    } else if (s.isSubmitted && s.hasAlert) {
-      cardClass += " has-alert-submitted";
-      statusBadge = `
-        <span class="badge badge-warning" style="background: #f59e0b; color: #ffffff; border-color: #d97706; font-weight: 700;">
-          <span class="radar-beacon" style="margin-right: 4px; background: #ffffff;"></span>
-          ส่งแล้ว (ผิด ${s.violationCount} ครั้ง)
-        </span>
-      `;
-      statusText = `⚠️ ส่งแล้ว (ผิดกฎ ${s.violationCount} ครั้ง)`;
-    } else if (s.isSubmitted) {
-      cardClass += " is-submitted";
-      statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
-      statusText = `ส่งข้อสอบแล้ว (ปกติ)`;
-    } else {
-      cardClass += " is-active-normal";
-      statusBadge = `<span class="badge badge-primary">กำลังสอบ</span>`;
-      statusText = `กำลังทำข้อสอบ`;
-    }
-
-    const lastEventShort = s.lastEventText ? escapeHtml(s.lastEventText) : "กำลังทำข้อสอบอย่างต่อเนื่อง";
-    const updateTime = formatDisplayTime(s.lastEventTime, s.lastEventIso);
-
-    // BUG-03: ใช้ data-student-id attribute แทน inline onclick เพื่อป้องกัน XSS
-    return `
-      <div class="${cardClass}" data-student-id="${escapeHtml(s.studentId)}">
-        <!-- Card Header -->
-        <div class="screen-card-header">
-          <div class="screen-card-identity">
-            <div class="screen-device-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-            </div>
-            <div class="screen-station-text">
-              <span class="screen-station-label">จอผู้สอบ</span>
-              <span class="screen-station-id">รหัส ${escapeHtml(s.studentId)}</span>
-            </div>
-          </div>
-          <div>
-            ${statusBadge}
-          </div>
-        </div>
-
-        <!-- Screen Mockup Bezel (จำลองหน้าจอสด) -->
-        <div class="screen-mockup-frame">
-          <div class="screen-mockup-top">
-            <div class="screen-window-dots"><span></span><span></span><span></span></div>
-            <span class="screen-mockup-tag">Exam Screen</span>
-          </div>
-          <div class="screen-last-event">
-            ${lastEventShort}
-          </div>
-          <div class="screen-mockup-bottom">
-            <span>ล่าสุด: ${updateTime}</span>
-            <span>${statusText}</span>
-          </div>
-        </div>
-
-        <!-- Card Footer -->
-        <div class="screen-card-footer">
-          <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">
-            บันทึก ${s.logs.length} รายการ
-          </span>
-          <span class="screen-action-btn">
-            ดูรายละเอียดจอ
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
+  return `
+    <div class="${cardClass}" data-student-id="${escapeHtml(s.studentId)}">
+      <!-- Card Header -->
+      <div class="screen-card-header">
+        <div class="screen-card-identity">
+          <div class="screen-device-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
-          </span>
+          </div>
+          <div class="screen-station-text">
+            <span class="screen-station-label">${isCompletedView ? "ผู้ส่งข้อสอบ" : "จอผู้สอบสด"}</span>
+            <span class="screen-station-id">รหัส ${escapeHtml(s.studentId)}</span>
+          </div>
+        </div>
+        <div>
+          ${statusBadge}
         </div>
       </div>
-    `;
-  }).join("");
 
-  // BUG-03: เพิ่ม event delegation แทน inline onclick
-  gridContainer.querySelectorAll(".student-screen-card").forEach((card) => {
+      <!-- Screen Mockup Bezel (จำลองหน้าจอสด) -->
+      <div class="screen-mockup-frame">
+        <div class="screen-mockup-top">
+          <div class="screen-window-dots"><span></span><span></span><span></span></div>
+          <span class="screen-mockup-tag">${isCompletedView ? "Completed Exam" : "Live Screen"}</span>
+        </div>
+        <div class="screen-last-event">
+          ${lastEventShort}
+        </div>
+        <div class="screen-mockup-bottom">
+          <span>${isCompletedView ? "ส่งเมื่อ" : "ล่าสุด"}: ${updateTime}</span>
+          <span>${statusText}</span>
+        </div>
+      </div>
+
+      <!-- Card Footer -->
+      <div class="screen-card-footer">
+        <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">
+          บันทึก ${s.logs.length} รายการ
+        </span>
+        <span class="screen-action-btn">
+          ดูรายละเอียดจอ
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+// ผูก Event คลิกเปิด Modal ให้กับทุกการ์ด
+function bindScreenCardEvents(container) {
+  if (!container) return;
+  container.querySelectorAll(".student-screen-card").forEach((card) => {
     card.addEventListener("click", () => {
       const sid = card.getAttribute("data-student-id");
       if (sid) openStudentDetail(sid);
@@ -638,12 +682,143 @@ function renderScreensGrid(query) {
   });
 }
 
+// 1. เรนเดอร์เฉพาะหน้าจอที่กำลังสอบสด (Live Screens Grid)
+function renderLiveScreensGrid(query) {
+  const gridContainer = document.getElementById("studentScreensGrid");
+  if (!gridContainer) return;
+
+  let filtered = liveStudents.filter((s) => {
+    if (!query) return true;
+    const matchId = String(s.studentId != null ? s.studentId : "").toLowerCase().includes(query);
+    const matchLog = s.logs.some((l) => String(l.violation || "").toLowerCase().includes(query));
+    return matchId || matchLog;
+  });
+
+  if (currentFilter === "alert") {
+    filtered = filtered.filter((s) => s.hasAlert);
+  } else if (currentFilter === "today") {
+    filtered = filtered.filter((s) => !s.isOldDate);
+  }
+
+  if (filtered.length === 0) {
+    let emptyTitle = "ขณะนี้ยังไม่มีผู้เข้าทำข้อสอบสด";
+    let emptyDesc = "ระบบกำลังรอสัญญาณ เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอสดจะปรากฏขึ้นที่นี่โดยอัตโนมัติ";
+    if (query) {
+      emptyTitle = `ไม่พบผู้สอบสดที่ตรงกับ "${escapeHtml(query)}"`;
+      emptyDesc = "ลองค้นหาด้วยรหัสประจำตัวอื่น หรือกดดูในหมวด 'ประวัติผู้ส่งข้อสอบแล้ว'";
+    } else if (currentFilter === "alert") {
+      emptyTitle = "ยอดเยี่ยม! ไม่พบการแจ้งเตือนสด";
+      emptyDesc = "ไม่มีผู้สอบสดคนใดที่ตรวจพบการผิดกฎในขณะนี้";
+    }
+
+    gridContainer.innerHTML = `
+      <div class="screens-empty-state" style="grid-column: 1 / -1; padding: 48px 20px; background: #ffffff; border: 2px dashed #cbd5e1; border-radius: var(--radius-lg); text-align: center;">
+        <div class="monitor-live-badge"><span class="live-dot"></span> ระบบคุมสอบสดพร้อมทำงาน</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 48px; height: 48px; color: var(--primary); margin: 0 auto 12px; display: block; opacity: 0.85;">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${emptyTitle}</h3>
+        <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 440px; margin: 0 auto 16px; line-height: 1.6;">${emptyDesc}</p>
+        ${completedStudents.length > 0 ? `
+          <button type="button" class="btn btn-secondary view-completed-shortcut-btn" style="min-height: 38px; padding: 6px 18px; font-size: 13px; margin: 0 auto; display: inline-flex;">
+            📁 ดูประวัติผู้ที่ส่งข้อสอบแล้ว (${completedStudents.length} คน)
+          </button>
+        ` : ''}
+      </div>
+    `;
+
+    const shortcutBtn = gridContainer.querySelector(".view-completed-shortcut-btn");
+    if (shortcutBtn) {
+      shortcutBtn.addEventListener("click", () => {
+        switchToMonitorTab("completed");
+      });
+    }
+    return;
+  }
+
+  // เรียงลำดับ: จอที่เตือนขึ้นก่อน
+  filtered.sort((a, b) => {
+    if (a.hasAlert && !b.hasAlert) return -1;
+    if (!a.hasAlert && b.hasAlert) return 1;
+    return b.logs.length - a.logs.length;
+  });
+
+  gridContainer.innerHTML = filtered.map((s) => renderStudentCardHtml(s, false)).join("");
+  bindScreenCardEvents(gridContainer);
+}
+
+// 2. เรนเดอร์ประวัติผู้ที่ส่งข้อสอบแล้ว (Completed / History Archive Grid)
+function renderCompletedScreensGrid(query) {
+  const gridContainer = document.getElementById("completedScreensGrid");
+  if (!gridContainer) return;
+
+  let filtered = completedStudents.filter((s) => {
+    if (!query) return true;
+    const matchId = String(s.studentId != null ? s.studentId : "").toLowerCase().includes(query);
+    const matchLog = s.logs.some((l) => String(l.violation || "").toLowerCase().includes(query));
+    return matchId || matchLog;
+  });
+
+  if (currentFilter === "alert") {
+    filtered = filtered.filter((s) => s.hasAlert);
+  } else if (currentFilter === "today") {
+    filtered = filtered.filter((s) => !s.isOldDate);
+  }
+
+  if (filtered.length === 0) {
+    gridContainer.innerHTML = `
+      <div class="screens-empty-state" style="grid-column: 1 / -1; padding: 40px 20px; background: #ffffff; border: 2px dashed #cbd5e1; border-radius: var(--radius-lg); text-align: center;">
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">ยังไม่มีผู้สอบที่ส่งข้อสอบในหมวดนี้</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">เมื่อนักเรียนกดส่งข้อสอบ การ์ดจะถูกจัดเก็บย้อนหลังที่นี่โดยอัตโนมัติ</p>
+      </div>
+    `;
+    return;
+  }
+
+  gridContainer.innerHTML = filtered.map((s) => renderStudentCardHtml(s, true)).join("");
+  bindScreenCardEvents(gridContainer);
+}
+
+// ฟังก์ชันสลับ 3 หมวดการแสดงผลของหน้าคุมสอบ
+function switchToMonitorTab(tabName) {
+  currentMonitorTab = tabName;
+  const liveBtn = document.getElementById("toggleLiveViewBtn");
+  const completedBtn = document.getElementById("toggleCompletedViewBtn");
+  const tableBtn = document.getElementById("toggleTableViewBtn");
+
+  const liveContainer = document.getElementById("screensGridContainer");
+  const completedContainer = document.getElementById("completedGridContainer");
+  const tableContainer = document.getElementById("tableViewContainer");
+
+  [liveBtn, completedBtn, tableBtn].forEach((b) => {
+    if (b) b.classList.remove("active");
+  });
+  if (liveContainer) liveContainer.style.display = "none";
+  if (completedContainer) completedContainer.style.display = "none";
+  if (tableContainer) tableContainer.style.display = "none";
+
+  if (tabName === "live") {
+    if (liveBtn) liveBtn.classList.add("active");
+    if (liveContainer) liveContainer.style.display = "block";
+  } else if (tabName === "completed") {
+    if (completedBtn) completedBtn.classList.add("active");
+    if (completedContainer) completedContainer.style.display = "block";
+  } else if (tabName === "table") {
+    if (tableBtn) tableBtn.classList.add("active");
+    if (tableContainer) tableContainer.style.display = "block";
+  }
+
+  updateFilterBadges();
+}
+
 // เรนเดอร์มุมมองตารางประวัติ (Table View)
 function renderTableLogs(query) {
   const tableBody = document.getElementById("monitorTableBody");
   if (!tableBody) return;
 
-  const filtered = allLogs.filter((item) => {
+  let filtered = allLogs.filter((item) => {
     if (!query) return true;
     const sIdStr = String(item.studentId != null ? item.studentId : "").toLowerCase();
     const textStr = String(item.violation || "").toLowerCase();
@@ -654,6 +829,22 @@ function renderTableLogs(query) {
       timeStr.includes(query)
     );
   });
+
+  if (currentFilter === "alert") {
+    filtered = filtered.filter((item) => {
+      const text = String(item.violation || "");
+      const isStart = text.includes("เริ่มเข้าทำข้อสอบ");
+      const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
+      return !isStart && !isEnd;
+    });
+  } else if (currentFilter === "today") {
+    const nowMs = Date.now();
+    const oneDayMs = 20 * 60 * 60 * 1000;
+    filtered = filtered.filter((item) => {
+      const ms = parseLogTimestampMs(item);
+      return ms ? (nowMs - ms <= oneDayMs) : true;
+    });
+  }
 
   if (filtered.length === 0) {
     tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 24px; color: var(--text-muted);">ยังไม่มีข้อมูลเหตุการณ์</td></tr>`;
@@ -970,27 +1161,61 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 1. ปุ่มสลับมุมมอง จอภาพ VS ตาราง
-  const toggleGridBtn = document.getElementById("toggleGridViewBtn");
+  // 1. ปุ่มสลับมุมมอง 3 หมวด (จอคุมสอบสด VS ประวัติผู้ส่งข้อสอบแล้ว VS ตารางบันทึกเหตุการณ์)
+  const toggleLiveBtn = document.getElementById("toggleLiveViewBtn");
+  if (toggleLiveBtn) {
+    toggleLiveBtn.addEventListener("click", () => switchToMonitorTab("live"));
+  }
+
+  const toggleCompletedBtn = document.getElementById("toggleCompletedViewBtn");
+  if (toggleCompletedBtn) {
+    toggleCompletedBtn.addEventListener("click", () => switchToMonitorTab("completed"));
+  }
+
   const toggleTableBtn = document.getElementById("toggleTableViewBtn");
-  const screensGridContainer = document.getElementById("screensGridContainer");
-  const tableViewContainer = document.getElementById("tableViewContainer");
+  if (toggleTableBtn) {
+    toggleTableBtn.addEventListener("click", () => switchToMonitorTab("table"));
+  }
 
-  if (toggleGridBtn && toggleTableBtn) {
-    toggleGridBtn.addEventListener("click", () => {
-      toggleGridBtn.classList.add("active");
-      toggleTableBtn.classList.remove("active");
-      currentViewMode = "grid";
-      if (screensGridContainer) screensGridContainer.style.display = "block";
-      if (tableViewContainer) tableViewContainer.style.display = "none";
+  // 1.1 ปุ่มเริ่มรอบสอบใหม่ (Reset Live Monitor)
+  const resetSessionBtn = document.getElementById("resetSessionBtn");
+  if (resetSessionBtn) {
+    resetSessionBtn.addEventListener("click", async () => {
+      const confirmed = await showConfirm(
+        "ต้องการเริ่มรอบการสอบใหม่หรือไม่?\n\nระบบจะย้ายหน้าจอผู้สอบชุดก่อนหน้าทั้งหมดไปยัง '📁 ประวัติผู้ส่งข้อสอบแล้ว' เพื่อให้หน้าจอคุมสอบสดว่างพร้อมรับนักเรียนรอบใหม่\n\n(หมายเหตุ: ข้อมูลทั้งหมดยังคงบันทึกปลอดภัยใน Google Sheets และสามารถดูย้อนหลังได้ตลอดเวลา)",
+        {
+          title: "✨ เริ่มรอบสอบใหม่ (Reset Live Monitor)",
+          confirmText: "เริ่มรอบใหม่ทันที",
+          cancelText: "ยกเลิก",
+          type: "primary"
+        }
+      );
+      if (confirmed) {
+        sessionCutoffTime = Date.now();
+        localStorage.setItem("examSessionCutoff", sessionCutoffTime.toString());
+        renderMonitorLogs();
+        switchToMonitorTab("live");
+        await showAlert("เริ่มรอบสอบใหม่เรียบร้อยแล้ว\nหน้าจอคุมสอบสดพร้อมรับนักเรียนรอบใหม่", {
+          type: "success",
+          title: "พร้อมสำหรับการสอบรอบใหม่",
+          confirmText: "ตกลง"
+        });
+      }
     });
+  }
 
-    toggleTableBtn.addEventListener("click", () => {
-      toggleTableBtn.classList.add("active");
-      toggleGridBtn.classList.remove("active");
-      currentViewMode = "table";
-      if (screensGridContainer) screensGridContainer.style.display = "none";
-      if (tableViewContainer) tableViewContainer.style.display = "block";
+  // 1.2 ปุ่มล้างตัวตัดรอบ (แสดงประวัติทั้งหมด)
+  const clearCutoffBtn = document.getElementById("clearCutoffBtn");
+  if (clearCutoffBtn) {
+    clearCutoffBtn.addEventListener("click", async () => {
+      sessionCutoffTime = 0;
+      localStorage.removeItem("examSessionCutoff");
+      renderMonitorLogs();
+      await showAlert("ล้างตัวตัดรอบเรียบร้อยแล้ว\nแสดงข้อมูลผู้สอบทั้งหมดตามปกติ", {
+        type: "success",
+        title: "แสดงประวัติทั้งหมด",
+        confirmText: "ตกลง"
+      });
     });
   }
 
