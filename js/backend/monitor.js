@@ -11,6 +11,7 @@ let currentPrimaryMode = "live"; // "live" | "archive"
 let currentMonitorTab = "live"; // "live" | "completed" | "table"
 let currentFilter = "all"; // "all" | "alert" | "today"
 let completedDateFilter = "all"; // "all" | "YYYY-MM-DD"
+let selectedMonitorCategory = "live"; // "all" | "live" | "alert" | "completed"
 let studentsData = {};
 let liveStudents = [];
 let completedStudents = [];
@@ -511,6 +512,20 @@ function renderMonitorLogs() {
     clearCutoffBtn.style.display = sessionCutoffTime > 0 ? "inline-flex" : "none";
   }
 
+  // ซิงค์สถานะ Active ของ Stat Cards ทั้ง 4 ใบให้ตรงกับหมวดที่เลือกอยู่
+  const cardMap = {
+    all: "statCardAll",
+    live: "statCardActive",
+    alert: "statCardViolations",
+    completed: "statCardSubmitted"
+  };
+  Object.keys(cardMap).forEach(key => {
+    const el = document.getElementById(cardMap[key]);
+    if (el) {
+      el.classList.toggle("active", key === selectedMonitorCategory && currentPrimaryMode === "live");
+    }
+  });
+
   updateFilterBadges();
 
   // Find latest incident among active live students for the Ticker
@@ -553,12 +568,18 @@ function updateFilterBadges() {
   const badgeAlert = document.getElementById("badgeFilterAlert");
   const badgeToday = document.getElementById("badgeFilterToday");
 
-  const activePool = currentMonitorTab === "live"
-    ? liveStudents
-    : (currentMonitorTab === "completed" ? completedStudents : Object.values(studentsData).filter(s => !s.isTestPing));
+  const allList = Object.values(studentsData).filter(s => !s.isTestPing);
+  let activePool = allList;
+  if (selectedMonitorCategory === "live") {
+    activePool = liveStudents;
+  } else if (selectedMonitorCategory === "alert") {
+    activePool = allList.filter(s => s.hasAlert || s.violationCount > 0);
+  } else if (selectedMonitorCategory === "completed") {
+    activePool = completedStudents;
+  }
 
   if (badgeAll) badgeAll.textContent = activePool.length;
-  if (badgeAlert) badgeAlert.textContent = activePool.filter(s => s.hasAlert).length;
+  if (badgeAlert) badgeAlert.textContent = activePool.filter(s => s.hasAlert || s.violationCount > 0).length;
   if (badgeToday) badgeToday.textContent = activePool.filter(s => !s.isOldDate).length;
 }
 
@@ -567,7 +588,24 @@ function renderStudentCardHtml(s, isCompletedView) {
   let statusBadge = "";
   let statusText = "🟢 ปกติ";
 
-  if (!s.isSubmitted && s.hasAlert) {
+  if (s.isSubmitted) {
+    cardClass += " is-submitted";
+    if (s.hasAlert && s.violationCount > 0) {
+      cardClass += " has-alert";
+      statusBadge = `
+        <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+          <span class="badge badge-danger" title="พบเหตุการณ์สลับหน้าจอ">
+            ⚠️ เตือน ${s.violationCount} ครั้ง
+          </span>
+          <span class="badge badge-success">ส่งข้อสอบแล้ว</span>
+        </div>
+      `;
+      statusText = `⚠️ ส่งแล้ว (เตือน ${s.violationCount} ครั้ง)`;
+    } else {
+      statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
+      statusText = "✅ ส่งข้อสอบแล้ว";
+    }
+  } else if (s.hasAlert) {
     cardClass += " has-alert";
     statusBadge = `
       <span class="badge badge-danger">
@@ -576,10 +614,6 @@ function renderStudentCardHtml(s, isCompletedView) {
       </span>
     `;
     statusText = "🚨 พบการแจ้งเตือน";
-  } else if (s.isSubmitted) {
-    cardClass += " is-submitted";
-    statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
-    statusText = "✅ ส่งข้อสอบแล้ว";
   } else {
     statusBadge = `<span class="badge badge-primary">กำลังสอบ</span>`;
   }
@@ -619,9 +653,11 @@ function renderStudentCardHtml(s, isCompletedView) {
           <div class="screen-content-area">
             ${s.isSubmitted ? `
               <div class="screen-status-center success">
-                <div style="font-size: 26px;">📝</div>
-                <div style="font-size: 13px; font-weight: 700; color: #059669; margin-top: 4px;">ส่งข้อสอบสำเร็จ</div>
-                <div style="font-size: 11px; color: var(--text-muted);">${formatDisplayTime(s.submitTime)}</div>
+                <div style="font-size: 26px;">${s.hasAlert && s.violationCount > 0 ? "⚠️" : "📝"}</div>
+                <div style="font-size: 13px; font-weight: 700; color: ${s.hasAlert && s.violationCount > 0 ? "#b91c1c" : "#059669"}; margin-top: 4px;">
+                  ${s.hasAlert && s.violationCount > 0 ? `ส่งแล้ว (เตือน ${s.violationCount} ครั้ง)` : "ส่งข้อสอบสำเร็จ"}
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted);">ส่งเมื่อ: ${formatDisplayTime(s.submitTime)}</div>
                 ${s.roomTitle ? `<div style="font-size: 11px; color: #047857; margin-top: 3px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 200px;" title="${escapeHtml(s.roomTitle)}">วิชา: ${escapeHtml(s.roomTitle)}</div>` : ""}
               </div>
             ` : (s.hasAlert ? `
@@ -656,34 +692,185 @@ function renderStudentCardHtml(s, isCompletedView) {
   `;
 }
 
+function selectMonitorCategory(category) {
+  selectedMonitorCategory = category;
+
+  // หากอยู่ในหน้าคลังประวัติ ให้สลับกลับมาที่หน้าจอคุมสอบสดเพื่อแสดงการ์ดตามหมวดที่เลือก
+  if (currentPrimaryMode !== "live") {
+    currentPrimaryMode = "live";
+    const liveBtn = document.getElementById("primaryModeLiveBtn");
+    const archiveBtn = document.getElementById("primaryModeArchiveBtn");
+    const liveZone = document.getElementById("liveProctorZone");
+    const archiveZone = document.getElementById("archiveZone");
+
+    if (liveBtn) liveBtn.classList.add("active");
+    if (archiveBtn) archiveBtn.classList.remove("active");
+    if (liveZone) liveZone.style.display = "block";
+    if (archiveZone) archiveZone.style.display = "none";
+  }
+
+  // อัปเดตสถานะ Active ของ Stat Cards ทั้ง 4 ใบ
+  const cardMap = {
+    all: "statCardAll",
+    live: "statCardActive",
+    alert: "statCardViolations",
+    completed: "statCardSubmitted"
+  };
+
+  Object.keys(cardMap).forEach(key => {
+    const el = document.getElementById(cardMap[key]);
+    if (el) {
+      el.classList.toggle("active", key === category);
+    }
+  });
+
+  const query = (document.getElementById("searchLogInput") ? document.getElementById("searchLogInput").value : "").trim().toLowerCase();
+  renderSelectedCategoryGrid(query);
+  updateFilterBadges();
+}
+
 function renderLiveScreensGrid(query) {
+  renderSelectedCategoryGrid(query);
+}
+
+function renderSelectedCategoryGrid(query) {
   const container = document.getElementById("studentScreensGrid");
+  const titleText = document.getElementById("monitorZoneTitleText");
+  const iconEl = document.getElementById("monitorZoneIcon");
+  const countBadge = document.getElementById("monitorCategoryCountBadge");
   if (!container) return;
 
-  let filtered = liveStudents;
-  if (query) {
-    filtered = filtered.filter(s => s.studentId.toLowerCase().includes(query) || (s.lastEventText && s.lastEventText.toLowerCase().includes(query)));
+  const allList = Object.values(studentsData).filter(s => !s.isTestPing);
+  const totalCombined = allList.length;
+  const alertStudents = allList.filter(s => s.hasAlert || s.violationCount > 0);
+  const totalAlert = alertStudents.length;
+  const totalCompleted = completedStudents.length;
+
+  let pool = [];
+  let categoryTitle = "";
+  let categoryIcon = "";
+  let emptyTitle = "";
+  let emptyDesc = "";
+
+  switch (selectedMonitorCategory) {
+    case "all":
+      pool = allList;
+      categoryTitle = "ผู้เข้าสอบทั้งหมด (All Examinees)";
+      categoryIcon = "👥";
+      emptyTitle = "ยังไม่มีข้อมูลผู้เข้าสอบ";
+      emptyDesc = "ยังไม่พบข้อมูลผู้เข้าสอบในระบบหรือห้องสอบที่เลือก";
+      break;
+
+    case "alert":
+      pool = alertStudents;
+      categoryTitle = "ผู้เข้าสอบที่พบการแจ้งเตือนสลับจอ (Violations Detected)";
+      categoryIcon = "⚠️";
+      emptyTitle = "✅ ไม่พบการแจ้งเตือนสลับหน้าจอ";
+      emptyDesc = "ผู้เข้าสอบทุกคนอยู่ในโหมดเต็มหน้าจอและทำข้อสอบด้วยความซื่อสัตย์";
+      break;
+
+    case "completed":
+      pool = completedStudents;
+      categoryTitle = "ผู้ที่ส่งข้อสอบเรียบร้อยแล้ว (Submitted Examinees)";
+      categoryIcon = "🏆";
+      emptyTitle = "ยังไม่มีผู้ส่งข้อสอบ";
+      emptyDesc = "เมื่อมีนักเรียนกดส่งข้อสอบ รายชื่อจะปรากฏที่นี่";
+      break;
+
+    case "live":
+    default:
+      pool = liveStudents;
+      categoryTitle = "จอภาพผู้สอบสด (Real-time Live Monitors)";
+      categoryIcon = `<span class="live-pulse-dot" style="width: 8px; height: 8px;"></span>`;
+      emptyTitle = "ขณะนี้ยังไม่มีผู้เข้าทำข้อสอบสด";
+      emptyDesc = "เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอสดจะปรากฏขึ้นที่นี่โดยอัตโนมัติ";
+      break;
   }
+
+  // อัปเดตส่วนหัวของจอคุมสอบสด
+  if (titleText) titleText.textContent = categoryTitle;
+  if (iconEl) {
+    if (selectedMonitorCategory === "live") {
+      iconEl.className = "live-pulse-dot";
+      iconEl.style.display = "inline-block";
+      iconEl.textContent = "";
+    } else {
+      iconEl.className = "";
+      iconEl.style.display = "inline";
+      iconEl.textContent = categoryIcon;
+    }
+  }
+
+  // ตัวกรองย่อยเพิ่มเติม (ค้นหา / พบแจ้งเตือน / เฉพาะวันนี้)
+  let filtered = pool;
+  if (query) {
+    filtered = filtered.filter(s => 
+      s.studentId.toLowerCase().includes(query) || 
+      (s.lastEventText && s.lastEventText.toLowerCase().includes(query)) ||
+      (s.roomTitle && s.roomTitle.toLowerCase().includes(query))
+    );
+  }
+
   if (currentFilter === "alert") {
-    filtered = filtered.filter(s => s.hasAlert);
+    filtered = filtered.filter(s => s.hasAlert || s.violationCount > 0);
   } else if (currentFilter === "today") {
     filtered = filtered.filter(s => !s.isOldDate);
   }
 
+  if (countBadge) {
+    if (selectedMonitorCategory === "alert") {
+      const totalViolationsInAlert = filtered.reduce((acc, s) => acc + (s.violationCount || 0), 0);
+      countBadge.textContent = `${filtered.length} คน (${totalViolationsInAlert} ครั้ง)`;
+    } else {
+      countBadge.textContent = `${filtered.length} คน`;
+    }
+  }
+
+  // กรณีไม่มีข้อมูล ให้แสดง Empty State พร้อมปุ่มคลิกไปหมวดอื่นที่มีข้อมูล
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div class="screens-empty-state">
-        <div class="monitor-live-badge"><span class="live-dot"></span> ระบบคุมสอบสดพร้อมทำงาน</div>
-        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">ขณะนี้ยังไม่มีผู้เข้าทำข้อสอบ</h3>
-        <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 440px; margin: 0 auto; line-height: 1.6;">
-          เมื่อนักเรียนเปิดลิงก์และเริ่มสอบ หน้าจอสดจะปรากฏขึ้นที่นี่โดยอัตโนมัติ
+      <div class="screens-empty-state compact-empty-state">
+        <div class="monitor-live-badge"><span class="live-dot"></span> หมวดที่เลือก: ${escapeHtml(categoryTitle.split(" (")[0])}</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="width: 38px; height: 38px; color: var(--primary); margin: 0 auto 8px; display: block; opacity: 0.85;">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${escapeHtml(emptyTitle)}</h3>
+        <p style="font-size: 12.5px; color: var(--text-secondary); max-width: 440px; margin: 0 auto 12px; line-height: 1.5;">
+          ${escapeHtml(emptyDesc)}
         </p>
+        ${totalCombined > 0 && selectedMonitorCategory === "live" ? `
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btnEmptyViewAll" style="font-size: 12px; padding: 4px 12px; border-radius: 99px;">
+              👥 ดูผู้เข้าสอบทั้งหมด (${totalCombined} คน)
+            </button>
+            ${totalAlert > 0 ? `
+              <button type="button" class="btn btn-sm btn-outline-danger" id="btnEmptyViewAlert" style="font-size: 12px; padding: 4px 12px; border-radius: 99px; color: #dc2626; border-color: #fecaca; background: #fff1f2;">
+                ⚠️ ดูผู้ที่ถูกแจ้งเตือน (${totalAlert} คน)
+              </button>
+            ` : ""}
+            ${totalCompleted > 0 ? `
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnEmptyViewCompleted" style="font-size: 12px; padding: 4px 12px; border-radius: 99px;">
+                🏆 ดูผู้ที่ส่งข้อสอบแล้ว (${totalCompleted} คน)
+              </button>
+            ` : ""}
+          </div>
+        ` : ""}
       </div>
     `;
+
+    const btnAll = document.getElementById("btnEmptyViewAll");
+    if (btnAll) btnAll.addEventListener("click", () => selectMonitorCategory("all"));
+    const btnAlert = document.getElementById("btnEmptyViewAlert");
+    if (btnAlert) btnAlert.addEventListener("click", () => selectMonitorCategory("alert"));
+    const btnComp = document.getElementById("btnEmptyViewCompleted");
+    if (btnComp) btnComp.addEventListener("click", () => selectMonitorCategory("completed"));
+
     return;
   }
 
-  container.innerHTML = filtered.map(s => renderStudentCardHtml(s, false)).join("");
+  container.innerHTML = filtered.map(s => renderStudentCardHtml(s, selectedMonitorCategory === "completed")).join("");
   bindStudentCardClicks(container);
 }
 
@@ -1016,7 +1203,13 @@ function switchPrimaryMonitorMode(mode) {
     currentMonitorTab = "live";
     const liveContainer = document.getElementById("screensGridContainer");
     if (liveContainer) liveContainer.style.display = "block";
+    selectMonitorCategory(selectedMonitorCategory || "live");
   } else {
+    // หากเข้าหน้าคลังประวัติ ให้ถอน active จากการ์ดฝั่งสด
+    ["statCardAll", "statCardActive", "statCardViolations", "statCardSubmitted"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove("active");
+    });
     if (currentMonitorTab === "live") {
       currentMonitorTab = "completed";
     }
@@ -1106,6 +1299,43 @@ document.addEventListener("DOMContentLoaded", () => {
   if (searchLogInput) {
     searchLogInput.addEventListener("input", renderMonitorLogs);
   }
+
+  // ตัวเลือกประเภทจาก Stat Cards ทั้ง 4 ด้านบน (คลิกเพื่อแสดงตามประเภท)
+  const statCardAll = document.getElementById("statCardAll");
+  if (statCardAll) {
+    statCardAll.addEventListener("click", () => selectMonitorCategory("all"));
+    statCardAll.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectMonitorCategory("all"); });
+  }
+
+  const statCardActive = document.getElementById("statCardActive");
+  if (statCardActive) {
+    statCardActive.addEventListener("click", () => selectMonitorCategory("live"));
+    statCardActive.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectMonitorCategory("live"); });
+  }
+
+  const statCardViolations = document.getElementById("statCardViolations");
+  if (statCardViolations) {
+    statCardViolations.addEventListener("click", () => selectMonitorCategory("alert"));
+    statCardViolations.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectMonitorCategory("alert"); });
+  }
+
+  const statCardSubmitted = document.getElementById("statCardSubmitted");
+  if (statCardSubmitted) {
+    statCardSubmitted.addEventListener("click", () => selectMonitorCategory("completed"));
+    statCardSubmitted.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") selectMonitorCategory("completed"); });
+  }
+
+  // แถบ Filter Pills ใน Toolbar ย่อย
+  const monitorFilterPills = document.querySelectorAll("#monitorFilterPills .filter-pill");
+  monitorFilterPills.forEach(pill => {
+    pill.addEventListener("click", () => {
+      monitorFilterPills.forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentFilter = pill.getAttribute("data-filter") || "all";
+      const query = (document.getElementById("searchLogInput") ? document.getElementById("searchLogInput").value : "").trim().toLowerCase();
+      renderSelectedCategoryGrid(query);
+    });
+  });
 
   const refreshLogsBtn = document.getElementById("refreshLogsBtn");
   if (refreshLogsBtn) {

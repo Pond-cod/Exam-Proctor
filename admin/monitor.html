@@ -61,10 +61,14 @@
     <!-- หน้าจอคุมสอบสด (Real-time Monitor) -->
     <section id="monitorSection" class="view-section active">
       <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์กะทัดรัด (Compact Stats Strip) -->
+      <!-- การ์ดสถิติภาพรวม 4 มิติ สไตล์กะทัดรัด (Compact Stats Strip) - คลิกเลือกประเภทเพื่อแสดงผู้เข้าสอบได้ -->
       <div class="stats-grid compact-stats-grid">
-        <div class="stat-card compact-stat-card">
+        <div class="stat-card compact-stat-card" id="statCardAll" data-category="all" title="คลิกเพื่อแสดงผู้เข้าสอบทั้งหมด" role="button" tabindex="0">
           <div class="compact-stat-top">
-            <span class="stat-badge stat-badge-blue">👥 ทั้งหมด</span>
+            <span class="stat-badge stat-badge-blue">
+              👥 ทั้งหมด
+              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+            </span>
             <span class="compact-stat-num" id="statTotalStudents">0 คน</span>
           </div>
           <div class="compact-stat-bottom">
@@ -75,10 +79,11 @@
           </div>
         </div>
 
-        <div class="stat-card compact-stat-card">
+        <div class="stat-card compact-stat-card active" id="statCardActive" data-category="live" title="คลิกเพื่อแสดงเฉพาะผู้ที่กำลังสอบสด" role="button" tabindex="0">
           <div class="compact-stat-top">
             <span class="stat-badge stat-badge-emerald">
               <span class="live-pulse-dot"></span> กำลังสอบสด
+              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
             </span>
             <span class="compact-stat-num" id="statActiveStudents" style="color: #047857;">0 คน</span>
           </div>
@@ -90,9 +95,12 @@
           </div>
         </div>
 
-        <div class="stat-card compact-stat-card">
+        <div class="stat-card compact-stat-card" id="statCardViolations" data-category="alert" title="คลิกเพื่อแสดงเฉพาะผู้เข้าสอบที่พบการแจ้งเตือนสลับจอ" role="button" tabindex="0">
           <div class="compact-stat-top">
-            <span class="stat-badge stat-badge-rose">⚠️ แจ้งเตือนสลับจอ</span>
+            <span class="stat-badge stat-badge-rose">
+              ⚠️ แจ้งเตือนสลับจอ
+              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+            </span>
             <span class="compact-stat-num" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</span>
           </div>
           <div class="compact-stat-bottom">
@@ -103,9 +111,12 @@
           </div>
         </div>
 
-        <div class="stat-card compact-stat-card">
+        <div class="stat-card compact-stat-card" id="statCardSubmitted" data-category="completed" title="คลิกเพื่อแสดงเฉพาะผู้ที่ส่งข้อสอบแล้ว" role="button" tabindex="0">
           <div class="compact-stat-top">
-            <span class="stat-badge stat-badge-violet">🏆 ส่งข้อสอบแล้ว</span>
+            <span class="stat-badge stat-badge-violet">
+              🏆 ส่งข้อสอบแล้ว
+              <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+            </span>
             <span class="compact-stat-num" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</span>
           </div>
           <div class="compact-stat-bottom">
@@ -146,8 +157,9 @@
         <div class="card-header compact-header" style="flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <div class="card-title" style="display: flex; align-items: center; gap: 6px; font-size: 15px;">
-              <span class="live-pulse-dot" style="width: 8px; height: 8px;"></span>
-              <span>จอภาพผู้สอบสด (Real-time Live Monitors)</span>
+              <span id="monitorZoneIcon" class="live-pulse-dot" style="width: 8px; height: 8px;"></span>
+              <span id="monitorZoneTitleText">จอภาพผู้สอบสด (Real-time Live Monitors)</span>
+              <span id="monitorCategoryCountBadge" class="badge badge-primary" style="font-size: 11px; padding: 2px 7px;">0 คน</span>
             </div>
             <!-- ตัวเลือกกรองห้องสอบสด -->
             <select id="monitorRoomFilterSelect" class="form-control" style="min-width: 180px; max-width: 250px; font-size: 12.5px; height: 32px; padding: 2px 10px;">

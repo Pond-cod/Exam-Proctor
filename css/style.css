@@ -2936,12 +2936,83 @@ img, svg, video, canvas, iframe {
   justify-content: center !important;
   gap: 4px !important;
   box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.04) !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  border: 1.5px solid var(--border-color, #e2e8f0) !important;
+  position: relative !important;
 }
 
 .compact-stat-card:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 14px -2px rgba(2, 132, 199, 0.12) !important;
+  box-shadow: 0 6px 14px -2px rgba(15, 23, 42, 0.1) !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Active Highlight States per Category */
+.compact-stat-card.active {
+  transform: translateY(-1px) !important;
+}
+
+#statCardAll.active {
+  border-color: #0284c7 !important;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(2, 132, 199, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.3), 0 6px 16px rgba(2, 132, 199, 0.15) !important;
+}
+
+#statCardActive.active {
+  border-color: #059669 !important;
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(5, 150, 105, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(5, 150, 105, 0.3), 0 6px 16px rgba(5, 150, 105, 0.15) !important;
+}
+
+#statCardViolations.active {
+  border-color: #e11d48 !important;
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.08) 0%, rgba(225, 29, 72, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(225, 29, 72, 0.3), 0 6px 16px rgba(225, 29, 72, 0.15) !important;
+}
+
+#statCardSubmitted.active {
+  border-color: #7c3aed !important;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(124, 58, 237, 0.02) 100%), #ffffff !important;
+  box-shadow: 0 0 0 2.5px rgba(124, 58, 237, 0.3), 0 6px 16px rgba(124, 58, 237, 0.15) !important;
+}
+
+/* Stat card active indicator pill */
+.stat-card-active-pill {
+  display: none;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 99px;
+  margin-left: 4px;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+
+.compact-stat-card.active .stat-card-active-pill {
+  display: inline-flex;
+  align-items: center;
+}
+
+#statCardAll.active .stat-card-active-pill {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+#statCardActive.active .stat-card-active-pill {
+  background: #059669;
+  color: #ffffff;
+}
+
+#statCardViolations.active .stat-card-active-pill {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+#statCardSubmitted.active .stat-card-active-pill {
+  background: #7c3aed;
+  color: #ffffff;
 }
 
 .compact-stat-top {
