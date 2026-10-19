@@ -396,18 +396,25 @@ function updateFilterBadges() {
 
 let recentLocalLiveEvents = [];
 
+let adminLiveChannel = null;
+
 // รับสัญญาณ Real-time ตรงจากหน้าจอผู้สอบ (exam.html) ทันที 0ms ผ่าน BroadcastChannel & Storage Event
 function setupLiveBroadcastListener() {
   try {
     if (typeof BroadcastChannel !== "undefined") {
-      const channel = new BroadcastChannel("exam_proctor_bus");
-      channel.onmessage = (event) => {
+      if (adminLiveChannel) {
+        try { adminLiveChannel.close(); } catch (_) {}
+      }
+      adminLiveChannel = new BroadcastChannel("exam_proctor_bus");
+      adminLiveChannel.onmessage = (event) => {
         if (event.data && event.data.type === "EXAM_EVENT" && event.data.payload) {
           handleIncomingLiveEvent(event.data.payload);
         }
       };
     }
-  } catch (_) {}
+  } catch (err) {
+    console.warn("BroadcastChannel listener setup failed:", err);
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === "exam_live_event" && e.newValue) {
@@ -422,8 +429,16 @@ function setupLiveBroadcastListener() {
 function handleIncomingLiveEvent(payload) {
   if (!payload || !payload.studentId) return;
 
-  const key = `${payload.studentId}_${payload.violation}_${payload.timestamp || payload.time}`;
-  const exists = allLogs.some((l) => `${l.studentId}_${l.violation}_${l.timestamp || l.time}` === key);
+  const exists = allLogs.some((l) => {
+    if (String(l.studentId) !== String(payload.studentId)) return false;
+    if (String(l.violation) !== String(payload.violation)) return false;
+    if (l.timestamp && payload.timestamp && l.timestamp === payload.timestamp) return true;
+    if (l.timestamp && payload.timestamp) {
+      const diff = Math.abs(new Date(l.timestamp).getTime() - new Date(payload.timestamp).getTime());
+      if (diff < 800) return true;
+    }
+    return false;
+  });
 
   if (!exists) {
     allLogs.push(payload);

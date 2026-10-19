@@ -47,17 +47,32 @@ function playWarningBeep() {
   }
 }
 
-// ส่งสัญญาณ Real-time ตรงไปยัง Admin Monitor ผ่าน BroadcastChannel และ localStorage
+let proctorLiveChannel = null;
+function getProctorLiveChannel() {
+  if (!proctorLiveChannel && typeof BroadcastChannel !== "undefined") {
+    try {
+      proctorLiveChannel = new BroadcastChannel("exam_proctor_bus");
+    } catch (_) {}
+  }
+  return proctorLiveChannel;
+}
+
+// ส่งสัญญาณ Real-time ตรงไปยัง Admin Monitor ทันที 0ms (ไม่ close channel)
 function broadcastLocalEvent(payload) {
   try {
-    if (typeof BroadcastChannel !== "undefined") {
-      const channel = new BroadcastChannel("exam_proctor_bus");
-      channel.postMessage({ type: "EXAM_EVENT", payload });
-      channel.close();
+    const ch = getProctorLiveChannel();
+    if (ch) {
+      ch.postMessage({ type: "EXAM_EVENT", payload });
     }
-  } catch (_) {}
+  } catch (err) {
+    console.warn("BroadcastChannel error:", err);
+  }
   try {
-    localStorage.setItem("exam_live_event", JSON.stringify({ ...payload, _t: Date.now() }));
+    localStorage.setItem("exam_live_event", JSON.stringify({
+      ...payload,
+      _rand: Math.random(),
+      _t: Date.now()
+    }));
   } catch (_) {}
 }
 
@@ -79,24 +94,29 @@ async function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   // 1. ส่งสัญญาณตรงแบบ Instant Real-Time ทันที (0ms) สำหรับเบราว์เซอร์เดียวกัน
   broadcastLocalEvent(payload);
 
-  // 2. ส่งขึ้น Cloud Google Sheets Webhook (Persistent Storage)
+  // 2. ส่งขึ้น Cloud Google Sheets Webhook ด้วย navigator.sendBeacon (ทำงานแม้หน้าต่างหลุดโฟกัส)
+  const payloadStr = JSON.stringify(payload);
+  let beaconSent = false;
   try {
-    await fetch(examConfig.webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-      keepalive: true
-    });
-  } catch (err) {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payloadStr], { type: "text/plain;charset=utf-8" });
+      beaconSent = navigator.sendBeacon(examConfig.webhookUrl, blob);
+    }
+  } catch (_) {}
+
+  // 3. Fallback: ส่งด้วย fetch (mode: no-cors + keepalive)
+  if (!beaconSent) {
     try {
       await fetch(examConfig.webhookUrl, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload),
+        body: payloadStr,
         keepalive: true
       });
-    } catch (_) {}
+    } catch (err) {
+      console.warn("Webhook fetch fallback failed:", err);
+    }
   }
 }
 

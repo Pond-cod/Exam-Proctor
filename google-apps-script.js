@@ -32,10 +32,13 @@ function getSpreadsheet() {
 
 // 1. รับข้อมูลแจ้งเตือน (POST Request จาก Extension)
 function doPost(e) {
+  let hasLock = false;
+  const lock = LockService.getScriptLock();
   try {
-    const lock = LockService.getScriptLock();
-    lock.waitLock(10000); // ป้องกัน race condition เมื่อมีแจ้งเตือนเข้ามาพร้อมกัน
+    hasLock = lock.tryLock(8000);
+  } catch (_) {}
 
+  try {
     const ss = getSpreadsheet();
     let sheet = ss.getSheetByName(SHEET_NAME);
 
@@ -66,7 +69,9 @@ function doPost(e) {
     // บันทึกแถวใหม่
     sheet.appendRow([timeFormatted, studentId, violation, severity, timestamp]);
 
-    lock.releaseLock();
+    if (hasLock) {
+      try { lock.releaseLock(); } catch (_) {}
+    }
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
@@ -74,6 +79,9 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
+    if (hasLock) {
+      try { lock.releaseLock(); } catch (_) {}
+    }
     return ContentService.createTextOutput(JSON.stringify({
       status: "error",
       message: error.toString()
