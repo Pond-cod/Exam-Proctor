@@ -280,13 +280,15 @@ function initExamFromUrl() {
 
     // ตรวจสอบ Student ID ที่ส่งมาล่วงหน้าจาก Portal
     const sidParam = urlParams.get("sid") || urlParams.get("studentId");
+    const studentInput = document.getElementById("studentIdInput");
     if (sidParam) {
-      const studentInput = document.getElementById("studentIdInput");
       if (studentInput) {
         studentInput.value = sidParam;
         studentInput.readOnly = true;
         studentInput.style.backgroundColor = "var(--bg-subtle)";
       }
+    } else if (studentInput) {
+      setTimeout(() => studentInput.focus(), 150);
     }
 
     // ตรวจสอบ Entry Code ที่ส่งมาล่วงหน้าจาก Portal

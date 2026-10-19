@@ -50,7 +50,7 @@
           <div class="portal-hero-badge">🎓 ศูนย์สอบออนไลน์สำหรับนักเรียน</div>
           <h1 class="portal-hero-title">ยินดีต้อนรับสู่ห้องสอบออนไลน์</h1>
           <p class="portal-hero-desc">
-            เลือกรายวิชาหรือการสอบที่กำลังเปิดรับสมัคร จากนั้นคลิกปุ่ม <strong>"🚀 เข้าสู่ห้องสอบ"</strong> และกรอกรหัสประจำตัวนักเรียนพร้อมรหัสเข้าห้องสอบ 6 หลักเพื่อเริ่มทำข้อสอบ
+            เลือกรายวิชาหรือการสอบที่กำลังเปิดรับสมัคร จากนั้นคลิกปุ่ม <strong>"🚀 เข้าสู่ห้องสอบ"</strong> และกรอกรหัสเข้าห้องสอบเพื่อเริ่มทำข้อสอบ
           </p>
         </div>
         <div class="portal-hero-mascot-box">
@@ -101,7 +101,7 @@
 
   </main>
 
-  <!-- Modal สำหรับนักเรียนกรอกรหัสนักเรียน + รหัสเข้าห้องสอบ (Room Entry Modal) -->
+  <!-- Modal สำหรับนักเรียนกรอกรหัสเข้าห้องสอบ (Room Entry Modal) -->
   <div id="roomEntryModal" class="modal-overlay">
     <div class="modal-dialog" style="max-width: 440px;">
       <div class="modal-header">
@@ -109,7 +109,7 @@
           <div class="modal-header-icon" style="background: #eff6ff; color: #2563eb;">🎓</div>
           <div>
             <div class="modal-title-text" id="entryModalRoomTitle">เข้าสู่ห้องสอบ</div>
-            <div class="modal-subtitle-text" id="entryModalRoomCategory">กรอกรหัสนักเรียนและรหัสเข้าห้องสอบ</div>
+            <div class="modal-subtitle-text" id="entryModalRoomCategory">กรอกรหัสเข้าห้องสอบสำหรับนักเรียน</div>
           </div>
         </div>
         <button class="modal-close-btn" id="closeEntryModalBtn" title="ปิดหน้าต่าง">✕</button>
@@ -118,22 +118,7 @@
       <div class="modal-body">
         <form id="roomEntryForm" onsubmit="event.preventDefault();">
           <div class="form-group">
-            <label class="form-label" for="entryStudentIdInput">1. รหัสประจำตัวนักเรียน (ตัวเลขเท่านั้น) *</label>
-            <input 
-              type="text" 
-              id="entryStudentIdInput" 
-              class="form-control" 
-              inputmode="numeric" 
-              pattern="[0-9]*" 
-              placeholder="กรอกรหัสประจำตัว เช่น 55441"
-              autocomplete="off"
-              required
-              style="font-size: 16px;"
-            >
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="entryPasscodeInput">2. รหัสเข้าห้องสอบ 6 หลัก (จากครูผู้สอน) *</label>
+            <label class="form-label" for="entryPasscodeInput">รหัสเข้าห้องสอบสำหรับนักเรียน (ตัวเลข 6 หลัก) *</label>
             <input 
               type="text" 
               id="entryPasscodeInput" 
@@ -144,9 +129,9 @@
               placeholder="กรอกรหัส 6 หลัก เช่น 842109"
               autocomplete="off"
               required
-              style="font-family: monospace; font-size: 20px; font-weight: 800; letter-spacing: 0.18em; text-align: center; color: #1d4ed8;"
+              style="font-family: monospace; font-size: 22px; font-weight: 800; letter-spacing: 0.18em; text-align: center; color: #1d4ed8;"
             >
-            <div class="form-hint" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">
+            <div class="form-hint" style="color: var(--text-muted); font-size: 12.5px; margin-top: 6px; text-align: center;">
               สอบถามรหัส 6 หลักนี้ได้จากครูผู้คุมสอบประจำห้อง
             </div>
           </div>
@@ -160,7 +145,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="cancelEntryModalBtn">ยกเลิก</button>
         <button type="button" class="btn btn-primary" id="confirmEntryBtn" style="font-weight: 700;">
-          🚀 เริ่มทำข้อสอบ (เปิดเต็มจอ)
+          เข้าห้องสอบ
         </button>
       </div>
     </div>
@@ -168,6 +153,6 @@
 
   <script src="js/shared/config.js?v=5.7"></script>
   <script src="js/shared/common.js?v=5.7"></script>
-  <script src="js/frontend/portal.js?v=5.7"></script>
+  <script src="js/frontend/portal.js?v=5.8"></script>
 </body>
 </html>

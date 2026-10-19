@@ -86,43 +86,29 @@ function openRoomEntryModal(room) {
   const titleEl = document.getElementById("entryModalRoomTitle");
   const catEl = document.getElementById("entryModalRoomCategory");
   const errEl = document.getElementById("entryErrorMessage");
-  const sidInput = document.getElementById("entryStudentIdInput");
   const passInput = document.getElementById("entryPasscodeInput");
 
   if (titleEl) titleEl.textContent = room.title;
   if (catEl) catEl.textContent = `${room.category || "ทั่วไป"} • ${room.gradeLevel || ""}`;
   if (errEl) errEl.style.display = "none";
-  if (sidInput) sidInput.value = "";
   if (passInput) passInput.value = "";
 
   if (modal) modal.classList.add("active");
-  setTimeout(() => { if (sidInput) sidInput.focus(); }, 100);
+  setTimeout(() => { if (passInput) passInput.focus(); }, 120);
 }
 
 function handleConfirmRoomEntry() {
   if (!currentEntryRoom) return;
 
-  const sidInput = document.getElementById("entryStudentIdInput");
   const passInput = document.getElementById("entryPasscodeInput");
   const errEl = document.getElementById("entryErrorMessage");
-
-  const studentId = (sidInput ? sidInput.value : "").trim();
   const enteredPass = (passInput ? passInput.value : "").trim();
 
-  if (!studentId || !/^\d+$/.test(studentId)) {
-    if (errEl) {
-      errEl.textContent = "กรุณากรอกรหัสประจำตัวนักเรียนเป็นตัวเลขเท่านั้น";
-      errEl.style.display = "block";
-    }
-    if (sidInput) sidInput.focus();
-    return;
-  }
-
-  // ตรวจสอบรหัสเข้าห้องสอบ 6 หลัก
+  // ตรวจสอบรหัสเข้าห้องสอบสำหรับนักเรียน (6 หลัก)
   const expectedPass = String(currentEntryRoom.entryCode || "").trim();
   if (expectedPass && enteredPass !== expectedPass) {
     if (errEl) {
-      errEl.textContent = "รหัสเข้าห้องสอบ 6 หลักไม่ถูกต้อง กรุณาตรวจสอบกับครูผู้คุมสอบ";
+      errEl.textContent = "รหัสเข้าห้องสอบไม่ถูกต้อง กรุณาตรวจสอบกับครูผู้คุมสอบ";
       errEl.style.display = "block";
     }
     if (passInput) {
@@ -138,7 +124,6 @@ function handleConfirmRoomEntry() {
   const encoded = encodeExamConfig(currentEntryRoom);
   const examUrl = new URL("exam.html", window.location.href);
   examUrl.searchParams.set("data", encoded);
-  examUrl.searchParams.set("sid", studentId);
   examUrl.searchParams.set("entry", enteredPass);
 
   window.open(examUrl.toString(), "_blank");
