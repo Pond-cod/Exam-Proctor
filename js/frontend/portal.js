@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fetchCloudRooms(() => {
     renderPortalRooms();
-  });
+  }, true);
 
   const portalRefreshBtn = document.getElementById("portalRefreshBtn");
   if (portalRefreshBtn) {
@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchCloudRooms(() => {
         renderPortalRooms();
         showAlert("รีเฟรชรายการห้องสอบเรียบร้อยแล้ว", { type: "info" });
-      });
+      }, true);
     });
   }
 

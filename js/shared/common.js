@@ -123,17 +123,21 @@ async function syncRoomToCloud(action, roomData) {
   }
 }
 
-async function fetchCloudRooms(callback) {
+async function fetchCloudRooms(callback, forceActiveOnly = false) {
   const webhookInput = document.getElementById("examWebhookInput");
   const defaultWh = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || defaultWh;
   if (!webhookUrl) return;
 
   const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+  const hasAuth = Object.keys(authHeaders).length > 0;
+  // หากเป็นหน้าบ้านนักเรียน หรือยังไม่ได้ล็อกอิน ให้ใช้ getActiveRooms (Public 200 OK)
+  // หากล็อกอินเป็นครู/แอดมินหลังบ้าน ให้ใช้ getAllRooms พร้อม Token สิทธิ์การจัดการ
+  const action = (forceActiveOnly || !hasAuth) ? "getActiveRooms" : "getAllRooms";
 
   try {
     const url = new URL(webhookUrl);
-    url.searchParams.set("action", "getAllRooms");
+    url.searchParams.set("action", action);
     const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
     const res = await fetchFn(url.toString(), {
       headers: { ...authHeaders }
