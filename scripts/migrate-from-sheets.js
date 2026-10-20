@@ -136,6 +136,103 @@ async function runMigration() {
     console.warn("⚠️ ไม่สามารถดึง ExamRooms ได้:", err.message);
   }
 
+  // 3.5 ตรวจสอบและสร้างห้องสอบเริ่มต้น RM-GENERAL หากยังไม่มี (สำหรับ Log ทั่วไปที่ไม่มีห้อง)
+  try {
+    await sql`
+      INSERT INTO exam_rooms (
+        room_id, title, category, grade_level, form_url, exam_url,
+        entry_code, admin_passcode, status, created_by, creator_username,
+        created_at, updated_at
+      ) VALUES (
+        'RM-GENERAL',
+        'ห้องสอบทั่วไป (General)',
+        'ทั่วไป (General)',
+        'ไม่ระบุ (All / Not Specified)',
+        'https://docs.google.com/forms',
+        '',
+        '000000',
+        '999888',
+        'OPEN',
+        'ผู้ดูแลระบบหลัก (Super Admin)',
+        'admin',
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (room_id) DO NOTHING;
+    `;
+    console.log("✅ ตรวจสอบห้อง RM-GENERAL เรียบร้อย");
+  } catch (err) {
+    console.warn("⚠️ RM-GENERAL insert warning:", err.message);
+  }
+
+  // 4. ดึงข้อมูลประวัติเหตุการณ์การสอบ (ExamLogs) จาก Google Apps Script
+  try {
+    console.log("📥 กำลังดึงประวัติเหตุการณ์การสอบ (ExamLogs)...");
+    const logsRes = await fetch(`${DEFAULT_WEBHOOK_URL}?action=getLogs`);
+    if (logsRes.ok) {
+      const logsJson = await logsRes.json();
+      const logs = (logsJson && (logsJson.data || logsJson.logs)) || [];
+      console.log(`📋 พบประวัติการสอบ ${logs.length} รายการจาก Google Sheets กำลังบันทึกลง Neon...`);
+
+      // ตรวจสอบ Room IDs ที่มีอยู่ใน exam_rooms
+      const existingRooms = await sql`SELECT room_id FROM exam_rooms`;
+      const validRoomIds = new Set(existingRooms.map((r) => r.room_id));
+
+      let importedCount = 0;
+      for (const l of logs) {
+        if (!l.logId) continue;
+        const roomId = validRoomIds.has(l.roomId) ? l.roomId : null;
+        const studentId = String(l.studentId !== undefined && l.studentId !== null ? l.studentId : 'ไม่ระบุชื่อ');
+        const eventType = String(l.eventType || 'VIOLATION').toUpperCase();
+        const violation = String(l.violation || '');
+        const violationCount = Number(l.violationCount || 0);
+        const severity = String(l.severity || '⚠️ ทั่วไป');
+        const formattedTime = String(l.time || '');
+        let isoTimestamp = new Date();
+        if (l.timestamp) {
+          const parsed = new Date(l.timestamp);
+          if (!isNaN(parsed.getTime())) isoTimestamp = parsed;
+        }
+
+        await sql`
+          INSERT INTO exam_logs (
+            log_id, room_id, room_title, student_id, event_type,
+            violation_detail, violation_count, severity, formatted_time, iso_timestamp
+          ) VALUES (
+            ${l.logId},
+            ${roomId},
+            ${l.roomTitle || 'แบบทดสอบออนไลน์'},
+            ${studentId},
+            ${eventType},
+            ${violation},
+            ${violationCount},
+            ${severity},
+            ${formattedTime},
+            ${isoTimestamp}
+          )
+          ON CONFLICT (log_id) DO UPDATE
+          SET
+            room_id = EXCLUDED.room_id,
+            room_title = EXCLUDED.room_title,
+            student_id = EXCLUDED.student_id,
+            event_type = EXCLUDED.event_type,
+            violation_detail = EXCLUDED.violation_detail,
+            violation_count = EXCLUDED.violation_count,
+            severity = EXCLUDED.severity,
+            formatted_time = EXCLUDED.formatted_time,
+            iso_timestamp = EXCLUDED.iso_timestamp;
+        `;
+        importedCount++;
+      }
+      console.log(`✅ ย้าย ExamLogs จำนวน ${importedCount} รายการเข้าสู่ Neon Postgres สำเร็จ!`);
+
+      const totalCountRes = await sql`SELECT count(*) FROM exam_logs`;
+      console.log(`📊 จำนวนข้อมูลทั้งหมดในตาราง exam_logs ปัจจุบัน: ${totalCountRes[0].count} รายการ`);
+    }
+  } catch (err) {
+    console.warn("⚠️ ไม่สามารถดึง ExamLogs ได้:", err.message);
+  }
+
   console.log("🎉 การย้ายข้อมูลจาก Google Apps Script สู่ Neon Serverless Postgres เสร็จสมบูรณ์ 100%!");
 }
 
