@@ -3,7 +3,6 @@
  */
 const NEON_API_URL = "https://examproctor-jade.vercel.app/api";
 const DEFAULT_WEBHOOK_URL = "https://examproctor-jade.vercel.app/api";
-const FALLBACK_GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
 
 /**
@@ -207,12 +206,11 @@ function decodeExamConfig(base64Str) {
     }).join(""));
     const data = JSON.parse(jsonStr);
 
-    // รองรับทั้ง compact keys (r, f, p, e, t, c, g, w) และ legacy keys
+    // รองรับทั้ง compact keys (r, f, e, t, c, g, w) และ legacy keys (ไม่รวม adminPasscode เพื่อความปลอดภัย)
     return {
       roomId: data.r || data.roomId || "",
       title: data.t || data.title || "แบบทดสอบออนไลน์",
       formUrl: data.f || data.formUrl || "",
-      adminPasscode: data.p || data.adminPasscode || DEFAULT_ADMIN_PASSCODE,
       entryCode: data.e || data.entryCode || "",
       category: data.c || data.category || "ทั่วไป (General)",
       gradeLevel: data.g || data.gradeLevel || "ไม่ระบุ (All / Not Specified)",

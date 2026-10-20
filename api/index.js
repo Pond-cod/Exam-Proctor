@@ -95,13 +95,71 @@ function extractAuthUser(req, bodyData, queryParams) {
   let token = "";
   if (authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7).trim();
-  } else if (bodyData.authToken) {
+  } else if (bodyData && bodyData.authToken) {
     token = String(bodyData.authToken).trim();
-  } else if (queryParams.authToken) {
-    token = String(queryParams.authToken).trim();
   }
+  // M-05: ปิดรับ token จาก queryParams เพื่อป้องกัน Token Leak ใน Browser History, Server Logs และ Referrer Header
   return verifySessionToken(token);
 }
+
+// ===================================================================
+// Rate Limiting & Spam Protection State
+// ===================================================================
+
+// H-05: Rate limiting สำหรับ verifyLogin (IP-based sliding window)
+const loginAttempts = new Map();
+const MAX_LOGIN_ATTEMPTS = 10;
+const LOGIN_LOCKOUT_WINDOW_MS = 5 * 60 * 1000; // 5 นาที
+
+function checkLoginRateLimit(ip) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  if (!record) return { allowed: true };
+  if (now - record.firstAttempt > LOGIN_LOCKOUT_WINDOW_MS) {
+    loginAttempts.delete(ip);
+    return { allowed: true };
+  }
+  if (record.count >= MAX_LOGIN_ATTEMPTS) {
+    const remainingSecs = Math.ceil((LOGIN_LOCKOUT_WINDOW_MS - (now - record.firstAttempt)) / 1000);
+    return { allowed: false, remainingSecs };
+  }
+  return { allowed: true };
+}
+
+function recordLoginAttempt(ip, isSuccess) {
+  if (isSuccess) {
+    loginAttempts.delete(ip);
+    return;
+  }
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  if (!record || (now - record.firstAttempt > LOGIN_LOCKOUT_WINDOW_MS)) {
+    loginAttempts.set(ip, { count: 1, firstAttempt: now });
+  } else {
+    record.count++;
+  }
+}
+
+// H-07: Spam Guard สำหรับ logEvent (ป้องกัน flood spam ลง exam_logs)
+const logSpamMap = new Map();
+const MIN_LOG_INTERVAL_MS = 300; // ห้ามบันทึกซ้ำเร็วกว่า 300ms ต่อคีย์
+
+function isLogSpam(identifier) {
+  const now = Date.now();
+  const lastTime = logSpamMap.get(identifier);
+  if (lastTime && (now - lastTime < MIN_LOG_INTERVAL_MS)) {
+    return true;
+  }
+  logSpamMap.set(identifier, now);
+  if (logSpamMap.size > 2000) {
+    const cutoff = now - 60000;
+    for (const [key, time] of logSpamMap.entries()) {
+      if (time < cutoff) logSpamMap.delete(key);
+    }
+  }
+  return false;
+}
+
 
 module.exports = async function handler(req, res) {
   setCorsHeaders(res);
@@ -198,10 +256,22 @@ module.exports = async function handler(req, res) {
     // 2. Authentication & Users Handlers
     // ===================================================================
     if (action === "verifyLogin") {
+      const clientIp = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "127.0.0.1").split(",")[0].trim();
+      
+      // H-05: ตรวจสอบ Rate Limiting (ป้องกัน Brute Force Password)
+      const rateLimitCheck = checkLoginRateLimit(clientIp);
+      if (!rateLimitCheck.allowed) {
+        return res.status(429).json({
+          status: "error",
+          message: `คุณพยายามเข้าสู่ระบบผิดพลาดเกินกำหนด กรุณารอ ${rateLimitCheck.remainingSecs} วินาทีก่อนลองใหม่อีกครั้ง`
+        });
+      }
+
       const username = String(bodyData.username || queryParams.username || "").trim().toLowerCase();
       const passcode = String(bodyData.passcode || queryParams.passcode || "").trim();
 
       if (!username || !passcode || passcode.length < 8) {
+        recordLoginAttempt(clientIp, false);
         return res.status(200).json({
           status: "error",
           message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร/หลัก)"
@@ -216,6 +286,7 @@ module.exports = async function handler(req, res) {
       `;
 
       if (rows.length === 0 || !verifyPassword(passcode, rows[0].passcode)) {
+        recordLoginAttempt(clientIp, false);
         return res.status(200).json({
           status: "error",
           message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบใหม่อีกครั้ง"
@@ -224,16 +295,22 @@ module.exports = async function handler(req, res) {
 
       const user = rows[0];
 
-      // Auto-upgrade legacy plaintext passwords to scrypt hash upon successful login
-      if (!String(user.passcode).startsWith("scrypt$")) {
-        const upgradedHash = hashPassword(passcode);
-        await sql`UPDATE users SET passcode = ${upgradedHash} WHERE user_id = ${user.user_id};`;
-      }
+      // C-03: ตรวจสอบสถานะ ACTIVE ก่อน auto-upgrade เพื่อป้องกันไม่ให้บัญชีที่ถูกระงับเข้าถึงหรือเขียน DB
       if (String(user.status).toUpperCase() !== "ACTIVE") {
+        recordLoginAttempt(clientIp, false);
         return res.status(200).json({
           status: "error",
           message: "บัญชีผู้ใช้นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ"
         });
+      }
+
+      // รีเซ็ตประวัติความพยายามผิดพลาดเมื่อเข้าสู่ระบบสำเร็จ
+      recordLoginAttempt(clientIp, true);
+
+      // Auto-upgrade legacy plaintext passwords to scrypt hash upon successful login
+      if (!String(user.passcode).startsWith("scrypt$")) {
+        const upgradedHash = hashPassword(passcode);
+        await sql`UPDATE users SET passcode = ${upgradedHash} WHERE user_id = ${user.user_id};`;
       }
 
       // Update last_login
@@ -433,28 +510,42 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === "getAllRooms") {
+      // C-04: ป้องกัน Information Disclosure ตรวจสอบสิทธิ์ล็อกอินก่อนเข้าถึงรายการห้องสอบทั้งหมด
+      if (!authUser) {
+        return res.status(401).json({
+          status: "error",
+          message: "กรุณาเข้าสู่ระบบก่อนดูรายการห้องสอบ"
+        });
+      }
+
       const rows = await sql`
         SELECT room_id, title, category, grade_level, form_url, exam_url, entry_code, admin_passcode, status, created_by, creator_username, creator_id, created_at, updated_at
         FROM exam_rooms
         ORDER BY created_at DESC;
       `;
 
-      const rooms = rows.map((r) => ({
-        roomId: r.room_id,
-        title: r.title,
-        category: r.category,
-        gradeLevel: r.grade_level,
-        formUrl: r.form_url,
-        examUrl: r.exam_url,
-        entryCode: r.entry_code,
-        adminPasscode: r.admin_passcode,
-        status: r.status,
-        createdBy: r.created_by || "",
-        creatorUsername: r.creator_username || "",
-        creatorId: r.creator_id || "",
-        createdAt: r.created_at ? new Date(r.created_at).toISOString() : "",
-        updatedAt: r.updated_at ? new Date(r.updated_at).toISOString() : ""
-      }));
+      const isAdmin = String(authUser.role).toUpperCase() === "ADMIN";
+
+      const rooms = rows.map((r) => {
+        // C-04: ส่ง adminPasscode ให้เฉพาะ Admin หรือครูผู้สร้างห้องนั้นๆ เท่านั้น (ห้องของครูท่านอื่นจะถูก Mask เป็น '******')
+        const isOwner = isAdmin || (r.creator_username && String(r.creator_username).toLowerCase() === String(authUser.username).toLowerCase());
+        return {
+          roomId: r.room_id,
+          title: r.title,
+          category: r.category,
+          gradeLevel: r.grade_level,
+          formUrl: r.form_url,
+          examUrl: r.exam_url,
+          entryCode: r.entry_code,
+          adminPasscode: isOwner ? r.admin_passcode : "******",
+          status: r.status,
+          createdBy: r.created_by || "",
+          creatorUsername: r.creator_username || "",
+          creatorId: r.creator_id || "",
+          createdAt: r.created_at ? new Date(r.created_at).toISOString() : "",
+          updatedAt: r.updated_at ? new Date(r.updated_at).toISOString() : ""
+        };
+      });
 
       return res.status(200).json({ status: "success", data: rooms });
     }
@@ -594,7 +685,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         status: "success",
         message: "เปลี่ยนสถานะห้องสอบเป็น " + newStatus + " เรียบร้อยแล้ว",
-        status: newStatus
+        roomStatus: newStatus
       });
     }
 
@@ -662,8 +753,16 @@ module.exports = async function handler(req, res) {
     // 4. Exam Logs Handlers (Live Monitor)
     // ===================================================================
     if (action === "logEvent") {
-      const logId = "LOG-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
       const studentId = String(bodyData.studentId || "ไม่ระบุชื่อ").trim();
+      const clientIp = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "127.0.0.1").split(",")[0].trim();
+      const spamKey = `${studentId}_${clientIp}`;
+
+      // H-07: Spam Guard ป้องกันการยิง request ถี่เกินไป
+      if (isLogSpam(spamKey)) {
+        return res.status(200).json({ status: "success", message: "บันทึกข้อมูลเรียบร้อยแล้ว (throttled)" });
+      }
+
+      const logId = "LOG-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
       const rawRoomId = String(bodyData.roomId || "").trim();
       let validRoomId = null;
       if (rawRoomId) {
@@ -705,6 +804,11 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === "getLogs") {
+      // H-06: ป้องกัน Information Disclosure ตรวจสอบสิทธิ์ก่อนเข้าถึงประวัติเหตุการณ์และข้อมูลนักเรียน
+      if (!authUser) {
+        return res.status(401).json({ status: "error", message: "กรุณาเข้าสู่ระบบก่อนดูบันทึกการสอบ" });
+      }
+
       const since = queryParams.since || bodyData.since;
       let rows;
 
@@ -752,6 +856,29 @@ module.exports = async function handler(req, res) {
       }
 
       return res.status(200).json({ status: "success", data: logs });
+    }
+
+    // L-02: ฟังก์ชันสำหรับ Admin เพื่อลบหรือล้าง Log
+    if (action === "deleteLog" || action === "deleteLogs" || action === "clearLogs") {
+      if (!authUser || String(authUser.role).toUpperCase() !== "ADMIN") {
+        return res.status(403).json({ status: "error", message: "เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบหรือล้างประวัติการสอบได้" });
+      }
+
+      const targetLogId = String(bodyData.logId || queryParams.logId || "").trim();
+      const targetRoomId = String(bodyData.roomId || queryParams.roomId || "").trim();
+
+      if (targetLogId) {
+        await sql`DELETE FROM exam_logs WHERE log_id = ${targetLogId};`;
+        return res.status(200).json({ status: "success", message: "ลบบันทึกเหตุการณ์เรียบร้อยแล้ว" });
+      } else if (targetRoomId) {
+        await sql`DELETE FROM exam_logs WHERE room_id = ${targetRoomId};`;
+        return res.status(200).json({ status: "success", message: "ล้างบันทึกเหตุการณ์ของห้องสอบเรียบร้อยแล้ว" });
+      } else if (action === "clearLogs") {
+        await sql`DELETE FROM exam_logs;`;
+        return res.status(200).json({ status: "success", message: "ล้างบันทึกเหตุการณ์ทั้งหมดเรียบร้อยแล้ว" });
+      } else {
+        return res.status(400).json({ status: "error", message: "กรุณาระบุ logId หรือ roomId หรือ action=clearLogs" });
+      }
     }
 
     return res.status(200).json({

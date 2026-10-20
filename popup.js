@@ -1,5 +1,32 @@
 // BUG-01: ลบ ADMIN_PASS hardcode ออก — อ่านจาก storage เสมอผ่านสาย chrome.storage.local เพื่อไม่ให้รหัสผ่าน hardcode ในโค้ด
 
+function showPopupToast(message, type = "info") {
+  const toast = document.getElementById("popupToast");
+  if (!toast) return;
+
+  toast.style.display = "block";
+  if (type === "danger" || type === "error") {
+    toast.style.background = "#fee2e2";
+    toast.style.color = "#991b1b";
+    toast.style.border = "1px solid #fecaca";
+  } else if (type === "success") {
+    toast.style.background = "#dcfce7";
+    toast.style.color = "#166534";
+    toast.style.border = "1px solid #bbf7d0";
+  } else {
+    toast.style.background = "#e0f2fe";
+    toast.style.color = "#075985";
+    toast.style.border = "1px solid #bae6fd";
+  }
+
+  toast.textContent = message;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.display = "none";
+  }, 4000);
+}
+
+
 // องค์ประกอบแท็บ
 const tabStudent = document.getElementById("tabStudent");
 const tabAdmin = document.getElementById("tabAdmin");
@@ -87,8 +114,9 @@ if (grabCurrentTabAdminBtn) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs && tabs[0] && tabs[0].url && (tabs[0].url.includes("docs.google.com/forms") || tabs[0].url.includes("forms.gle"))) {
         cfgFormUrl.value = tabs[0].url;
+        showPopupToast("ดึงลิงก์ Google Forms จากแท็บปัจจุบันสำเร็จ", "success");
       } else {
-        alert("แท็บปัจจุบันไม่ได้เปิดหน้า Google Forms อยู่ กรุณาเปิดหน้า Google Forms ก่อนกดปุ่มนี้ครับ");
+        showPopupToast("แท็บปัจจุบันไม่ได้เปิดหน้า Google Forms อยู่ กรุณาเปิดหน้าข้อสอบก่อนกดปุ่มนี้ครับ", "danger");
       }
     });
   });
@@ -135,7 +163,7 @@ loginAdminBtn.addEventListener("click", () => {
       adminLoginBox.style.display = "none";
       adminConfigBox.style.display = "block";
     } else {
-      alert("❌ รหัสผ่านผู้คุมสอบไม่ถูกต้อง!");
+      showPopupToast("❌ รหัสผ่านผู้คุมสอบไม่ถูกต้อง!", "danger");
     }
   });
 });
@@ -188,9 +216,9 @@ if (testWebhookBtn) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(testPayload)
       });
-      alert(`✅ ส่งข้อความทดสอบสำเร็จ! (Status: ${res.status})\nคุณสามารถตรวจดูในหน้าจอ Live Monitor ได้ทันที`);
+      showPopupToast(`✅ ส่งข้อความทดสอบสำเร็จ! (HTTP ${res.status}) ตรวจสอบใน Live Monitor ได้ทันที`, "success");
     } catch (err) {
-      alert(`⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ Webhook:\n${err.message}\nโปรดตรวจสอบ URL อีกครั้ง`);
+      showPopupToast(`⚠️ เชื่อมต่อขัดข้อง: ${err.message}`, "danger");
     } finally {
       testWebhookBtn.disabled = false;
       testWebhookBtn.textContent = "📡 ทดสอบส่งสัญญาณ Webhook";
@@ -344,7 +372,7 @@ stopBtn.addEventListener("click", () => {
   chrome.storage.local.get(["adminPasscode"], (data) => {
     const currentPass = data.adminPasscode || "1234"; // fallback สำหรับกรณี storage ถูกล้างเท่านั้น
     if (pass !== currentPass) {
-      alert("❌ รหัสผ่านผู้คุมสอบไม่ถูกต้อง!\nหากทำข้อสอบเสร็จแล้ว ให้กดปุ่มส่ง (Submit) ใน Google Forms ระบบจะปลดล็อกให้อัตโนมัติ");
+      showPopupToast("❌ รหัสผ่านผู้คุมสอบไม่ถูกต้อง! (หากส่งข้อสอบแล้วระบบจะปลดล็อกให้อัตโนมัติ)", "danger");
       return;
     }
 

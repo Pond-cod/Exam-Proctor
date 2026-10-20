@@ -425,16 +425,17 @@ function fetchMonitorLogs() {
   }
 
   let reqUrl = webhookUrl;
-  if (latestIso) {
-    try {
-      const u = new URL(webhookUrl);
-      u.searchParams.set("action", "getLogs");
+  try {
+    const u = new URL(webhookUrl);
+    u.searchParams.set("action", "getLogs");
+    if (latestIso) {
       u.searchParams.set("since", latestIso);
-      reqUrl = u.toString();
-    } catch (_) {}
-  }
+    }
+    reqUrl = u.toString();
+  } catch (_) {}
 
-  fetchFn(reqUrl, {}, 6000)
+  const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+  fetchFn(reqUrl, { headers: { ...authHeaders } }, 6000)
     .then((res) => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
@@ -1674,6 +1675,69 @@ function testWebhookPing() {
   });
 }
 
+function exportLogsToCsv() {
+  if (!allLogs || allLogs.length === 0) {
+    showAlert("ยังไม่มีข้อมูลบันทึกเหตุการณ์สำหรับการส่งออก", { type: "info" });
+    return;
+  }
+
+  const accessibleRooms = getAccessibleRoomsForCurrentUser();
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  const isAdmin = !currentUser || String(currentUser.role).toUpperCase() === USER_ROLES.ADMIN;
+  const accessibleRoomIds = new Set(accessibleRooms.map(r => String(r.roomId).trim()));
+
+  let exportList = [...allLogs];
+  if (!isAdmin) {
+    exportList = exportList.filter(l => l.roomId && accessibleRoomIds.has(String(l.roomId).trim()));
+  }
+
+  exportList.sort((a, b) => {
+    const tA = parseLogTimestampMs(a) || 0;
+    const tB = parseLogTimestampMs(b) || 0;
+    return tA - tB;
+  });
+
+  const headers = ["ลำดับ", "วันเวลา", "รหัสนักเรียน", "รหัสห้องสอบ", "ชื่อห้องสอบ", "ประเภทเหตุการณ์", "รายละเอียดเหตุการณ์", "จำนวนเตือนสะสม", "ระดับความรุนแรง"];
+  const rows = exportList.map((item, idx) => {
+    const timeStr = formatDisplayTime(item.time, item.timestamp);
+    const sId = item.studentId || "-";
+    const rId = item.roomId || "-";
+    const title = item.roomTitle || item.formTitle || "-";
+    const eType = item.eventType || "VIOLATION";
+    const detail = item.violation || "-";
+    const vCount = item.violationCount || 0;
+    const severity = item.severity || "⚠️ ทั่วไป";
+
+    const escapeCsv = (val) => `"${String(val).replace(/"/g, '""')}"`;
+
+    return [
+      idx + 1,
+      escapeCsv(timeStr),
+      escapeCsv(sId),
+      escapeCsv(rId),
+      escapeCsv(title),
+      escapeCsv(eType),
+      escapeCsv(detail),
+      vCount,
+      escapeCsv(severity)
+    ].join(",");
+  });
+
+  const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const nowStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `Exam_Proctor_Logs_${nowStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showAlert(`ส่งออกข้อมูล ${exportList.length} รายการเป็นไฟล์ Excel CSV เรียบร้อยแล้ว`, { type: "success" });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (typeof requireAuth === "function" && !requireAuth()) return;
 
@@ -1860,6 +1924,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === studentDetailModal) closeStudentDetail();
     });
   }
+
+  const exportCsvBtn = document.getElementById("exportCsvBtn");
+  if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportLogsToCsv);
 
   const testWebhookBtn = document.getElementById("testWebhookBtn");
   if (testWebhookBtn) testWebhookBtn.addEventListener("click", testWebhookPing);

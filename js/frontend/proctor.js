@@ -5,8 +5,7 @@
 let examConfig = {
   title: "แบบทดสอบออนไลน์",
   formUrl: "",
-  webhookUrl: DEFAULT_WEBHOOK_URL,
-  adminPasscode: DEFAULT_ADMIN_PASSCODE
+  webhookUrl: DEFAULT_WEBHOOK_URL
 };
 
 let studentId = "";
@@ -256,7 +255,6 @@ function initExamFromUrl() {
         title: urlParams.get("t") || urlParams.get("title") || "แบบทดสอบออนไลน์",
         formUrl: rawForm,
         webhookUrl: urlParams.get("w") || urlParams.get("webhook") || DEFAULT_WEBHOOK_URL,
-        adminPasscode: urlParams.get("p") || urlParams.get("pass") || DEFAULT_ADMIN_PASSCODE,
         entryCode: urlParams.get("e") || urlParams.get("entry") || "",
         category: urlParams.get("c") || urlParams.get("cat") || "ทั่วไป",
         gradeLevel: urlParams.get("g") || urlParams.get("grade") || "ไม่ระบุ"
@@ -270,7 +268,6 @@ function initExamFromUrl() {
       title: configData.title || "แบบทดสอบออนไลน์",
       formUrl: formatGoogleFormEmbedUrl(configData.formUrl),
       webhookUrl: configData.webhookUrl || DEFAULT_WEBHOOK_URL,
-      adminPasscode: configData.adminPasscode || DEFAULT_ADMIN_PASSCODE,
       entryCode: configData.entryCode || "",
       category: configData.category || "ทั่วไป",
       gradeLevel: configData.gradeLevel || "ไม่ระบุ"
@@ -682,12 +679,7 @@ async function handleAdminUnlock() {
       }
     }
   } catch (err) {
-    console.warn("verifyAdminUnlock API error, checking local fallback:", err);
-  }
-
-  // 2. สำรองกรณีเน็ตหลุดหากมีการระบุ adminPasscode เดิมไว้
-  if (!isUnlockValid && examConfig.adminPasscode && pass === examConfig.adminPasscode) {
-    isUnlockValid = true;
+    console.warn("verifyAdminUnlock API error:", err);
   }
 
   if (isUnlockValid) {

@@ -12,8 +12,6 @@
   "host_permissions": [
     "https://docs.google.com/forms/*",
     "https://forms.gle/*",
-    "https://script.google.com/*",
-    "https://script.googleusercontent.com/*",
     "https://examproctor-jade.vercel.app/*"
   ],
   "action": {

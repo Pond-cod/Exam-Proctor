@@ -102,15 +102,18 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="settingAdminPasscodeInput">3. Master Admin Passcode (รหัสปลดล็อกห้องสอบระดับสูง) *</label>
-              <input 
-                type="text" 
-                id="settingAdminPasscodeInput" 
-                class="form-control" 
-                maxlength="6"
-                placeholder="6 หลัก (เช่น 999888)"
-                required
-                style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #b91c1c; text-align: center;"
-              >
+              <div style="position: relative;">
+                <input 
+                  type="password" 
+                  id="settingAdminPasscodeInput" 
+                  class="form-control" 
+                  maxlength="6"
+                  placeholder="6 หลัก (เช่น 999888)"
+                  required
+                  style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #b91c1c; text-align: center; padding-right: 42px;"
+                >
+                <button type="button" id="toggleAdminPassVisibleBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.7;" title="แสดง/ซ่อนรหัสผ่าน">👁️</button>
+              </div>
               <div class="form-hint" style="color: #991b1b;">รหัส 6 หลักสำหรับครู/แอดมินใช้ปลดล็อกหน้าจอสอบของนักเรียน</div>
             </div>
 

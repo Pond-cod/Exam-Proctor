@@ -5,35 +5,7 @@
  * and Admin editing / deletion.
  */
 
-function isRoomOwnedByUser(room, user) {
-  if (!user) return false;
-  if (user.role && String(user.role).toUpperCase() === USER_ROLES.ADMIN) return true;
-
-  const curUser = String(user.username || "").trim().toLowerCase();
-  const curName = String(user.displayName || "").trim().toLowerCase();
-  const curId = String(user.userId || "").trim();
-
-  // 1. เช็ค creatorUsername
-  if (room.creatorUsername && String(room.creatorUsername).trim().toLowerCase() === curUser) {
-    return true;
-  }
-  // 2. เช็ค creatorId
-  if (room.creatorId && curId && String(room.creatorId).trim() === curId) {
-    return true;
-  }
-  // 3. เช็ค createdBy (เช่น "ครูผู้สอน" หรือ "ครูสมชาย")
-  if (room.createdBy) {
-    const cb = String(room.createdBy).trim().toLowerCase();
-    if (cb === curUser || cb === curName || cb.includes(curUser) || cb.includes(curName)) {
-      return true;
-    }
-  }
-  // 4. กรณีไม่มีผู้สร้างระบุไว้ชัดเจน (ห้องเก่า) หากเป็น user เริ่มต้น 'teacher' และห้องไม่ได้ระบุ admin ให้ครูเห็นได้
-  if (!room.creatorUsername && (!room.createdBy || room.createdBy === "User" || room.createdBy === "ครูผู้สอน") && curUser === "teacher") {
-    return true;
-  }
-  return false;
-}
+// Note: isRoomOwnedByUser is centrally defined in js/backend/auth.js
 
 function populateRoomsDropdowns() {
   const catFilter = document.getElementById("historyCategoryFilter");

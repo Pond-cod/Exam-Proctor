@@ -65,18 +65,18 @@ CREATE INDEX IF NOT EXISTS idx_exam_rooms_status ON exam_rooms(status);
 CREATE INDEX IF NOT EXISTS idx_exam_rooms_creator ON exam_rooms(creator_username);
 CREATE INDEX IF NOT EXISTS idx_exam_logs_room_id ON exam_logs(room_id);
 CREATE INDEX IF NOT EXISTS idx_exam_logs_timestamp ON exam_logs(iso_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_exam_logs_student_id ON exam_logs(student_id);
 
 -- ===================================================================
 -- Initial Seed Data (ข้อมูลเริ่มต้นของระบบ)
 -- ===================================================================
 
--- บัญชีเริ่มต้นสำหรับ Admin และ Teacher
+-- บัญชีเริ่มต้นสำหรับ Admin และ Teacher (ไม่ทับรหัสผ่านที่มีอยู่แล้วเพื่อความปลอดภัย)
 INSERT INTO users (user_id, username, display_name, role, passcode, status)
 VALUES 
     ('USR-ADMIN', 'admin', 'ผู้ดูแลระบบหลัก (Super Admin)', 'ADMIN', 'admin1234', 'ACTIVE'),
     ('USR-TEACHER', 'teacher', 'ครูผู้สอน / ผู้คุมสอบ', 'TEACHER', 'teacher1234', 'ACTIVE')
-ON CONFLICT (username) DO UPDATE 
-SET passcode = EXCLUDED.passcode WHERE users.username IN ('admin', 'teacher');
+ON CONFLICT (username) DO NOTHING;
 
 -- การตั้งค่าระบบกลางเริ่มต้น
 INSERT INTO system_config (id, master_admin_passcode, system_name, portal_announcement, teacher_passcode)

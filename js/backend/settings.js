@@ -190,6 +190,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const testBtn = document.getElementById("testWebhookBtn");
   if (testBtn) testBtn.addEventListener("click", handleTestWebhook);
 
+  const togglePassBtn = document.getElementById("toggleAdminPassVisibleBtn");
+  const adminPassInput = document.getElementById("settingAdminPasscodeInput");
+  if (togglePassBtn && adminPassInput) {
+    togglePassBtn.addEventListener("click", () => {
+      const isPassword = adminPassInput.type === "password";
+      adminPassInput.type = isPassword ? "text" : "password";
+      togglePassBtn.textContent = isPassword ? "🙈" : "👁️";
+    });
+  }
+
   const openSheetBtn = document.getElementById("openSheetBtn");
   if (openSheetBtn) {
     openSheetBtn.addEventListener("click", () => window.open(DEFAULT_SHEET_URL, "_blank"));
