@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.3">
+  <link rel="stylesheet" href="../css/style.css?v=7.0">
 </head>
 <body>
 
@@ -40,18 +40,21 @@
         <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่าระบบ</a>
       </div>
 
-      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
+      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ (Executive User Hub) -->
       <div class="nav-role-box">
-        <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
-          <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
-          <span id="navUserNameDisplay" style="font-size: 14px; color: var(--text-muted); margin-top: 2px;"></span>
-        </div>
-        <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
-          ออกจากระบบ
+        <button type="button" class="theme-toggle-btn" title="สลับโหมดมืด/สว่าง">
+          <span class="theme-text">โหมดมืด</span>
         </button>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
+          <span id="navUserNameDisplay" style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);"></span>
+        </div>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
           หน้าบ้าน
         </a>
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-soft-danger" title="ออกจากระบบหลังบ้าน">
+          ออกจากระบบ
+        </button>
       </div>
     </div>
   </nav>
@@ -162,7 +165,7 @@
                   style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #1d4ed8; text-align: center; background: #fff;"
                   required
                 >
-                <button type="button" id="randomEntryCodeBtn" class="btn btn-secondary" style="min-height: 44px; padding: 0 14px; white-space: nowrap; font-size: 16px;" title="สุ่มรหัสเข้าสอบนักเรียนใหม่">
+                <button type="button" id="randomEntryCodeBtn" class="btn btn-soft-primary" style="min-height: 44px; padding: 0 16px; white-space: nowrap; font-size: 16px; border-radius: 8px;" title="สุ่มรหัสเข้าสอบนักเรียนใหม่">
                   สุ่มใหม่
                 </button>
               </div>
@@ -192,7 +195,7 @@
                   style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #b91c1c; text-align: center; background: #fff;"
                   required
                 >
-                <button type="button" id="randomPasscodeBtn" class="btn btn-secondary" style="min-height: 44px; padding: 0 14px; white-space: nowrap; font-size: 16px;" title="สุ่มรหัสผ่านผู้คุมสอบใหม่">
+                <button type="button" id="randomPasscodeBtn" class="btn btn-soft-danger" style="min-height: 44px; padding: 0 16px; white-space: nowrap; font-size: 16px; border-radius: 8px;" title="สุ่มรหัสผ่านผู้คุมสอบใหม่">
                   สุ่มใหม่
                 </button>
               </div>
@@ -202,7 +205,7 @@
             </div>
           </div>
 
-          <button type="button" id="generateLinkBtn" class="btn btn-primary btn-lg btn-block" style="margin-top: 16px;">
+          <button type="button" id="generateLinkBtn" class="btn btn-primary btn-lg btn-block" style="margin-top: 16px; border-radius: 10px;">
             สร้างห้องสอบและบันทึกลงระบบ
           </button>
         </form>
@@ -214,32 +217,32 @@
 
           <!-- แถบแสดงรหัสผ่าน 2 ระดับ -->
           <div class="result-passcodes-grid">
-            <div class="result-passcode-card" style="border-color: #93c5fd; background: #eff6ff;">
+            <div class="result-passcode-card" style="border-color: #93c5fd; background: #eff6ff; border-radius: 12px;">
               <div>
                 <span style="font-size: 15px; color: #1e40af; font-weight: 700; display: block; margin-bottom: 2px;">
                   รหัสเข้าห้องสอบสำหรับนักเรียน (Entry Code):
                 </span>
                 <span style="font-size: 24px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.18em; font-family: monospace;" id="generatedEntryCodeDisplay">------</span>
               </div>
-              <button type="button" id="copyEntryCodeBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">คัดลอกรหัสเข้าสอบ</button>
+              <button type="button" id="copyEntryCodeBtn" class="btn btn-soft-primary" style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;">คัดลอกรหัสเข้าสอบ</button>
             </div>
 
-            <div class="result-passcode-card" style="border-color: #fca5a5; background: #fef2f2;">
+            <div class="result-passcode-card" style="border-color: #fca5a5; background: #fef2f2; border-radius: 12px;">
               <div>
                 <span style="font-size: 15px; color: #991b1b; font-weight: 700; display: block; margin-bottom: 2px;">
                   รหัสผ่านผู้คุมสอบ (Admin Passcode สำหรับครู):
                 </span>
                 <span style="font-size: 24px; font-weight: 800; color: #b91c1c; letter-spacing: 0.18em; font-family: monospace;" id="generatedPasscodeDisplay">------</span>
               </div>
-              <button type="button" id="copyPasscodeBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">คัดลอกรหัสคุมสอบ</button>
+              <button type="button" id="copyPasscodeBtn" class="btn btn-soft-danger" style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;">คัดลอกรหัสคุมสอบ</button>
             </div>
           </div>
 
           <div class="link-url-display" style="margin-top: 14px;">
-            <input type="text" id="generatedLinkDisplay" class="link-input" readonly>
+            <input type="text" id="generatedLinkDisplay" class="link-input" readonly style="border-radius: 8px;">
             <div class="link-action-buttons">
-              <button id="copyLinkBtn" class="btn btn-primary">คัดลอกลิงก์</button>
-              <a id="testOpenLinkBtn" class="btn btn-secondary" href="#" target="_blank">เปิดหน้าห้องสอบ</a>
+              <button id="copyLinkBtn" class="btn btn-primary" style="border-radius: 8px;">คัดลอกลิงก์</button>
+              <a id="testOpenLinkBtn" class="btn btn-soft-secondary" href="#" target="_blank" style="border-radius: 8px;">เปิดหน้าห้องสอบ</a>
             </div>
           </div>
 
@@ -255,10 +258,10 @@
                 QR Code ถูกย่อข้อมูลให้กะทัดรัด คมชัด และสแกนติดง่ายบนสมาร์ตโฟน/แท็บเล็ตทุกรุ่น เหมาะสำหรับการฉายขึ้นจอโปรเจกเตอร์หรือพิมพ์ใส่กระดาษ
               </p>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" id="zoomQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
+                <button type="button" id="zoomQrBtn" class="btn btn-soft-primary" style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;">
                   ขยายเต็มจอ (ฉายโปรเจกเตอร์)
                 </button>
-                <button type="button" id="downloadQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
+                <button type="button" id="downloadQrBtn" class="btn btn-soft-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;">
                   บันทึกรูปภาพ QR (.png)
                 </button>
               </div>

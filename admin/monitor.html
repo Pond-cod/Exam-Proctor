@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.3">
+  <link rel="stylesheet" href="../css/style.css?v=7.0">
   <link rel="manifest" href="../manifest.webmanifest">
   <meta name="theme-color" content="#0284c7">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -37,28 +37,28 @@
         <span class="hamburger-bar"></span>
       </button>
 
-      <!-- เมนูนำทางหลังบ้านแบบกะทัดรัด -->
+      <!-- เมนูนำทางหลังบ้าน -->
       <div class="nav-links" id="navLinksMenu">
-        <a href="create.html" class="nav-tab-btn">สร้างห้อง</a>
-        <a href="monitor.html" class="nav-tab-btn active">จอคุมสอบสด</a>
-        <a href="rooms.html" class="nav-tab-btn">ห้องสอบ</a>
-        <a href="users.html" class="nav-tab-btn admin-only-nav-item">ผู้ใช้งาน</a>
-        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่า</a>
+        <a href="create.html" class="nav-tab-btn">สร้างห้องสอบ</a>
+        <a href="monitor.html" class="nav-tab-btn active">หน้าจอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn">จัดการห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">จัดการผู้ใช้</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่าระบบ</a>
       </div>
 
-      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
+      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ (Executive User Hub) -->
       <div class="nav-role-box">
         <button type="button" class="theme-toggle-btn" title="สลับโหมดมืด/สว่าง">
           <span class="theme-text">โหมดมืด</span>
         </button>
         <div style="display: flex; align-items: center; gap: 6px;">
-          <span id="navRoleBadge" class="role-badge role-badge-user">ผู้คุมสอบ</span>
-          <span id="navUserNameDisplay" style="font-size: 14px; font-weight: 700; color: var(--text-primary);"></span>
+          <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
+          <span id="navUserNameDisplay" style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);"></span>
         </div>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
           หน้าบ้าน
         </a>
-        <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-soft-danger" title="ออกจากระบบหลังบ้าน">
           ออกจากระบบ
         </button>
       </div>

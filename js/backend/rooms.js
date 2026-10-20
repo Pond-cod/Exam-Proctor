@@ -52,6 +52,26 @@ function populateRoomsDropdowns() {
   }
 }
 
+function formatThaiDateTime(isoStr) {
+  if (!isoStr || isoStr === "-") return "-";
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return isoStr;
+    const months = [
+      "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+      "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    ];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear() + 543;
+    const hours = String(d.getHours()).padStart(2, "0");
+    const mins = String(d.getMinutes()).padStart(2, "0");
+    return `${day} ${month} ${year}, ${hours}:${mins} น.`;
+  } catch (_) {
+    return isoStr;
+  }
+}
+
 function renderRoomHistory() {
   const container = document.getElementById("historyRoomsList");
   if (!container) return;
@@ -148,32 +168,32 @@ function renderRoomHistory() {
     const creatorUserTag = r.creatorUsername ? ` (@${escapeHtml(r.creatorUsername)})` : "";
 
     return `
-      <div class="room-mgmt-card" style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-sm); padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-          <div style="flex: 1; min-width: 240px;">
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
-              <strong style="font-size: 19px; color: var(--text-primary);">${escapeHtml(r.title)}</strong>
+      <div class="room-mgmt-card">
+        <div class="room-card-header">
+          <div class="room-card-title-group">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <span class="room-card-title">${escapeHtml(r.title)}</span>
               ${statusBadge}
             </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px;">
-              <span class="badge badge-neutral" style="font-size: 15px;">${escapeHtml(r.category || "ทั่วไป")}</span>
-              <span class="badge badge-neutral" style="font-size: 15px;">${escapeHtml(r.gradeLevel || "ไม่ระบุ")}</span>
-              <span class="badge badge-neutral" style="font-size: 15px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">
+            <div class="room-card-meta-chips">
+              <span class="room-meta-chip">${escapeHtml(r.category || "ทั่วไป")}</span>
+              <span class="room-meta-chip">${escapeHtml(r.gradeLevel || "ไม่ระบุ")}</span>
+              <span class="room-meta-chip room-meta-creator">
                 ผู้สร้าง: <strong>${escapeHtml(creatorDisplayName)}</strong>${creatorUserTag}
               </span>
-              <span style="font-size: 15px; color: var(--text-muted);">รหัสห้อง: <code>${escapeHtml(r.roomId || "-")}</code></span>
+              <span style="font-size: 14.5px; color: var(--text-muted);">รหัสห้อง: <code style="font-weight: 700;">${escapeHtml(r.roomId || "-")}</code></span>
             </div>
           </div>
 
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <div class="room-actions-group">
             <!-- สลับเปิด/ปิดสถานะสอบ (เจ้าของห้อง หรือ Admin) -->
             ${canManage ? `
               <button 
                 type="button" 
-                class="btn ${isOpen ? "btn-secondary" : "btn-success"} btn-toggle-status" 
+                class="btn ${isOpen ? "btn-soft-warning" : "btn-soft-success"} btn-toggle-status" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
-                title="${isOpen ? "คลิกเพื่อปิดห้องสอบชั่วคราว" : "คลิกเพื่อเปิดรับนักเรียนเข้าสอบ"}"
+                style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
+                title="${isOpen ? "คลิกเพื่อพักการสอบชั่วคราว" : "คลิกเพื่อเปิดรับนักเรียนเข้าสอบ"}"
               >
                 ${isOpen ? "พักการสอบ" : "เปิดรับเข้าสอบ"}
               </button>
@@ -182,9 +202,9 @@ function renderRoomHistory() {
             <!-- คัดลอกลิงก์ -->
             <button 
               type="button" 
-              class="btn btn-secondary btn-copy-room-link" 
+              class="btn btn-soft-primary btn-copy-room-link" 
               data-url="${escapeHtml(roomExamUrl)}" 
-              style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
+              style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
             >
               คัดลอกลิงก์
             </button>
@@ -192,9 +212,9 @@ function renderRoomHistory() {
             <!-- แสดง QR Code -->
             <button 
               type="button" 
-              class="btn btn-secondary btn-show-room-qr" 
+              class="btn btn-soft-secondary btn-show-room-qr" 
               data-room-id="${escapeHtml(r.roomId)}" 
-              style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
+              style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
             >
               QR Code
             </button>
@@ -203,17 +223,17 @@ function renderRoomHistory() {
             ${canManage ? `
               <button 
                 type="button" 
-                class="btn btn-secondary btn-edit-room" 
+                class="btn btn-soft-secondary btn-edit-room" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
+                style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
               >
                 แก้ไข
               </button>
               <button 
                 type="button" 
-                class="btn btn-danger btn-delete-room" 
+                class="btn btn-soft-danger btn-delete-room" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
+                style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
               >
                 ลบ
               </button>
@@ -221,18 +241,18 @@ function renderRoomHistory() {
           </div>
         </div>
 
-        <!-- แถบแสดงรหัส 2 รูปแบบ -->
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; background: var(--bg-subtle); padding: 8px 14px; border-radius: var(--radius-sm); align-items: center;">
-          <div style="font-size: 15px;">
-            <span style="color: #1e40af; font-weight: 700;">รหัสเข้าสอบนักเรียน:</span>
-            <code style="font-size: 18px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.entryCode || "-")}</code>
+        <!-- แถบแสดงรหัส 2 รูปแบบ (Security Credential Chips) -->
+        <div class="room-credentials-bar">
+          <div class="credential-chip credential-student">
+            <span style="font-weight: 700; color: #1e40af;">รหัสเข้าสอบนักเรียน:</span>
+            <code class="credential-code">${escapeHtml(r.entryCode || "-")}</code>
           </div>
-          <div style="font-size: 15px; border-left: 1.5px solid #cbd5e1; padding-left: 12px;">
-            <span style="color: #991b1b; font-weight: 700;">รหัสคุมสอบ (Passcode 6 หลัก):</span>
-            <code style="font-size: 18px; font-weight: 800; color: #b91c1c; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.adminPasscode || "-")}</code>
+          <div class="credential-chip credential-admin">
+            <span style="font-weight: 700; color: #991b1b;">รหัสคุมสอบ (Passcode 6 หลัก):</span>
+            <code class="credential-code">${escapeHtml(r.adminPasscode || "-")}</code>
           </div>
-          <div style="font-size: 15px; color: var(--text-muted); margin-left: auto;">
-            สร้างเมื่อ: ${escapeHtml(r.createdAt || "-")}
+          <div class="credential-time">
+            สร้างเมื่อ: ${formatThaiDateTime(r.createdAt)}
           </div>
         </div>
       </div>

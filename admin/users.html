@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.3">
+  <link rel="stylesheet" href="../css/style.css?v=7.0">
 </head>
 <body>
 
@@ -40,18 +40,21 @@
         <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่าระบบ</a>
       </div>
 
-      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
+      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ (Executive User Hub) -->
       <div class="nav-role-box">
-        <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
-          <span id="navRoleBadge" class="role-badge role-badge-admin">ผู้ดูแลระบบ (Admin)</span>
-          <span id="navUserNameDisplay" style="font-size: 14px; color: var(--text-muted); margin-top: 2px;"></span>
-        </div>
-        <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
-          ออกจากระบบ
+        <button type="button" class="theme-toggle-btn" title="สลับโหมดมืด/สว่าง">
+          <span class="theme-text">โหมดมืด</span>
         </button>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span id="navRoleBadge" class="role-badge role-badge-admin">ผู้ดูแลระบบ (Admin)</span>
+          <span id="navUserNameDisplay" style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);"></span>
+        </div>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
           หน้าบ้าน
         </a>
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-soft-danger" title="ออกจากระบบหลังบ้าน">
+          ออกจากระบบ
+        </button>
       </div>
     </div>
   </nav>
