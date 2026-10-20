@@ -125,15 +125,14 @@ function sendAlertToWebhook(violationText, isSeverityHigh = false) {
     try {
       fetch(examConfig.webhookUrl, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        headers: { "Content-Type": "application/json" },
         body: payloadStr,
         keepalive: true
       }).catch(() => {});
       dispatched = true;
     } catch (_) {}
 
-    // Fallback ใช้ sendBeacon เฉพาะเมื่อ fetch ล้มเหลวเท่านั้น (ตัดการยิงซ้ำสองเท่า ลดภาระ GAS ลง 50%)
+    // Fallback ใช้ sendBeacon เฉพาะเมื่อ fetch ล้มเหลวเท่านั้น
     if (!dispatched) {
       try {
         if (navigator.sendBeacon) {
@@ -648,7 +647,7 @@ async function handleStudentFinished() {
   }
 }
 
-// Admin Force Stop / Unlock with Passcode — UX-02 & BUG-02
+// Admin Force Stop / Unlock with Passcode — Secure Server-Side Verification
 async function handleAdminUnlock() {
   const pass = await showPrompt("กรุณากรอกรหัสผ่านผู้คุมสอบ (Admin Passcode) เพื่อปลดล็อก:", {
     title: "ปลดล็อกโดยผู้คุมสอบ",
@@ -660,7 +659,38 @@ async function handleAdminUnlock() {
     icon: "🔒"
   });
 
-  if (pass === examConfig.adminPasscode) {
+  if (!pass) return;
+
+  let isUnlockValid = false;
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+
+  // 1. ตรวจสอบรหัสผ่านกับ Server API (ปลอดภัย รหัสไม่หลุดในฝั่งนักเรียน)
+  try {
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "verifyAdminUnlock",
+        roomId: examConfig.roomId || "",
+        passcode: pass
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.status === "success" && data.valid) {
+        isUnlockValid = true;
+      }
+    }
+  } catch (err) {
+    console.warn("verifyAdminUnlock API error, checking local fallback:", err);
+  }
+
+  // 2. สำรองกรณีเน็ตหลุดหากมีการระบุ adminPasscode เดิมไว้
+  if (!isUnlockValid && examConfig.adminPasscode && pass === examConfig.adminPasscode) {
+    isUnlockValid = true;
+  }
+
+  if (isUnlockValid) {
     isExamSubmitted = true;
     isExamActive = false;
     clearInterval(timerInterval);
@@ -675,8 +705,8 @@ async function handleAdminUnlock() {
     } catch (_) {}
 
     showCompletedScreen("ปลดล็อกโดยผู้คุมสอบ");
-  } else if (pass !== null) {
-    await showAlert("รหัสผ่านผู้คุมสอบไม่ถูกต้อง", {
+  } else {
+    await showAlert("รหัสผ่านผู้คุมสอบไม่ถูกต้อง กรุณาตรวจสอบกับผู้คุมสอบ", {
       type: "danger",
       title: "รหัสผ่านผิดพลาด",
       confirmText: "ลองใหม่"

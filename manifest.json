@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Exam Proctor Lock v2.1",
-  "version": "2.1",
-  "description": "ระบบคุมสอบ Google Forms พร้อมหน้าตั้งค่า URL และระบบ Admin Monitor",
+  "name": "Exam Proctor Lock v2.2",
+  "version": "2.2",
+  "description": "ระบบคุมสอบ Google Forms เชื่อมต่อ Neon Serverless Postgres พร้อมหน้าจอ Real-time Live Monitor",
   "permissions": [
     "tabs",
     "windows",

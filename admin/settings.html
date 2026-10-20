@@ -139,18 +139,18 @@
           <div class="form-group" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: var(--radius-md); padding: 18px; margin-top: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <label class="form-label" for="settingWebhookUrlInput" style="margin-bottom: 0; font-weight: 700;">
-                5. Google Apps Script Webhook URL (ฐานข้อมูลกลาง) *
+                5. Cloud API URL (Neon Serverless Postgres / API) *
               </label>
-              <span class="badge badge-success" style="font-size: 11px;">v5.5 Relational Sheets</span>
+              <span class="badge badge-success" style="font-size: 11px;">v6.0 Neon Postgres</span>
             </div>
             <input 
               type="url" 
               id="settingWebhookUrlInput" 
               class="form-control" 
-              placeholder="https://script.google.com/macros/s/.../exec"
+              placeholder="https://examproctor-jade.vercel.app/api"
               required
             >
-            <div class="form-hint" style="margin-bottom: 12px;">URL ปลายทางที่ใช้บันทึกและอ่านข้อมูล 4 ตาราง (Users, SystemConfig, ExamRooms, ExamLogs)</div>
+            <div class="form-hint" style="margin-bottom: 12px;">URL ปลายทาง API ที่ใช้บันทึกและอ่านข้อมูล 4 ตาราง (users, system_config, exam_rooms, exam_logs) แบบเรียลไทม์</div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button type="button" id="testWebhookBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">

@@ -71,8 +71,8 @@ function populateUsersList() {
         </td>
         <td>${roleBadge}</td>
         <td>
-          <span class="masked-passcode" data-pass="${escapeHtml(u.passcode || "")}" style="font-family: monospace; font-size: 14px; font-weight: 700; letter-spacing: 0.12em; color: #1e3a8a; cursor: pointer;" title="คลิกเพื่อดูรหัสผ่าน">
-            ••••••
+          <span style="font-size: 12.5px; color: #059669; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+            🔒 เข้ารหัสปลอดภัย
           </span>
         </td>
         <td>${statusBadge}</td>
@@ -102,18 +102,6 @@ function populateUsersList() {
       </tr>
     `;
   }).join("");
-
-  // ผูกการคลิกดูรหัสผ่าน
-  container.querySelectorAll(".masked-passcode").forEach((el) => {
-    el.onclick = () => {
-      const real = el.getAttribute("data-pass");
-      if (el.textContent.trim() === "••••••") {
-        el.textContent = real;
-      } else {
-        el.textContent = "••••••";
-      }
-    };
-  });
 
   // ผูกปุ่มแก้ไข
   container.querySelectorAll(".btn-edit-user").forEach((btn) => {

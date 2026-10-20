@@ -1,10 +1,11 @@
 /**
  * Authentication and Role Guard Engine for Exam Proctor Studio
- * Version: v5.5
- * Handles User Login, Session State, Role Verification, and Route Protection
+ * Version: v6.0
+ * Handles User Login, Session State, Role Verification, Token Management, and Route Protection
  */
 
 const AUTH_USER_KEY = "examProctorAuthUser";
+const AUTH_TOKEN_KEY = "examProctorAuthToken";
 const DEFAULT_TEACHER_PASSCODE = "111222";
 
 function getCurrentUser() {
@@ -17,12 +18,31 @@ function getCurrentUser() {
   }
 }
 
-function setCurrentUser(user, persist = true) {
+function getAuthToken() {
+  try {
+    return sessionStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY) || "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function getAuthHeaders() {
+  const token = getAuthToken();
+  return token ? { "Authorization": `Bearer ${token}` } : {};
+}
+
+function setCurrentUser(user, token = "", persist = true) {
   try {
     const data = JSON.stringify(user);
     sessionStorage.setItem(AUTH_USER_KEY, data);
+    if (token) {
+      sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+    }
     if (persist) {
       localStorage.setItem(AUTH_USER_KEY, data);
+      if (token) {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+      }
     }
     // ซิงก์ role เข้ากับ examProctorRole เดิม
     localStorage.setItem("examProctorRole", user.role);
@@ -32,14 +52,17 @@ function setCurrentUser(user, persist = true) {
 function clearCurrentUser() {
   try {
     sessionStorage.removeItem(AUTH_USER_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(AUTH_USER_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.setItem("examProctorRole", USER_ROLES.TEACHER);
   } catch (_) {}
 }
 
 function isLoggedIn() {
   const user = getCurrentUser();
-  return !!(user && user.userId && user.role);
+  const token = getAuthToken();
+  return !!(user && user.userId && user.role && token);
 }
 
 function isCurrentUserAdmin() {
@@ -53,9 +76,10 @@ function isCurrentUserAdmin() {
  */
 function requireAuth(requiredRole = null) {
   const user = getCurrentUser();
+  const token = getAuthToken();
 
-  // 1. ยังไม่ได้เข้าสู่ระบบ
-  if (!user || !user.role) {
+  // 1. ยังไม่ได้เข้าสู่ระบบ หรือไม่มี Token
+  if (!user || !user.role || !token) {
     const currentPage = encodeURIComponent(window.location.pathname.split("/").pop() || "rooms.html");
     window.location.replace(`login.html?redirect=${currentPage}`);
     return false;
@@ -92,7 +116,7 @@ async function handleLogout() {
 }
 
 /**
- * ตรวจสอบชื่อผู้ใช้และรหัสผ่าน (Username + Password อย่างน้อย 8 ตัวอักษร)
+ * ตรวจสอบชื่อผู้ใช้และรหัสผ่านผ่าน Serverless Postgres API โดยตรง
  * @param {Object} credentials - { username, passcode }
  */
 async function authenticateUser(credentials) {
@@ -110,100 +134,47 @@ async function authenticateUser(credentials) {
     return { success: false, message: "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร/หลัก" };
   }
 
-  // 2. FAST PATH: ตรวจสอบกับฐานข้อมูลในเครื่องก่อนทันที (Local-First Instant Auth: 0ms)
-  // ให้เข้าใช้งานได้ทันทีโดยไม่ต้องรอ Cold Start ของ Google Apps Script
-  try {
-    const users = typeof getStoredUsers === "function" 
-      ? getStoredUsers() 
-      : JSON.parse(localStorage.getItem("examProctorUsersList") || "[]");
-
-    const matched = users.find(u => {
-      const uMatch = u.username && u.username.toLowerCase() === username;
-      const pMatch = String(u.passcode).trim() === passcode;
-      return uMatch && pMatch;
-    });
-
-    if (matched) {
-      if (String(matched.status).toUpperCase() === "INACTIVE") {
-        return { success: false, message: "บัญชีผู้ใช้นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" };
-      }
-
-      // อัปเดตเวลาเข้าสู่ระบบล่าสุด (Last Login) ในเครื่องทันที
-      try {
-        matched.lastLogin = new Date().toISOString();
-        if (typeof setStoredUsers === "function") {
-          setStoredUsers(users);
-        } else {
-          localStorage.setItem("examProctorUsersList", JSON.stringify(users));
-        }
-      } catch (_) {}
-
-      // ส่งสัญญาณอัปเดต Last Login ไปยัง Cloud แบบ Background Async (ไม่บล็อกหน้าจอผู้ใช้)
-      if (typeof syncUserToCloud === "function") {
-        try {
-          syncUserToCloud("updateUser", { userId: matched.userId, lastLogin: matched.lastLogin });
-        } catch (_) {}
-      }
-
-      return { 
-        success: true, 
-        user: {
-          ...matched,
-          role: String(matched.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
-        } 
-      };
-    }
-  } catch (localErr) {
-    console.warn("Local auth check error:", localErr);
-  }
-
-  // 3. SLOW PATH: กรณีไม่พบบัญชีในเครื่อง (เช่น บัญชีเพิ่งสร้างใหม่จากเครื่องอื่น) จึงส่งไปตรวจกับ Cloud
-  // มี Timeout คุมไม่เกิน 2.5 วินาที เพื่อป้องกันหน้าเว็บหมุนค้าง
+  // 2. ส่งตรวจสอบกับ Neon Postgres Serverless API
   const webhookUrl = typeof getEffectiveWebhookUrl === "function" 
     ? getEffectiveWebhookUrl() 
     : (localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL);
 
-  if (webhookUrl) {
-    try {
-      const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
-      const response = await fetchFn(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "verifyLogin",
-          username: username,
-          passcode: passcode
-        })
-      }, 2500);
+  if (!webhookUrl) {
+    return { success: false, message: "ยังไม่ได้กำหนดที่อยู่ API ของระบบ" };
+  }
 
-      if (response && response.ok) {
-        const result = await response.json();
-        if (result && result.status === "success" && result.user) {
-          const cloudUser = {
-            ...result.user,
-            role: String(result.user.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
-          };
+  try {
+    const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
+    const response = await fetchFn(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "verifyLogin",
+        username: username,
+        passcode: passcode
+      })
+    }, 6000);
 
-          // แคชผู้ใช้ลง Local ทันทีสำหรับการล็อกอินครั้งถัดไป
-          try {
-            const users = typeof getStoredUsers === "function" ? getStoredUsers() : [];
-            const idx = users.findIndex(u => u.username && u.username.toLowerCase() === username);
-            if (idx >= 0) {
-              users[idx] = { ...users[idx], ...cloudUser };
-            } else {
-              users.push(cloudUser);
-            }
-            if (typeof setStoredUsers === "function") setStoredUsers(users);
-          } catch (_) {}
+    if (response && response.ok) {
+      const result = await response.json();
+      if (result && result.status === "success" && result.user) {
+        const cloudUser = {
+          ...result.user,
+          role: String(result.user.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
+        };
 
-          return { success: true, user: cloudUser };
-        } else if (result && result.status === "error") {
-          return { success: false, message: result.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
-        }
+        return {
+          success: true,
+          user: cloudUser,
+          token: result.token || ""
+        };
+      } else if (result && result.status === "error") {
+        return { success: false, message: result.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
       }
-    } catch (netErr) {
-      console.warn("Cloud auth check timed out or failed:", netErr);
     }
+  } catch (netErr) {
+    console.warn("Authentication network error:", netErr);
+    return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง" };
   }
 
   return {
@@ -245,4 +216,3 @@ function isRoomOwnedByUser(room, user) {
   }
   return false;
 }
-

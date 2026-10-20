@@ -49,7 +49,7 @@ const testWebhookBtn = document.getElementById("testWebhookBtn");
 const openMonitorBtn = document.getElementById("openMonitorBtn");
 const saveStatus = document.getElementById("saveStatus");
 
-const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec";
+const DEFAULT_WEBHOOK_URL = "https://examproctor-jade.vercel.app/api";
 
 let detectedActiveTab = null;
 
@@ -174,20 +174,21 @@ if (testWebhookBtn) {
     testWebhookBtn.textContent = "⏳ กำลังทดสอบ...";
 
     const testPayload = {
-      studentId: "ทดสอบระบบ (Test Ping)",
-      violation: "ทดสอบการเชื่อมต่อ Webhook จาก Extension",
+      action: "logEvent",
+      studentId: "ทดสอบระบบ (Extension Test)",
+      violation: "ทดสอบการเชื่อมต่อ Extension เข้าสู่ Neon Serverless Postgres สำเร็จ",
       timestamp: new Date().toISOString(),
       time: new Date().toLocaleTimeString("th-TH"),
-      content: "🧪 **ทดสอบการเชื่อมต่อระบบคุมสอบ**: Extension สามารถสื่อสารกับ Webhook ได้สมบูรณ์!"
+      content: "🧪 **ทดสอบการเชื่อมต่อระบบคุมสอบ**: Extension สามารถสื่อสารกับ Neon API ได้สมบูรณ์!"
     };
 
     try {
       const res = await fetch(webhook, {
         method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(testPayload)
       });
-      alert(`✅ ส่งข้อความทดสอบสำเร็จ! (Status: ${res.status})\nคุณสามารถตรวจดูใน Google Sheets ได้ทันที`);
+      alert(`✅ ส่งข้อความทดสอบสำเร็จ! (Status: ${res.status})\nคุณสามารถตรวจดูในหน้าจอ Live Monitor ได้ทันที`);
     } catch (err) {
       alert(`⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ Webhook:\n${err.message}\nโปรดตรวจสอบ URL อีกครั้ง`);
     } finally {

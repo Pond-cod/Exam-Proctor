@@ -7,8 +7,9 @@
   <link rel="icon" type="image/png" href="../logo.png">
   <script>
     // ตรวจสอบเซสชัน หากล็อกอินแล้วไป rooms.html มิฉะนั้นไป login.html
-    const sessionRaw = localStorage.getItem("exam_staff_session") || sessionStorage.getItem("exam_staff_session");
-    if (sessionRaw) {
+    const userRaw = sessionStorage.getItem("examProctorAuthUser") || localStorage.getItem("examProctorAuthUser");
+    const tokenRaw = sessionStorage.getItem("examProctorAuthToken") || localStorage.getItem("examProctorAuthToken");
+    if (userRaw && tokenRaw) {
       window.location.replace("rooms.html");
     } else {
       window.location.replace("login.html");

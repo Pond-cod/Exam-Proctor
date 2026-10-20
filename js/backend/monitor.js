@@ -414,7 +414,27 @@ function fetchMonitorLogs() {
   const syncStatus = document.getElementById("syncStatusText");
   const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
 
-  fetchFn(webhookUrl, {}, 6000)
+  // Delta Polling: ค้นหา Timestamp ล่าสุดที่มีอยู่ในแคชเพื่อดึงเฉพาะ Log ใหม่
+  let latestIso = "";
+  if (allLogs.length > 0) {
+    for (const item of allLogs) {
+      if (item.timestamp && (!latestIso || item.timestamp > latestIso)) {
+        latestIso = item.timestamp;
+      }
+    }
+  }
+
+  let reqUrl = webhookUrl;
+  if (latestIso) {
+    try {
+      const u = new URL(webhookUrl);
+      u.searchParams.set("action", "getLogs");
+      u.searchParams.set("since", latestIso);
+      reqUrl = u.toString();
+    } catch (_) {}
+  }
+
+  fetchFn(reqUrl, {}, 6000)
     .then((res) => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
@@ -430,13 +450,20 @@ function fetchMonitorLogs() {
       }
 
       const mergedMap = new Map();
-      fetchedList.forEach((item) => {
-        const key = `${item.studentId}_${item.violation}_${item.timestamp || item.time}`;
+      // คง log เดิมไว้ในแคช
+      allLogs.forEach((item) => {
+        const key = item.logId || `${item.studentId}_${item.violation}_${item.timestamp || item.time}`;
         mergedMap.set(key, item);
       });
+      // รวม log ใหม่ที่เพิ่งดึงมา
+      fetchedList.forEach((item) => {
+        const key = item.logId || `${item.studentId}_${item.violation}_${item.timestamp || item.time}`;
+        mergedMap.set(key, item);
+      });
+
       const recentThreshold = Date.now() - 45000;
       recentLocalLiveEvents.forEach((item) => {
-        const key = `${item.studentId}_${item.violation}_${item.timestamp || item.time}`;
+        const key = item.logId || `${item.studentId}_${item.violation}_${item.timestamp || item.time}`;
         if (!mergedMap.has(key)) {
           const itemMs = parseLogTimestampMs(item);
           if (!itemMs || itemMs >= recentThreshold) {

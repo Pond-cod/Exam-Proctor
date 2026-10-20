@@ -157,7 +157,7 @@ function encodeExamConfig(config) {
     const compact = {};
     if (config.roomId) compact.r = config.roomId;
     if (config.formUrl) compact.f = config.formUrl;
-    if (config.adminPasscode) compact.p = config.adminPasscode;
+    // SECURITY: ห้ามฝัง adminPasscode ใน URL ของนักเรียนเด็ดขาด (ตรวจสอบผ่าน Server verifyAdminUnlock แทน)
     if (config.entryCode) compact.e = config.entryCode;
     if (config.title && config.title !== "แบบทดสอบออนไลน์") compact.t = config.title;
     if (config.category && config.category !== "ทั่วไป (General)") compact.c = config.category;

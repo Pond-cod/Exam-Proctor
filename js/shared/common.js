@@ -91,25 +91,36 @@ function setStoredRooms(rooms) {
   } catch (_) {}
 }
 
-function syncRoomToCloud(action, roomData) {
+async function syncRoomToCloud(action, roomData) {
   const webhookInput = document.getElementById("examWebhookInput");
   const defaultWh = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || defaultWh;
-  if (!webhookUrl) return;
+  if (!webhookUrl) return null;
 
   const payload = {
     action: action,
     ...roomData
   };
 
+  const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+
   try {
-    fetch(webhookUrl, {
+    const res = await fetch(webhookUrl, {
       method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders
+      },
       body: JSON.stringify(payload)
-    }).catch((err) => console.warn("Cloud sync room failed:", err));
-  } catch (_) {}
+    });
+    if (!res.ok) {
+      console.warn(`Cloud sync room '${action}' returned status ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn("Cloud sync room failed:", err);
+    return null;
+  }
 }
 
 async function fetchCloudRooms(callback) {
@@ -118,11 +129,15 @@ async function fetchCloudRooms(callback) {
   const webhookUrl = (webhookInput && webhookInput.value ? webhookInput.value : "").trim() || defaultWh;
   if (!webhookUrl) return;
 
+  const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+
   try {
     const url = new URL(webhookUrl);
     url.searchParams.set("action", "getAllRooms");
     const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
-    const res = await fetchFn(url.toString(), {}, 5000);
+    const res = await fetchFn(url.toString(), {
+      headers: { ...authHeaders }
+    }, 5000);
     if (!res || !res.ok) return;
     const json = await res.json();
     if (json && json.status === "success" && Array.isArray(json.data)) {
@@ -174,69 +189,10 @@ async function fetchCloudRooms(callback) {
 
 function getStoredUsers() {
   try {
-    const defaultUsers = [
-      {
-        userId: "USR-ADMIN",
-        username: "admin",
-        displayName: "ผู้ดูแลระบบหลัก (Super Admin)",
-        role: "ADMIN",
-        passcode: "admin123",
-        status: "ACTIVE",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        userId: "USR-TEACHER",
-        username: "teacher",
-        displayName: "ครูผู้สอน / ผู้คุมสอบ",
-        role: "TEACHER",
-        passcode: "teacher123",
-        status: "ACTIVE",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        userId: "USR-407272",
-        username: "teacher2",
-        displayName: "ครูผู้สอน 2",
-        role: "TEACHER",
-        passcode: "teacher2",
-        status: "ACTIVE",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
     const raw = localStorage.getItem("examProctorUsersList");
-    if (!raw) {
-      localStorage.setItem("examProctorUsersList", JSON.stringify(defaultUsers));
-      return defaultUsers;
-    }
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      localStorage.setItem("examProctorUsersList", JSON.stringify(defaultUsers));
-      return defaultUsers;
-    }
-    // อัปเดตรหัสผ่านตั้งต้นของ admin / teacher ให้ตรงกับฐานข้อมูล Neon ล่าสุด
-    let updated = false;
-    parsed.forEach(u => {
-      if (u.username === "admin" && (u.passcode === "999888" || u.passcode === "admin1234")) {
-        u.passcode = "admin123";
-        updated = true;
-      }
-      if (u.username === "teacher" && (u.passcode === "111222" || u.passcode === "teacher1234")) {
-        u.passcode = "teacher123";
-        updated = true;
-      }
-    });
-    // เพิ่ม teacher2 หากยังไม่มี
-    if (!parsed.some(u => u.username === "teacher2")) {
-      parsed.push(defaultUsers[2]);
-      updated = true;
-    }
-    if (updated) {
-      localStorage.setItem("examProctorUsersList", JSON.stringify(parsed));
-    }
-    return parsed;
+    return Array.isArray(parsed) ? parsed : [];
   } catch (_) {
     return [];
   }
@@ -248,37 +204,49 @@ function setStoredUsers(users) {
   } catch (_) {}
 }
 
-function syncUserToCloud(action, userData) {
+async function syncUserToCloud(action, userData) {
   const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
-  if (!webhookUrl) return;
+  if (!webhookUrl) return null;
 
   const payload = {
     action: action,
     ...userData
   };
 
+  const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+
   try {
-    fetch(webhookUrl, {
+    const res = await fetch(webhookUrl, {
       method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders
+      },
       body: JSON.stringify(payload)
-    }).catch((err) => console.warn("Cloud sync user failed:", err));
-  } catch (_) {}
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Cloud sync user failed:", err);
+    return null;
+  }
 }
 
 async function fetchCloudUsers(callback) {
   const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   if (!webhookUrl) return;
 
+  const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+
   try {
     const url = new URL(webhookUrl);
     url.searchParams.set("action", "getAllUsers");
     const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
-    const res = await fetchFn(url.toString(), {}, 5000);
+    const res = await fetchFn(url.toString(), {
+      headers: { ...authHeaders }
+    }, 5000);
     if (!res || !res.ok) return;
     const json = await res.json();
-    if (json && json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
+    if (json && json.status === "success" && Array.isArray(json.data)) {
       allUsers = json.data;
       setStoredUsers(allUsers);
       if (typeof callback === "function") {

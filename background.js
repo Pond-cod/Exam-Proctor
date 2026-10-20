@@ -1,6 +1,6 @@
 // Background Service Worker (Manifest V3) - Exam Proctor Lock
 
-const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec";
+const DEFAULT_WEBHOOK_URL = "https://examproctor-jade.vercel.app/api";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
 
 function updateBadge(isActive) {
@@ -15,8 +15,13 @@ function updateBadge(isActive) {
 // กำหนดค่าเริ่มต้นอัตโนมัติเมื่อติดตั้งหรืออัปเดต Extension
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(["webhookUrl", "secretToken", "sheetUrl", "adminPasscode"], (data) => {
+    // อัปเกรด URL เก่าที่เป็น Google Apps Script มาเป็น Neon Postgres API อัตโนมัติ
+    let targetWebhook = data.webhookUrl;
+    if (!targetWebhook || targetWebhook.includes("script.google.com")) {
+      targetWebhook = DEFAULT_WEBHOOK_URL;
+    }
     chrome.storage.local.set({
-      webhookUrl: data.webhookUrl || DEFAULT_WEBHOOK_URL,
+      webhookUrl: targetWebhook,
       secretToken: data.secretToken || "EXAM_LOCK_999",
       sheetUrl: data.sheetUrl || DEFAULT_SHEET_URL,
       adminPasscode: data.adminPasscode || "1234",
@@ -34,7 +39,7 @@ chrome.runtime.onStartup.addListener(() => {
   });
 });
 
-// ฟังก์ชันส่งการแจ้งเตือนไปยัง Webhook URL (Google Apps Script / Discord / Custom API)
+// ฟังก์ชันส่งการแจ้งเตือนไปยัง Webhook URL (Neon Cloud Serverless API / GAS / Discord)
 async function sendAlertToAdmin(violationDetail, isSeverityHigh = false, customStudentId = null) {
   try {
     const data = await chrome.storage.local.get(["isExamActive", "studentId", "webhookUrl"]);
@@ -55,6 +60,7 @@ async function sendAlertToAdmin(violationDetail, isSeverityHigh = false, customS
 
     const now = new Date();
     const payload = {
+      action: "logEvent",
       studentId: finalStudentId,
       violation: violationDetail,
       timestamp: now.toISOString(),
@@ -66,11 +72,11 @@ async function sendAlertToAdmin(violationDetail, isSeverityHigh = false, customS
 
     console.log("[ExamProctor] กำลังส่งรายงานไปที่ Webhook:", payload);
 
-    // ใน Manifest V3 Service Worker ต้องใช้ fetch() เท่านั้น (ห้ามใช้ XMLHttpRequest)
+    // ใน Manifest V3 Service Worker ต้องใช้ fetch() เท่านั้น
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
-        "Content-Type": "text/plain;charset=utf-8"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
     });

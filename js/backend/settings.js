@@ -88,16 +88,22 @@ async function handleSaveSettings() {
       teacherPasscode
     };
 
+    const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+
     const res = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders
+      },
       body: JSON.stringify(payload)
     });
 
     if (res.ok) {
-      showAlert("บันทึกการตั้งค่าระบบลงใน Google Sheets เรียบร้อยแล้ว", { type: "success" });
+      showAlert("บันทึกการตั้งค่าระบบลงใน Neon PostgreSQL เรียบร้อยแล้ว", { type: "success" });
     } else {
-      showAlert("บันทึกการตั้งค่าในเครื่องเรียบร้อยแล้ว (การเชื่อมต่อคลาวด์อาจล่าช้า)", { type: "info" });
+      const errJson = await res.json().catch(() => ({}));
+      showAlert(errJson.message || "บันทึกการตั้งค่าในเครื่องเรียบร้อยแล้ว (การเชื่อมต่อคลาวด์อาจล่าช้า)", { type: "info" });
     }
   } catch (err) {
     showAlert("บันทึกการตั้งค่าในเครื่องเรียบร้อยแล้ว (โหมดออฟไลน์)", { type: "info" });
@@ -125,7 +131,7 @@ async function handleTestWebhook() {
     testBtn.innerHTML = `<span class="btn-spinner"></span> กำลังทดสอบ...`;
   }
   if (statusEl) {
-    statusEl.textContent = "กำลังส่งสัญญาณ Ping ไปยัง Google Apps Script...";
+    statusEl.textContent = "กำลังส่งสัญญาณ Ping ไปยัง Neon Serverless API...";
     statusEl.style.display = "block";
     statusEl.style.color = "var(--text-muted)";
   }
@@ -133,11 +139,11 @@ async function handleTestWebhook() {
   try {
     const res = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "logEvent",
         studentId: "TEST-PING",
-        violation: "ทดสอบการเชื่อมต่อ Webhook จากหน้าตั้งค่าระบบ",
+        violation: "ทดสอบการเชื่อมต่อ API จากหน้าตั้งค่าระบบ",
         isSeverityHigh: false,
         timestamp: new Date().toISOString()
       })
@@ -145,10 +151,10 @@ async function handleTestWebhook() {
 
     if (res.ok) {
       if (statusEl) {
-        statusEl.innerHTML = "🟢 การเชื่อมต่อสมบูรณ์: Google Apps Script ตอบสนองปกติ";
+        statusEl.innerHTML = "🟢 การเชื่อมต่อสมบูรณ์: Neon Serverless API ตอบสนองปกติ";
         statusEl.style.color = "#059669";
       }
-      showAlert("การเชื่อมต่อ Webhook สำเร็จ! ระบบสามารถบันทึกข้อมูลลง Google Sheets ได้ตามปกติ", { type: "success" });
+      showAlert("การเชื่อมต่อ API สำเร็จ! ระบบสามารถบันทึกข้อมูลลงฐานข้อมูล Neon ได้ตามปกติ", { type: "success" });
     } else {
       if (statusEl) {
         statusEl.innerHTML = `⚠️ ได้รับสถานะ HTTP ${res.status}`;
@@ -157,7 +163,7 @@ async function handleTestWebhook() {
     }
   } catch (err) {
     if (statusEl) {
-      statusEl.innerHTML = "🔴 การเชื่อมต่อขัดข้อง: ไม่สามารถส่งข้อมูลไปยัง Webhook URL ได้";
+      statusEl.innerHTML = "🔴 การเชื่อมต่อขัดข้อง: ไม่สามารถส่งข้อมูลไปยัง API ได้";
       statusEl.style.color = "#dc2626";
     }
   } finally {
