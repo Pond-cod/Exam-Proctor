@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=7.4">
+  <link rel="stylesheet" href="../css/style.css?v=7.5">
   <link rel="manifest" href="../manifest.webmanifest">
   <meta name="theme-color" content="#0284c7">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -494,12 +494,15 @@
       </div>
 
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <button class="btn btn-secondary" id="modalCopyHistoryBtn" style="padding: 8px 16px; font-size: 16px;">คัดลอกประวัติเหตุการณ์</button>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" class="btn btn-success" id="modalAcknowledgeAlertBtn" style="padding: 8px 18px; font-size: 16px; font-weight: 700; background: #059669; border-color: #059669; color: white;">
+        <button class="btn btn-secondary" id="modalCopyHistoryBtn" style="padding: 8px 16px; font-size: 15px;">คัดลอกประวัติเหตุการณ์</button>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="btn btn-danger" id="modalForceEndExamBtn" style="padding: 8px 16px; font-size: 15px; font-weight: 700; background: #dc2626; border-color: #dc2626; color: white;" title="สั่งจบการสอบของนักเรียนคนนี้ทันที (กรณีหลุดลิงก์หรือทำผิดกฎ)">
+            สั่งจบการสอบ
+          </button>
+          <button type="button" class="btn btn-success" id="modalAcknowledgeAlertBtn" style="padding: 8px 18px; font-size: 15px; font-weight: 700; background: #059669; border-color: #059669; color: white;">
             ตรวจสอบแล้ว (กลับสู่สถานะปกติ)
           </button>
-          <button class="btn btn-primary" id="modalDismissBtn" style="padding: 8px 18px; font-size: 16px;">ปิดหน้าต่าง</button>
+          <button class="btn btn-primary" id="modalDismissBtn" style="padding: 8px 18px; font-size: 15px;">ปิดหน้าต่าง</button>
         </div>
       </div>
     </div>
@@ -620,6 +623,6 @@
   <script src="../js/shared/common.js?v=6.3"></script>
   <script src="../js/backend/auth.js?v=6.3"></script>
   <script src="../js/backend/rooms.js?v=7.4"></script>
-  <script src="../js/backend/monitor.js?v=6.3"></script>
+  <script src="../js/backend/monitor.js?v=7.5"></script>
 </body>
 </html>

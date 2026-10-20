@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=7.4">
+  <link rel="stylesheet" href="css/style.css?v=7.5">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0284c7">
 </head>
@@ -126,12 +126,17 @@
 
     <!-- Floating AI Proctor Monitor (Webcam & Audio Analysis) -->
     <aside id="aiProctorWidget" class="ai-proctor-widget" style="display: none;" aria-label="ระบบ AI Proctor ตรวจจับกล้องและเสียง">
-      <div class="ai-proctor-header">
+      <div class="ai-proctor-header" id="aiProctorHeader">
         <div style="display: flex; align-items: center; gap: 6px;">
           <span class="ai-proctor-badge">AI Proctor</span>
-          <span id="aiFaceCountBadge" class="badge badge-success" style="font-size: 13px; padding: 2px 6px;">ปกติ</span>
+          <span id="aiFaceCountBadge" class="badge badge-success" style="font-size: 11.5px; padding: 1px 6px;">ปกติ</span>
         </div>
-        <span id="aiProctorStatusText" class="ai-proctor-status">พร้อมตรวจจับ</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span id="aiProctorStatusText" class="ai-proctor-status">พร้อมตรวจจับ</span>
+          <button type="button" id="toggleAiWidgetBtn" class="ai-proctor-toggle-btn" title="คลิกเพื่อซ่อน/แสดงภาพกล้อง ไม่ให้บังข้อสอบ">
+            <span id="toggleAiWidgetText">ซ่อนกล้อง</span>
+          </button>
+        </div>
       </div>
       <div class="ai-video-box">
         <video id="aiProctorVideo" autoplay playsinline muted></video>
@@ -220,6 +225,6 @@
   <!-- โหลดสคริปต์ -->
   <script src="js/shared/config.js?v=6.3"></script>
   <script src="js/shared/common.js?v=6.3"></script>
-  <script src="js/frontend/proctor.js?v=6.3"></script>
+  <script src="js/frontend/proctor.js?v=7.5"></script>
 </body>
 </html>

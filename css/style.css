@@ -4442,6 +4442,60 @@ img, svg, video, canvas, iframe {
   color: #94a3b8;
 }
 
+.ai-proctor-toggle-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.ai-proctor-toggle-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+/* Minimized Floating Mode (ซ่อนกล้องเพื่อไม่ให้บังข้อสอบ) */
+.ai-proctor-widget.minimized {
+  width: auto;
+  max-width: 250px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.ai-proctor-widget.minimized .ai-proctor-header {
+  margin-bottom: 0;
+  gap: 8px;
+}
+
+.ai-proctor-widget.minimized .ai-proctor-toggle-btn {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #38bdf8;
+}
+
+.ai-proctor-widget.minimized .ai-video-box,
+.ai-proctor-widget.minimized .ai-audio-meter-bar,
+.ai-proctor-widget.minimized .ai-proctor-caption {
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 .ai-video-box {
   position: relative;
   width: 100%;

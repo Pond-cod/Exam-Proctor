@@ -956,7 +956,7 @@ module.exports = async function handler(req, res) {
 
       let eventType = "VIOLATION";
       if (violation.includes("เริ่มเข้าทำข้อสอบ")) eventType = "START";
-      if (violation.includes("ส่งข้อสอบเรียบร้อย")) eventType = "FINISH";
+      if (violation.includes("ส่งข้อสอบเรียบร้อย") || violation.includes("สั่งจบการสอบ") || violation.includes("สั่งยุติการสอบ") || violation.includes("ปลดล็อกโดยผู้คุมสอบ")) eventType = "FINISH";
 
       const severity = bodyData.isSeverityHigh ? "วิกฤต" : "ทั่วไป";
       const formattedTime = bodyData.time || new Date().toLocaleTimeString("th-TH");

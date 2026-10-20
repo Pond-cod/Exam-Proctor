@@ -292,18 +292,25 @@ function handleIncomingLiveEvent(payload) {
 
   const sId = String(payload.studentId).trim();
   if (!studentsData[sId]) {
+    const isEndPayload = payload.violation && (
+      payload.violation.includes("ส่งข้อสอบเรียบร้อย") ||
+      payload.violation.includes("สั่งจบการสอบ") ||
+      payload.violation.includes("สั่งยุติการสอบ") ||
+      payload.violation.includes("ปลดล็อกโดยผู้คุมสอบ")
+    );
+
     studentsData[sId] = {
       studentId: sId,
       logs: [payload],
       violationCount: payload.violationCount || 0,
       isStarted: true,
-      isSubmitted: payload.violation && payload.violation.includes("ส่งข้อสอบเรียบร้อย"),
+      isSubmitted: Boolean(isEndPayload),
       startTime: payload.time || payload.timestamp,
-      submitTime: payload.violation && payload.violation.includes("ส่งข้อสอบเรียบร้อย") ? (payload.time || payload.timestamp) : null,
+      submitTime: isEndPayload ? (payload.time || payload.timestamp) : null,
       lastEventTime: payload.time || "",
       lastEventIso: payload.timestamp || "",
       lastEventText: payload.violation || "",
-      hasAlert: (payload.violationCount || 0) > 0,
+      hasAlert: !isEndPayload && (payload.violationCount || 0) > 0,
       isTestPing: false,
       isOldDate: false,
       isBeforeCutoff: false
@@ -311,18 +318,26 @@ function handleIncomingLiveEvent(payload) {
   } else {
     const s = studentsData[sId];
     s.logs.push(payload);
+    const isEndPayload = payload.violation && (
+      payload.violation.includes("ส่งข้อสอบเรียบร้อย") ||
+      payload.violation.includes("สั่งจบการสอบ") ||
+      payload.violation.includes("สั่งยุติการสอบ") ||
+      payload.violation.includes("ปลดล็อกโดยผู้คุมสอบ")
+    );
+
     if (payload.violationCount !== undefined && payload.violationCount > s.violationCount) {
       s.violationCount = payload.violationCount;
-    } else if (payload.violation && !payload.violation.includes("เริ่มเข้าทำข้อสอบ") && !payload.violation.includes("ส่งข้อสอบเรียบร้อย")) {
+    } else if (payload.violation && !payload.violation.includes("เริ่มเข้าทำข้อสอบ") && !isEndPayload) {
       s.violationCount++;
     }
-    s.hasAlert = s.violationCount > 0;
+    s.hasAlert = !isEndPayload && s.violationCount > 0;
     s.lastEventText = payload.violation || s.lastEventText;
     s.lastEventTime = payload.time || s.lastEventTime;
     s.lastEventIso = payload.timestamp || s.lastEventIso;
-    if (payload.violation && payload.violation.includes("ส่งข้อสอบเรียบร้อย")) {
+    if (isEndPayload) {
       s.isSubmitted = true;
       s.submitTime = payload.time || payload.timestamp;
+      s.hasActiveAlert = false;
     }
   }
 
@@ -370,6 +385,90 @@ function acknowledgeStudentAlert(studentId) {
   renderMonitorLogs();
   if (activeModalStudentId === studentId) {
     updateModalContent(s);
+  }
+}
+
+// สั่งจบการสอบของนักเรียนจากหน้าจอผู้สอบสด (กรณีหลุดลิงก์ หรือทำผิดกฎร้ายแรง)
+async function forceEndStudentExam(studentId) {
+  if (!studentId) return;
+  const s = studentsData[studentId] || {};
+
+  const confirmed = await showConfirm(
+    `ต้องการสั่งจบการสอบของนักเรียนรหัส "${studentId}" ทันทีใช่หรือไม่?\n\n• ปรับสถานะเป็นส่งข้อสอบแล้วทันที\n• ย้ายออกจากจอภาพผู้สอบสดไปยังคลังประวัติ\n• ส่งสัญญาณยุติการสอบไปยังเครื่องผู้สอบ (กรณีหลุดลิงก์หรือทำผิดกฎ)`,
+    {
+      title: "ยืนยันการสั่งจบการสอบ",
+      confirmText: "สั่งจบการสอบทันที",
+      cancelText: "ยกเลิก",
+      confirmClass: "danger",
+      icon: ""
+    }
+  );
+  if (!confirmed) return;
+
+  const nowIso = new Date().toISOString();
+  const nowTime = new Date().toLocaleTimeString("th-TH");
+  const violationMsg = "ผู้คุมสอบสั่งจบการสอบ (ทำผิดกฎหรือหลุดการสอบ)";
+
+  const payload = {
+    studentId: studentId,
+    roomId: s.roomId || "",
+    roomTitle: s.roomTitle || "แบบทดสอบออนไลน์",
+    violation: violationMsg,
+    violationCount: s.violationCount || 0,
+    isSeverityHigh: true,
+    timestamp: nowIso,
+    time: nowTime
+  };
+
+  // 1. ส่ง BroadcastChannel ให้เครื่องนักเรียนทราบทันที
+  if (adminLiveChannel) {
+    try {
+      adminLiveChannel.postMessage({
+        type: "FORCE_END_EXAM",
+        studentId: studentId,
+        reason: violationMsg
+      });
+    } catch (_) {}
+  }
+
+  // 2. Storage fallback
+  try {
+    localStorage.setItem("exam_force_finish", JSON.stringify({
+      studentId: studentId,
+      timestamp: Date.now(),
+      reason: violationMsg
+    }));
+  } catch (_) {}
+
+  // 3. ส่ง Log Event ไปยัง Server API / Cloud Webhook
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+  fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "logEvent", ...payload })
+  }).catch(() => {});
+
+  // 4. บันทึกและอัปเดต state ภายในจอคุมสอบทันที
+  if (studentsData[studentId]) {
+    const st = studentsData[studentId];
+    st.isSubmitted = true;
+    st.submitTime = nowTime;
+    st.hasActiveAlert = false;
+    st.hasAlert = false;
+    st.lastEventText = violationMsg;
+    st.lastEventTime = nowTime;
+    st.lastEventIso = nowIso;
+    if (!Array.isArray(st.logs)) st.logs = [];
+    st.logs.push(payload);
+  }
+
+  allLogs.push(payload);
+  recentLocalLiveEvents.unshift(payload);
+
+  renderMonitorLogs();
+  closeStudentDetail();
+  if (typeof showAlert === "function") {
+    showAlert(`สั่งจบการสอบของนักเรียนรหัส ${studentId} เรียบร้อยแล้ว`, { type: "success" });
   }
 }
 
@@ -690,7 +789,7 @@ function renderMonitorLogs() {
 
     const text = String(item.violation || "");
     const isStart = text.includes("เริ่มเข้าทำข้อสอบ");
-    const isEnd = text.includes("ส่งข้อสอบเรียบร้อย");
+    const isEnd = text.includes("ส่งข้อสอบเรียบร้อย") || text.includes("สั่งจบการสอบ") || text.includes("สั่งยุติการสอบ") || text.includes("ปลดล็อกโดยผู้คุมสอบ");
     const itemTime = String(item.time || "");
     const itemIso = String(item.timestamp || "");
 
@@ -1083,12 +1182,17 @@ function renderStudentCardHtml(s, isCompletedView) {
           </span>
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
+          ${!s.isSubmitted ? `
+            <button type="button" class="btn btn-soft-danger screen-force-end-btn" data-student-id="${escapeHtml(s.studentId)}" style="min-height: 32px; padding: 4px 8px; font-size: 12px; border-radius: 6px;" title="สั่งจบการสอบทันที (กรณีหลุดลิงก์หรือทำผิดกฎ)">
+              สั่งจบสอบ
+            </button>
+          ` : ""}
           ${s.hasActiveAlert ? `
             <button type="button" class="screen-ack-btn" data-student-id="${escapeHtml(s.studentId)}" title="คลิกเมื่อตรวจสอบแล้ว เพื่อรีเซ็ตสถานะกลับเป็นปกติ">
               ตรวจแล้ว
             </button>
           ` : ""}
-          <button class="btn btn-secondary screen-view-detail-btn" data-student-id="${escapeHtml(s.studentId)}" style="min-height: 32px; padding: 4px 10px; font-size: 12px;">
+          <button class="btn btn-secondary screen-view-detail-btn" data-student-id="${escapeHtml(s.studentId)}" style="min-height: 32px; padding: 4px 10px; font-size: 12px; border-radius: 6px;">
             ประวัติ
           </button>
         </div>
@@ -1541,6 +1645,15 @@ function bindStudentCardClicks(container) {
       if (sId && studentsData[sId]) openStudentDetail(studentsData[sId]);
     };
   });
+  container.querySelectorAll(".screen-force-end-btn").forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const sId = btn.getAttribute("data-student-id");
+      if (sId) {
+        forceEndStudentExam(sId);
+      }
+    };
+  });
   container.querySelectorAll(".screen-ack-btn").forEach((btn) => {
     btn.onclick = (e) => {
       e.stopPropagation();
@@ -1599,6 +1712,20 @@ function updateModalContent(s) {
   if (startTimeVal) startTimeVal.textContent = formatDisplayTime(s.startTime);
   if (lastTimeVal) lastTimeVal.textContent = formatDisplayTime(s.lastEventTime, s.lastEventIso);
   if (countEl) countEl.textContent = `${s.logs.length} รายการ`;
+
+  const forceEndBtn = document.getElementById("modalForceEndExamBtn");
+  if (forceEndBtn) {
+    if (!s.isSubmitted) {
+      forceEndBtn.style.display = "inline-flex";
+      forceEndBtn.disabled = false;
+      forceEndBtn.onclick = () => {
+        forceEndStudentExam(s.studentId);
+      };
+    } else {
+      forceEndBtn.style.display = "none";
+      forceEndBtn.onclick = null;
+    }
+  }
 
   if (ackBtn) {
     if (s.hasActiveAlert) {

@@ -644,7 +644,20 @@ async function initAIProctor() {
       audio: true
     });
 
-    if (widget) widget.style.display = "block";
+    if (widget) {
+      widget.style.display = "block";
+      setupAiWidgetToggle();
+      // บนหน้าจอมือถือ/แท็บเล็ต หรือจอเล็ก ให้ย่อกล้องอัตโนมัติหลังจากเปิด 3 วินาที เพื่อไม่ให้บังข้อสอบ
+      if (window.innerWidth <= 768) {
+        setTimeout(() => {
+          if (widget && !widget.classList.contains("minimized")) {
+            widget.classList.add("minimized");
+            const toggleText = document.getElementById("toggleAiWidgetText");
+            if (toggleText) toggleText.textContent = "แสดงกล้อง";
+          }
+        }, 3000);
+      }
+    }
     if (videoEl) {
       videoEl.srcObject = aiMediaStream;
       await videoEl.play().catch(() => {});
@@ -773,6 +786,31 @@ async function initAIProctor() {
   } catch (camErr) {
     console.warn("AI Proctor camera/audio access denied or not available:", camErr.message);
     if (widget) widget.style.display = "none";
+  }
+}
+
+function setupAiWidgetToggle() {
+  const widget = document.getElementById("aiProctorWidget");
+  const toggleBtn = document.getElementById("toggleAiWidgetBtn");
+  const toggleText = document.getElementById("toggleAiWidgetText");
+  const header = document.getElementById("aiProctorHeader");
+  if (!widget) return;
+
+  const toggle = (e) => {
+    if (e) e.stopPropagation();
+    const isMin = widget.classList.toggle("minimized");
+    if (toggleText) {
+      toggleText.textContent = isMin ? "แสดงกล้อง" : "ซ่อนกล้อง";
+    }
+  };
+
+  if (toggleBtn) toggleBtn.onclick = toggle;
+  if (header) {
+    header.onclick = (e) => {
+      if (widget.classList.contains("minimized") && e.target !== toggleBtn) {
+        toggle(e);
+      }
+    };
   }
 }
 
@@ -983,3 +1021,44 @@ document.addEventListener("DOMContentLoaded", () => {
     adminUnlockBtn.addEventListener("click", handleAdminUnlock);
   }
 });
+
+// รับคำสั่งสั่งจบการสอบระยะไกลจากผู้คุมสอบ (Remote Force Finish)
+if (typeof BroadcastChannel !== "undefined") {
+  try {
+    const rxBus = new BroadcastChannel("exam_proctor_bus");
+    rxBus.onmessage = (e) => {
+      if (e.data && e.data.type === "FORCE_END_EXAM") {
+        const targetStudent = String(e.data.studentId || "").trim();
+        const currentStudent = String(studentId || "").trim();
+        if (targetStudent && currentStudent && targetStudent === currentStudent) {
+          handleRemoteForceEnd(e.data.reason || "ผู้คุมสอบสั่งจบการสอบ (ทำผิดกฎหรือหลุดการสอบ)");
+        }
+      }
+    };
+  } catch (_) {}
+}
+
+window.addEventListener("storage", (e) => {
+  if (e.key === "exam_force_finish" && e.newValue) {
+    try {
+      const data = JSON.parse(e.newValue);
+      const targetStudent = String(data.studentId || "").trim();
+      const currentStudent = String(studentId || "").trim();
+      if (targetStudent && currentStudent && targetStudent === currentStudent) {
+        handleRemoteForceEnd(data.reason || "ผู้คุมสอบสั่งจบการสอบ (ทำผิดกฎหรือหลุดการสอบ)");
+      }
+    } catch (_) {}
+  }
+});
+
+function handleRemoteForceEnd(reason = "ผู้คุมสอบสั่งจบการสอบ (ทำผิดกฎหรือหลุดการสอบ)") {
+  if (isExamSubmitted) return;
+  isExamSubmitted = true;
+  isExamActive = false;
+  if (timerInterval) clearInterval(timerInterval);
+  if (integrityInterval) clearInterval(integrityInterval);
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  }
+  showCompletedScreen(reason);
+}
