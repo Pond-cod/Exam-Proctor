@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=7.1">
+  <link rel="stylesheet" href="../css/style.css?v=7.2">
   <style>
     .login-wrapper {
       min-height: 100vh;
@@ -18,24 +18,39 @@
       justify-content: center;
       align-items: center;
       padding: 24px 16px;
-      background-color: #f0f7ff;
+      background-color: #f8faff;
       background-image: 
-        radial-gradient(1000px circle at 50% 0%, rgba(2, 132, 199, 0.28) 0%, rgba(3, 105, 161, 0.14) 40%, transparent 70%),
-        radial-gradient(800px circle at 10% 20%, rgba(56, 189, 248, 0.25) 0%, transparent 60%),
-        radial-gradient(800px circle at 90% 20%, rgba(3, 105, 161, 0.22) 0%, transparent 60%),
-        linear-gradient(165deg, #e0f2fe 0%, #edf7ff 30%, #f8fafc 65%, #ffffff 100%);
+        radial-gradient(1100px circle at 50% 0%, rgba(79, 70, 229, 0.22) 0%, rgba(37, 99, 235, 0.14) 40%, transparent 70%),
+        radial-gradient(800px circle at 10% 20%, rgba(6, 182, 212, 0.22) 0%, transparent 60%),
+        radial-gradient(800px circle at 90% 20%, rgba(139, 92, 246, 0.2) 0%, transparent 60%),
+        linear-gradient(175deg, #f8faff 0%, #f0f4ff 35%, #f5f8ff 70%, #ffffff 100%);
     }
 
     .login-card {
       width: 100%;
       max-width: 440px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1.5px solid rgba(186, 230, 253, 0.85);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid rgba(226, 232, 240, 0.9);
       border-radius: 26px;
-      padding: 36px 32px;
-      box-shadow: 0 20px 48px -10px rgba(2, 132, 199, 0.16), 0 6px 16px -2px rgba(15, 23, 42, 0.04);
+      padding: 38px 34px;
+      box-shadow: 
+        0 24px 60px -12px rgba(15, 23, 42, 0.12), 
+        0 8px 24px -4px rgba(79, 70, 229, 0.1),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3.5px;
+      background: linear-gradient(90deg, #4f46e5 0%, #2563eb 50%, #06b6d4 100%);
     }
 
     .login-brand {
