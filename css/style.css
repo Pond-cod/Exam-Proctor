@@ -241,7 +241,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 15px;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overflow-x: hidden;
@@ -255,19 +255,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 25px !important;
+  font-size: 23px !important;
   font-weight: 700;
   line-height: 1.32;
 }
 
 h2 {
-  font-size: 20px !important;
+  font-size: 18.5px !important;
   font-weight: 700;
   line-height: 1.35;
 }
 
 h3 {
-  font-size: 17.5px !important;
+  font-size: 16px !important;
   font-weight: 700;
   line-height: 1.4;
 }
@@ -278,7 +278,7 @@ p, span, label, input, select, textarea, button, td, th {
 
 body {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.6;
   background-color: #f8faff;
   background-image: 
@@ -389,7 +389,7 @@ img, svg, video, canvas, iframe {
 }
 
 .brand-title {
-  font-size: 19px !important;
+  font-size: 17.5px !important;
   font-weight: 800;
   color: #1e3a8a;
   letter-spacing: -0.01em;
@@ -401,7 +401,7 @@ img, svg, video, canvas, iframe {
 }
 
 .brand-subtitle {
-  font-size: 13.5px !important;
+  font-size: 12.5px !important;
   color: var(--text-muted);
   font-weight: 500;
   margin-top: 1px;
@@ -480,7 +480,7 @@ img, svg, video, canvas, iframe {
   background: var(--bg-subtle);
   color: var(--text-secondary);
   font-family: var(--font-sans);
-  font-size: 16px !important;
+  font-size: 14.5px !important;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -546,7 +546,7 @@ img, svg, video, canvas, iframe {
   }
 
   .brand-title {
-    font-size: 16.5px !important;
+    font-size: 15px !important;
     font-weight: 800;
   }
 
@@ -588,7 +588,7 @@ img, svg, video, canvas, iframe {
     min-height: 34px;
     padding: 5px 11px;
     background: transparent;
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 600;
     color: var(--text-secondary);
     border-radius: 7px;
@@ -641,13 +641,13 @@ img, svg, video, canvas, iframe {
   }
 
   .role-badge {
-    font-size: 12.5px !important;
+    font-size: 11.5px !important;
     padding: 3px 8px;
     border-radius: 6px;
   }
 
   #navUserNameDisplay {
-    font-size: 13.5px !important;
+    font-size: 12.5px !important;
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -655,7 +655,7 @@ img, svg, video, canvas, iframe {
   }
 
   .theme-toggle-btn {
-    font-size: 12px;
+    font-size: 11.5px;
     padding: 4px 8px;
     min-height: 30px;
     border-radius: 6px;
@@ -663,7 +663,7 @@ img, svg, video, canvas, iframe {
 
   .btn-outline-role, #logoutBtn {
     padding: 4px 10px;
-    font-size: 12.5px !important;
+    font-size: 11.5px !important;
     min-height: 30px;
     border-radius: 6px;
   }
@@ -683,7 +683,7 @@ img, svg, video, canvas, iframe {
   }
 
   .brand-title {
-    font-size: 17.5px !important;
+    font-size: 16px !important;
   }
 
   .nav-links {
@@ -693,7 +693,7 @@ img, svg, video, canvas, iframe {
 
   .nav-tab-btn {
     padding: 5px 14px;
-    font-size: 14.5px !important;
+    font-size: 13.5px !important;
     min-height: 36px;
   }
 
@@ -703,7 +703,7 @@ img, svg, video, canvas, iframe {
   }
 
   .role-badge {
-    font-size: 13px !important;
+    font-size: 12px !important;
     padding: 4px 10px;
   }
 
@@ -713,7 +713,7 @@ img, svg, video, canvas, iframe {
 
   .btn-outline-role, #logoutBtn {
     padding: 4px 12px;
-    font-size: 13px !important;
+    font-size: 12px !important;
     min-height: 32px;
   }
 }
@@ -809,7 +809,7 @@ img, svg, video, canvas, iframe {
 }
 
 .card-title {
-  font-size: 17px;
+  font-size: 15.5px;
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -834,7 +834,7 @@ img, svg, video, canvas, iframe {
 
 .form-label {
   display: block;
-  font-size: 17px !important;
+  font-size: 15px !important;
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--text-primary);
@@ -842,14 +842,14 @@ img, svg, video, canvas, iframe {
 
 .form-control {
   width: 100%;
-  min-height: 46px;
-  padding: 10px 14px;
+  min-height: 44px;
+  padding: 8px 14px;
   background: var(--bg-input);
   border: 1.5px solid var(--border-input);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 17px !important;
+  font-size: 15px !important;
   font-weight: 500;
   outline: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
@@ -861,7 +861,7 @@ img, svg, video, canvas, iframe {
 }
 
 .form-hint {
-  font-size: 15px !important;
+  font-size: 13.5px !important;
   color: var(--text-muted);
   margin-top: 6px;
   line-height: 1.45;
@@ -888,11 +888,11 @@ img, svg, video, canvas, iframe {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 42px;
-  padding: 8px 18px;
-  border-radius: 10px;
+  min-height: 40px;
+  padding: 7px 16px;
+  border-radius: 9px;
   font-family: var(--font-sans);
-  font-size: 16px !important;
+  font-size: 14.5px !important;
   font-weight: 700;
   border: 1px solid transparent;
   cursor: pointer;
@@ -1546,11 +1546,11 @@ img, svg, video, canvas, iframe {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 38px;
-  padding: 6px 16px;
+  min-height: 36px;
+  padding: 5px 14px;
   border-radius: var(--radius-full);
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.9);
@@ -1603,7 +1603,7 @@ img, svg, video, canvas, iframe {
   background: rgba(255, 255, 255, 0.25);
   padding: 1px 7px;
   border-radius: 999px;
-  font-size: 11.5px;
+  font-size: 10.5px;
   font-weight: 700;
 }
 
@@ -1760,7 +1760,7 @@ img, svg, video, canvas, iframe {
 }
 
 .screen-station-label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1768,7 +1768,7 @@ img, svg, video, canvas, iframe {
 }
 
 .screen-station-id {
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.2;
@@ -3005,7 +3005,7 @@ img, svg, video, canvas, iframe {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 700;
   padding: 4px 12px;
   border-radius: var(--radius-full);
@@ -3712,9 +3712,9 @@ img, svg, video, canvas, iframe {
 /* Stat card active indicator pill */
 .stat-card-active-pill {
   display: none;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 1px 7px;
+  padding: 1px 6px;
   border-radius: 999px;
   margin-left: 5px;
   letter-spacing: 0;
@@ -3754,15 +3754,15 @@ img, svg, video, canvas, iframe {
 }
 
 .compact-stat-top .stat-badge {
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 6px;
   letter-spacing: 0;
 }
 
 .compact-stat-num {
-  font-size: 21px;
+  font-size: 19px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
