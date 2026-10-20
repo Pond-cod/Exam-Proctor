@@ -1,12 +1,11 @@
 {
   "name": "exam-proctor-studio",
-  "version": "6.0.0",
+  "version": "6.3.0",
   "description": "Exam Proctor Studio Management & Examination System with Neon Serverless Postgres",
   "main": "api/index.js",
   "scripts": {
-    "start": "node api/index.js",
-    "migrate": "node scripts/migrate-from-sheets.js",
-    "migrate:passwords": "node scripts/migrate-passwords.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4"

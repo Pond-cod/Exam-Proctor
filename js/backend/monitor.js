@@ -1979,7 +1979,7 @@ function testWebhookPing() {
     setTimeout(() => {
       fetchMonitorLogs();
       if (btn) btn.disabled = false;
-      showAlert("ส่งข้อมูลทดสอบเรียบร้อยแล้ว กรุณาตรวจสอบใน Google Sheets หรือหน้าจอ", { type: "success" });
+      showAlert("ส่งข้อมูลทดสอบเรียบร้อยแล้ว กรุณาตรวจสอบในหน้าจอคุมสอบสด", { type: "success" });
     }, 1200);
   }).catch(() => {
     if (btn) btn.disabled = false;
@@ -2263,11 +2263,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const testWebhookBtn = document.getElementById("testWebhookBtn");
   if (testWebhookBtn) testWebhookBtn.addEventListener("click", testWebhookPing);
-
-  const openSheetBtn = document.getElementById("openSheetBtn");
-  if (openSheetBtn) {
-    openSheetBtn.addEventListener("click", () => window.open(DEFAULT_SHEET_URL, "_blank"));
-  }
 
   setupLiveBroadcastListener();
   fetchMonitorLogs();

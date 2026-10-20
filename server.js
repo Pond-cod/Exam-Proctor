@@ -7,7 +7,14 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_QuZ29yXvSkdo@ep-floral-lake-ao7gz400-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+// DATABASE_URL should be loaded from environment variables (.env in gitignore)
+if (!process.env.DATABASE_URL) {
+  try {
+    const envContent = fs.readFileSync(path.join(__dirname, ".env"), "utf8");
+    const match = envContent.match(/DATABASE_URL=["']?([^"'\r\n]+)["']?/);
+    if (match) process.env.DATABASE_URL = match[1];
+  } catch (_) {}
+}
 const apiHandler = require("./api/index.js");
 
 const PORT = process.env.PORT || 3300;
@@ -91,6 +98,11 @@ const server = http.createServer((req, res) => {
   // If no extension, try appending .html
   if (!path.extname(relativePath)) {
     relativePath += ".html";
+  }
+
+  // Route legacy root admin pages to admin/ folder
+  if (["/login.html", "/rooms.html", "/monitor.html", "/create.html", "/users.html", "/settings.html"].includes(relativePath)) {
+    relativePath = "/admin" + relativePath;
   }
 
   const safePath = path.normalize(path.join(ROOT_DIR, relativePath));

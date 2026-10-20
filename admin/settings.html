@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exam Proctor Studio - ตั้งค่าระบบกลาง (System Settings)</title>
-  <meta name="description" content="ระบบตั้งค่าระบบกลางสำหรับผู้ดูแลระบบ จัดการรหัสผ่าน ประกาศ และฐานข้อมูล Google Sheets">
+  <meta name="description" content="ระบบตั้งค่าระบบกลางสำหรับผู้ดูแลระบบ จัดการรหัสผ่าน ประกาศ และฐานข้อมูลระบบคุมสอบ">
   <link rel="icon" type="image/png" href="../logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,7 +65,7 @@
           <div>
             <div class="card-title">ตั้งค่าระบบกลาง (System Settings)</div>
             <div style="font-size: 15px; color: var(--text-muted); margin-top: 2px;">
-              จัดการการตั้งค่าโครงสร้างระบบ ข้อความประกาศหน้าแรก รหัสผ่านกลาง และการเชื่อมต่อ Google Sheets
+              จัดการการตั้งค่าโครงสร้างระบบ ข้อความประกาศหน้าแรก รหัสผ่านกลาง และการเชื่อมต่อฐานข้อมูลระบบคุมสอบ
             </div>
           </div>
           <span class="badge badge-danger">เฉพาะผู้ดูแลระบบ Admin</span>
@@ -138,13 +138,13 @@
             <a href="users.html" style="color: #1d4ed8; font-weight: 700; text-decoration: underline;">จัดการผู้ใช้</a>
           </div>
 
-          <!-- 4. Webhook & Google Sheets -->
+          <!-- 4. Cloud API URL (Neon Serverless Postgres) -->
           <div class="form-group" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: var(--radius-md); padding: 18px; margin-top: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <label class="form-label" for="settingWebhookUrlInput" style="margin-bottom: 0; font-weight: 700;">
                 5. Cloud API URL (Neon Serverless Postgres / API) *
               </label>
-              <span class="badge badge-success" style="font-size: 13px;">v6.0 Neon Postgres</span>
+              <span class="badge badge-success" style="font-size: 13px;">v6.3 Neon Postgres</span>
             </div>
             <input 
               type="url" 
@@ -158,9 +158,6 @@
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button type="button" id="testWebhookBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
                 ทดสอบ Webhook
-              </button>
-              <button type="button" id="openSheetBtn" class="btn btn-success" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
-                เปิด Google Sheets ในแท็บใหม่
               </button>
             </div>
             <div id="webhookTestStatus" style="font-size: 14px; margin-top: 8px; display: none;"></div>

@@ -889,22 +889,6 @@ img, svg, video, canvas, iframe {
   transform: translateY(-1.5px);
 }
 
-.btn-sheet-modern {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: #ffffff !important;
-  border: 1.5px solid #047857;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.32);
-  min-height: 38px;
-  padding: 7px 16px;
-  font-size: 13px;
-  border-radius: var(--radius-full);
-}
-.btn-sheet-modern:hover {
-  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45);
-  transform: translateY(-1.5px);
-}
-
 .btn-block {
   width: 100%;
 }

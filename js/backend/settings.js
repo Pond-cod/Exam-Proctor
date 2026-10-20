@@ -199,9 +199,4 @@ document.addEventListener("DOMContentLoaded", () => {
       togglePassBtn.textContent = isPassword ? "ซ่อน" : "แสดง";
     });
   }
-
-  const openSheetBtn = document.getElementById("openSheetBtn");
-  if (openSheetBtn) {
-    openSheetBtn.addEventListener("click", () => window.open(DEFAULT_SHEET_URL, "_blank"));
-  }
 });

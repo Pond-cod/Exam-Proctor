@@ -1,15 +1,57 @@
-# OS files
+# ==========================================
+# 1. Environment & Secrets (ความลับและข้อมูลส่วนตัว)
+# ==========================================
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.cert
+*.crt
+credentials.json
+service-account*.json
+
+# ==========================================
+# 2. Dependencies & Build Artifacts
+# ==========================================
+node_modules/
+dist/
+build/
+.vercel/
+
+# ==========================================
+# 3. Logs & Diagnostics
+# ==========================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# 4. Scratch, Tests & Temporary Files
+# ==========================================
+scratch/
+test/
+temp/
+*.tmp
+*.temp
+
+# ==========================================
+# 5. IDE & AI Editor Cache
+# ==========================================
+.vscode/
+.idea/
+.gemini/
+.agents/
+.cursor/
+
+# ==========================================
+# 6. Operating System Files
+# ==========================================
 .DS_Store
 Thumbs.db
-
-# Temporary & Log files
-*.log
-scratch/
-
-# Dependencies & Environment
-node_modules/
-.env
-.env.local
-
-# Google Cloud Backend script (kept local only)
-google-apps-script.js
+desktop.ini

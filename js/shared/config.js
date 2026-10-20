@@ -3,7 +3,6 @@
  */
 const NEON_API_URL = "https://examproctor-jade.vercel.app/api";
 const DEFAULT_WEBHOOK_URL = "https://examproctor-jade.vercel.app/api";
-const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
 
 /**
  * ดึง Webhook URL ปัจจุบัน (รองรับ Neon Serverless Postgres API บน Vercel หรือใช้ค่า Custom ใน Settings)
@@ -26,7 +25,7 @@ function getEffectiveWebhookUrl() {
 
 /**
  * fetchWithTimeout — Wrapper สำหรับ fetch พร้อมระบบตัดรอบเวลา (Timeout Guard)
- * ป้องกันปัญหาระบบหมุนค้างจาก Google Apps Script Cold Start หรือเน็ตกระตุก
+ * ป้องกันปัญหาระบบหมุนค้างจากเน็ตกระตุกหรือเซิร์ฟเวอร์ตอบสนองช้า
  * @param {string|Request} resource
  * @param {object} options
  * @param {number} timeoutMs - มิลลิวินาที (ค่าเริ่มต้น 4000ms)
@@ -72,7 +71,7 @@ const DEFAULT_ADMIN_PASSCODE = generateRandomPasscode();
  * นิยาม Role สิทธิ์การใช้งานระบบ (Uppercase Standardized)
  */
 const USER_ROLES = {
-  ADMIN: "ADMIN",     // ผู้ดูแลระบบ (จัดการห้องสอบทั้งหมด, ลบ, แก้ไข, จัดการผู้ใช้, ตั้งค่า Webhook/Google Sheets, รีเซ็ตจอสด)
+  ADMIN: "ADMIN",     // ผู้ดูแลระบบ (จัดการห้องสอบทั้งหมด, ลบ, แก้ไข, จัดการผู้ใช้, ตั้งค่าระบบและ Cloud API, รีเซ็ตจอสด)
   TEACHER: "TEACHER", // ครูผู้คุมสอบ (สร้างห้องสอบใหม่, เปิด/ปิดรับนักเรียน, ดูหน้าจอคุมสอบสด)
   USER: "TEACHER"     // Alias เพื่อรองรับโค้ดเดิม
 };

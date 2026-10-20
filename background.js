@@ -1,7 +1,6 @@
 // Background Service Worker (Manifest V3) - Exam Proctor Lock
 
 const DEFAULT_WEBHOOK_URL = "https://examproctor-jade.vercel.app/api";
-const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
 
 function updateBadge(isActive) {
   if (isActive) {
@@ -14,7 +13,7 @@ function updateBadge(isActive) {
 
 // กำหนดค่าเริ่มต้นอัตโนมัติเมื่อติดตั้งหรืออัปเดต Extension
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.get(["webhookUrl", "secretToken", "sheetUrl", "adminPasscode"], (data) => {
+  chrome.storage.local.get(["webhookUrl", "secretToken", "adminPasscode"], (data) => {
     // อัปเกรด URL เก่าที่เป็น Google Apps Script มาเป็น Neon Postgres API อัตโนมัติ
     let targetWebhook = data.webhookUrl;
     if (!targetWebhook || targetWebhook.includes("script.google.com")) {
@@ -23,7 +22,6 @@ chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.set({
       webhookUrl: targetWebhook,
       secretToken: data.secretToken || "EXAM_LOCK_999",
-      sheetUrl: data.sheetUrl || DEFAULT_SHEET_URL,
       adminPasscode: data.adminPasscode || "1234",
       isExamActive: false,
       examTabId: null,

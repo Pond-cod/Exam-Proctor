@@ -8,6 +8,10 @@
     {
       "source": "/api",
       "destination": "/api/index.js"
+    },
+    {
+      "source": "/(login|rooms|monitor|create|users|settings).html",
+      "destination": "/admin/$1.html"
     }
   ],
   "headers": [

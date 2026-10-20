@@ -90,7 +90,7 @@ let lastCloudSendTime = 0;
 let lastCloudViolationText = "";
 let cloudSyncTimer = null;
 
-// Send Webhook Alert to Google Apps Script / Google Sheets & Direct Local Real-time
+// Send Webhook Alert to Neon Cloud API & Direct Local Real-time
 function sendAlertToWebhook(violationText, isSeverityHigh = false) {
   if (!examConfig.webhookUrl) return;
 
@@ -165,7 +165,7 @@ function logViolation(detail, isSeverityHigh = false) {
 
   violationCount++;
 
-  // 1. ส่งข้อมูล Real-Time ไปยังหน้าจอคุมสอบสด และ Google Sheets ทันที (สำคัญที่สุด ทำงานก่อนเสมอ)
+  // 1. ส่งข้อมูล Real-Time ไปยังหน้าจอคุมสอบสด และฐานข้อมูล Cloud ทันที (สำคัญที่สุด ทำงานก่อนเสมอ)
   try {
     sendAlertToWebhook(detail, isSeverityHigh);
   } catch (err) {
