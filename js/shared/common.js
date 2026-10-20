@@ -313,17 +313,10 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", toggleTheme);
   });
 
-  // Bind language toggles if i18n is available
-  if (typeof initI18n === "function") {
-    initI18n();
-  }
-  document.querySelectorAll(".lang-toggle-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (typeof toggleLanguage === "function") {
-        toggleLanguage();
-      }
-    });
-  });
+  // Reset any leftover language key to ensure Thai only
+  try {
+    localStorage.removeItem("app_lang");
+  } catch (_) {}
 
   // Register PWA Service Worker for offline capability & fast loading
   if ("serviceWorker" in navigator && window.location.protocol.startsWith("http")) {

@@ -106,13 +106,12 @@ async function run() {
   console.log("✅ PASS: 2. Service Worker sw.js exists with caching logic");
   passed++;
 
-  // 3. Check i18n Dictionary
-  const i18nPath = path.join(__dirname, "..", "js", "shared", "i18n.js");
-  assert(fs.existsSync(i18nPath), "i18n.js must exist");
-  const i18nContent = fs.readFileSync(i18nPath, "utf8");
-  assert(i18nContent.includes("I18N_DICTIONARY"), "i18n must have dictionary");
-  assert(i18nContent.includes("toggleLanguage"), "i18n must have toggleLanguage function");
-  console.log("✅ PASS: 3. Bilingual i18n engine (TH/EN) is present");
+  // 3. Verify pure Thai UI (Language toggle removed)
+  const indexPath = path.join(__dirname, "..", "index.html");
+  const indexContent = fs.readFileSync(indexPath, "utf8");
+  assert(!indexContent.includes("lang-toggle-btn"), "index.html must not contain lang-toggle-btn");
+  assert(!indexContent.includes("i18n.js"), "index.html must not include i18n.js");
+  console.log("✅ PASS: 3. Pure Thai UI verified (Language toggle removed)");
   passed++;
 
   // 4. Check CSS Dark Mode Tokens

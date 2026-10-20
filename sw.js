@@ -4,7 +4,7 @@
  * Version: 6.0
  */
 
-const CACHE_NAME = "exam-proctor-shell-v6.1";
+const CACHE_NAME = "exam-proctor-shell-v6.2";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
@@ -15,8 +15,7 @@ const SHELL_ASSETS = [
   "/css/style.css",
   "/logo.png",
   "/js/shared/config.js",
-  "/js/shared/common.js",
-  "/js/shared/i18n.js"
+  "/js/shared/common.js"
 ];
 
 self.addEventListener("install", (event) => {
