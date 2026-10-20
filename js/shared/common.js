@@ -22,16 +22,22 @@ function applyRoleUI() {
 
   if (badge) {
     if (isAdmin) {
-      badge.textContent = "ผู้ดูแลระบบ (Admin)";
+      badge.textContent = "ผู้ดูแลระบบ";
       badge.className = "role-badge role-badge-admin";
     } else {
-      badge.textContent = "ครูผู้สอน / ผู้คุมสอบ";
+      badge.textContent = "ครูผู้สอน";
       badge.className = "role-badge role-badge-user";
     }
   }
 
   if (userNameEl && user) {
-    userNameEl.textContent = user.displayName || user.username || "เจ้าหน้าที่";
+    let name = user.displayName || user.username || "เจ้าหน้าที่";
+    // ปรับข้อความชื่อไม่ให้ซ้ำซ้อนกับป้ายสิทธิ์ผู้ดูแลระบบ
+    if (isAdmin && (name.includes("ผู้ดูแลระบบ") || name.toLowerCase().includes("admin"))) {
+      name = user.username === "admin" ? "Super Admin" : (user.displayName || user.username);
+    }
+    userNameEl.textContent = name;
+    userNameEl.title = user.displayName ? `${user.displayName} (@${user.username})` : user.username;
   }
 
   if (logoutBtn && typeof handleLogout === "function") {

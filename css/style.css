@@ -229,7 +229,7 @@
 }
 
 html {
-  font-size: 18px;
+  font-size: 16px;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overflow-x: hidden;
@@ -243,19 +243,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 28px !important;
+  font-size: 25px !important;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.32;
 }
 
 h2 {
-  font-size: 22px !important;
+  font-size: 20px !important;
   font-weight: 700;
   line-height: 1.35;
 }
 
 h3 {
-  font-size: 19px !important;
+  font-size: 17.5px !important;
   font-weight: 700;
   line-height: 1.4;
 }
@@ -266,8 +266,8 @@ p, span, label, input, select, textarea, button, td, th {
 
 body {
   font-family: var(--font-sans);
-  font-size: 18px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.6;
   background-color: #f0f7ff;
   background-image: 
     /* 1. Top Wide Atmospheric Glow: Royal / Deep Navy Blue */
@@ -511,29 +511,30 @@ img, svg, video, canvas, iframe {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Desktop Navbar Layout - Minimalist & Breathable */
-@media (min-width: 820px) {
+/* Desktop & Laptop Navbar Layout (1024px+ for clean horizontal layout) */
+@media (min-width: 1024px) {
   .navbar-container {
-    padding: 6px 24px;
+    padding: 6px 16px;
     flex-wrap: nowrap;
-    min-height: 58px;
-    gap: 16px;
+    min-height: 52px;
+    gap: 10px;
+    max-width: min(1380px, 96vw);
   }
 
   .brand {
-    gap: 10px;
-    min-height: 40px;
+    gap: 8px;
+    min-height: 38px;
     flex-shrink: 0;
   }
 
   .brand-logo-img {
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
 
   .brand-title {
-    font-size: 18px !important;
+    font-size: 16.5px !important;
     font-weight: 800;
   }
 
@@ -545,40 +546,41 @@ img, svg, video, canvas, iframe {
     display: none;
   }
 
-  /* Sleek Minimalist Segmented Tabs - No Clunky Pill Container */
+  /* Sleek Minimalist Segmented Tabs */
   .nav-links {
     display: flex !important;
     width: auto;
     flex-direction: row;
     align-items: center;
-    gap: 6px;
-    padding: 4px;
+    gap: 4px;
+    padding: 3px;
     margin: 0;
     border-top: none;
-    background: rgba(241, 245, 249, 0.65);
+    background: rgba(241, 245, 249, 0.7);
     backdrop-filter: blur(12px);
-    border-radius: var(--radius-md);
+    border-radius: 10px;
     border: 1px solid rgba(226, 232, 240, 0.85);
     flex-shrink: 0;
   }
 
   [data-theme="dark"] .nav-links {
-    background: rgba(30, 41, 59, 0.65);
+    background: rgba(30, 41, 59, 0.7);
     border-color: rgba(51, 65, 85, 0.7);
   }
 
   .nav-tab-btn {
     width: auto;
-    min-height: 38px;
-    padding: 6px 16px;
+    min-height: 34px;
+    padding: 5px 11px;
     background: transparent;
-    font-size: 15.5px !important;
+    font-size: 14px !important;
     font-weight: 600;
     color: var(--text-secondary);
-    border-radius: 8px;
+    border-radius: 7px;
     border: none;
     position: relative;
     letter-spacing: -0.01em;
+    white-space: nowrap;
   }
 
   .nav-tab-btn:hover {
@@ -613,15 +615,87 @@ img, svg, video, canvas, iframe {
   .nav-role-box {
     margin-left: auto;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
+    padding: 3px 8px;
+    border-radius: 10px;
+  }
+
+  .role-badge {
+    font-size: 12.5px !important;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  #navUserNameDisplay {
+    font-size: 13.5px !important;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .theme-toggle-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+    min-height: 30px;
+    border-radius: 6px;
+  }
+
+  .btn-outline-role, #logoutBtn {
+    padding: 4px 10px;
+    font-size: 12.5px !important;
+    min-height: 30px;
+    border-radius: 6px;
+  }
+}
+
+/* Extra Spacious Desktop Layout (>= 1280px) */
+@media (min-width: 1280px) {
+  .navbar-container {
+    padding: 6px 20px;
+    gap: 14px;
+    min-height: 56px;
+  }
+
+  .brand-logo-img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand-title {
+    font-size: 17.5px !important;
+  }
+
+  .nav-links {
+    gap: 6px;
+    padding: 4px;
+  }
+
+  .nav-tab-btn {
+    padding: 5px 14px;
+    font-size: 14.5px !important;
+    min-height: 36px;
+  }
+
+  .nav-role-box {
+    gap: 8px;
+    padding: 4px 10px;
+  }
+
+  .role-badge {
+    font-size: 13px !important;
+    padding: 4px 10px;
+  }
+
+  #navUserNameDisplay {
+    max-width: 180px;
   }
 
   .btn-outline-role, #logoutBtn {
     padding: 4px 12px;
-    font-size: 13.5px !important;
-    min-height: 34px;
-    border-radius: var(--radius-sm);
+    font-size: 13px !important;
+    min-height: 32px;
   }
 }
 
@@ -3382,7 +3456,7 @@ img, svg, video, canvas, iframe {
 
 /* Wide Monitor Dashboard Container */
 .monitor-wide-container {
-  max-width: 1400px;
+  max-width: min(1400px, 96vw);
 }
 
 /* Live Dot for Navbar Brand */
@@ -3412,25 +3486,17 @@ img, svg, video, canvas, iframe {
 }
 
 /* ==========================================================================
-   Compact Monitor Layout (Focus on Live Examinee Screens)
+   Compact Monitor Layout (Fluid Auto-Fit Stats Grid)
    ========================================================================== */
 .stats-grid.compact-stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-@media (min-width: 900px) {
-  .stats-grid.compact-stats-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 8px;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .compact-stat-card {
-  padding: 8px 14px !important;
+  padding: 9px 14px !important;
   border-radius: 12px !important;
   min-height: 52px !important;
   display: flex !important;
@@ -3483,11 +3549,11 @@ img, svg, video, canvas, iframe {
 /* Stat card active indicator pill */
 .stat-card-active-pill {
   display: none;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 99px;
-  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 5px;
   letter-spacing: 0;
   vertical-align: middle;
 }
@@ -3525,14 +3591,15 @@ img, svg, video, canvas, iframe {
 }
 
 .compact-stat-top .stat-badge {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 3px 8px;
+  border-radius: 6px;
   letter-spacing: 0;
 }
 
 .compact-stat-num {
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
