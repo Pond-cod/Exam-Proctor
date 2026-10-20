@@ -266,3 +266,66 @@ document.addEventListener("keydown", (e) => {
     });
   }
 });
+
+/* ==========================================================================
+   4. Theme Management (Dark / Light Mode)
+   ========================================================================== */
+
+function getCurrentTheme() {
+  return localStorage.getItem("examProctorTheme") || 
+    (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === "dark") {
+    root.setAttribute("data-theme", "dark");
+  } else {
+    root.removeAttribute("data-theme");
+  }
+  localStorage.setItem("examProctorTheme", theme);
+
+  // Update theme toggle buttons across the UI
+  document.querySelectorAll(".theme-toggle-btn").forEach((btn) => {
+    btn.innerHTML = theme === "dark" 
+      ? '<span class="icon">☀️</span> <span class="theme-text">โหมดสว่าง</span>' 
+      : '<span class="icon">🌙</span> <span class="theme-text">โหมดมืด</span>';
+    btn.setAttribute("aria-label", theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode");
+  });
+}
+
+function toggleTheme() {
+  const current = getCurrentTheme();
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+}
+
+// Auto-initialize theme as early as possible
+applyTheme(getCurrentTheme());
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Bind all theme toggles
+  document.querySelectorAll(".theme-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", toggleTheme);
+  });
+
+  // Bind language toggles if i18n is available
+  if (typeof initI18n === "function") {
+    initI18n();
+  }
+  document.querySelectorAll(".lang-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (typeof toggleLanguage === "function") {
+        toggleLanguage();
+      }
+    });
+  });
+
+  // Register PWA Service Worker for offline capability & fast loading
+  if ("serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
+    navigator.serviceWorker.register("/sw.js").catch((err) => {
+      console.debug("PWA ServiceWorker not registered:", err.message);
+    });
+  }
+});
+

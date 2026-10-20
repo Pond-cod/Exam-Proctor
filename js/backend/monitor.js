@@ -488,6 +488,93 @@ function fetchMonitorLogs() {
     });
 }
 
+/* ==========================================================================
+   Ultra Low-Latency Real-Time SSE Stream (<1s Latency)
+   ========================================================================== */
+
+let activeEventSource = null;
+let isSSEConnected = false;
+
+function connectSSEStream() {
+  if (typeof EventSource === "undefined") return;
+  if (activeEventSource) {
+    activeEventSource.close();
+    activeEventSource = null;
+  }
+
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
+  if (!webhookUrl || !webhookUrl.startsWith("http")) return;
+
+  try {
+    const sseUrl = new URL(webhookUrl);
+    sseUrl.searchParams.set("action", "streamLogs");
+    const token = typeof getAuthToken === "function" ? getAuthToken() : "";
+    if (token) {
+      sseUrl.searchParams.set("authToken", token);
+    }
+    const sel = document.getElementById("monitorRoomFilterSelect");
+    if (sel && sel.value && sel.value !== "all") {
+      sseUrl.searchParams.set("roomId", sel.value);
+    }
+
+    activeEventSource = new EventSource(sseUrl.toString());
+
+    activeEventSource.onopen = () => {
+      isSSEConnected = true;
+      const syncStatus = document.getElementById("syncStatusText");
+      if (syncStatus) {
+        syncStatus.innerHTML = `⚡ สตรีมสด <span style="color: #10b981; font-weight: 700;">เรียลไทม์ (&lt;1s)</span>`;
+      }
+    };
+
+    activeEventSource.onmessage = (event) => {
+      if (!event.data) return;
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === "logs" && Array.isArray(payload.data) && payload.data.length > 0) {
+          const newItems = payload.data;
+          const mergedMap = new Map();
+          allLogs.forEach(i => mergedMap.set(i.logId || `${i.studentId}_${i.violation}_${i.timestamp}`, i));
+          
+          let hasAlert = false;
+          newItems.forEach(i => {
+            mergedMap.set(i.logId || `${i.studentId}_${i.violation}_${i.timestamp}`, i);
+            if (i.eventType === "VIOLATION" || (i.severity && i.severity.includes("🚨"))) {
+              hasAlert = true;
+            }
+          });
+
+          allLogs = Array.from(mergedMap.values());
+          renderMonitorLogs();
+
+          if (hasAlert) {
+            playAdminChime();
+          }
+
+          const syncStatus = document.getElementById("syncStatusText");
+          if (syncStatus) {
+            syncStatus.innerHTML = `⚡ สตรีมสด <span style="color: #10b981; font-weight: 700;">(&lt;1s)</span> ${new Date().toLocaleTimeString("th-TH")}`;
+          }
+        }
+      } catch (_) {}
+    };
+
+    activeEventSource.onerror = () => {
+      isSSEConnected = false;
+      if (activeEventSource) {
+        activeEventSource.close();
+        activeEventSource = null;
+      }
+      // Re-trigger fallback polling
+      fetchMonitorLogs();
+      // Retry SSE connection in 8s
+      setTimeout(connectSSEStream, 8000);
+    };
+  } catch (err) {
+    console.debug("SSE setup error, using polling fallback:", err);
+  }
+}
+
 function renderMonitorLogs() {
   const query = (document.getElementById("searchLogInput") ? document.getElementById("searchLogInput").value : "").trim().toLowerCase();
   const totalStudentsEl = document.getElementById("statTotalStudents");
@@ -1637,16 +1724,247 @@ function switchToMonitorTab(tab) {
 
   const compBtn = document.getElementById("toggleCompletedViewBtn");
   const tableBtn = document.getElementById("toggleTableViewBtn");
+  const analyticsBtn = document.getElementById("toggleAnalyticsViewBtn");
   const compContainer = document.getElementById("completedGridContainer");
   const tableContainer = document.getElementById("tableViewContainer");
+  const analyticsContainer = document.getElementById("analyticsViewContainer");
 
   if (compBtn) compBtn.classList.toggle("active", tab === "completed");
   if (tableBtn) tableBtn.classList.toggle("active", tab === "table");
+  if (analyticsBtn) analyticsBtn.classList.toggle("active", tab === "analytics");
 
   if (compContainer) compContainer.style.display = tab === "completed" ? "block" : "none";
   if (tableContainer) tableContainer.style.display = tab === "table" ? "block" : "none";
+  if (analyticsContainer) analyticsContainer.style.display = tab === "analytics" ? "block" : "none";
+
+  if (tab === "analytics") {
+    renderAnalyticsDashboard();
+  }
 
   updateFilterBadges();
+}
+
+let analyticsTimelineChartInstance = null;
+let analyticsTypeChartInstance = null;
+
+function renderAnalyticsDashboard() {
+  const studentsList = Object.values(studentsData).filter(s => !s.isTestPing);
+  const totalStudents = studentsList.length;
+  const submittedList = studentsList.filter(s => s.isSubmitted);
+  const normalStudents = studentsList.filter(s => !s.hasAlert && s.violationCount === 0);
+
+  const totalAlerts = studentsList.reduce((sum, s) => sum + (s.violationCount || 0), 0);
+  const integrityPct = totalStudents > 0 ? Math.round((normalStudents.length / totalStudents) * 100) : 100;
+  const submittedPct = totalStudents > 0 ? Math.round((submittedList.length / totalStudents) * 100) : 0;
+
+  // Average Duration calculation
+  let totalMinutes = 0;
+  let countWithDuration = 0;
+  submittedList.forEach(s => {
+    let startMs = null;
+    if (s.startTime) startMs = parseLogTimestampMs({ time: s.startTime }) || parseLogTimestampMs({ timestamp: s.startTime });
+    if (!startMs && s.logs && s.logs.length > 0) startMs = parseLogTimestampMs(s.logs[0]);
+    let endMs = parseLogTimestampMs({ time: s.submitTime }) || parseLogTimestampMs({ timestamp: s.submitTime });
+    if (startMs && endMs && endMs >= startMs) {
+      totalMinutes += Math.round((endMs - startMs) / 60000);
+      countWithDuration++;
+    }
+  });
+  const avgMins = countWithDuration > 0 ? Math.round(totalMinutes / countWithDuration) : null;
+
+  // DOM Updates
+  const intRateEl = document.getElementById("analyticsIntegrityRate");
+  const avgDurEl = document.getElementById("analyticsAvgDuration");
+  const alertsEl = document.getElementById("analyticsTotalAlerts");
+  const subCountEl = document.getElementById("analyticsSubmittedCount");
+  const subSubEl = document.getElementById("analyticsSubmittedSub");
+
+  if (intRateEl) intRateEl.textContent = `${integrityPct}%`;
+  if (avgDurEl) avgDurEl.textContent = avgMins !== null ? `${avgMins} นาที` : "เพิ่งเริ่มสอบ";
+  if (alertsEl) alertsEl.textContent = `${totalAlerts}`;
+  if (subCountEl) subCountEl.textContent = `${submittedList.length} คน`;
+  if (subSubEl) subSubEl.textContent = `คิดเป็น ${submittedPct}% ของผู้เข้าสอบทั้งหมด`;
+
+  // Render Chart.js if loaded
+  if (typeof Chart === "undefined") return;
+
+  // 1. Violation Types Doughnut Chart
+  const typeCounts = {
+    "สลับหน้าจอ/แท็บ": 0,
+    "หลุดจากโหมดเต็มจอ": 0,
+    "พยายามคัดลอก/วาง": 0,
+    "เหตุการณ์อื่นๆ": 0
+  };
+
+  allLogs.forEach(l => {
+    const text = String(l.violation || "").toLowerCase();
+    if (text.includes("เริ่มเข้าทำข้อสอบ") || text.includes("ส่งข้อสอบเรียบร้อย")) return;
+    if (text.includes("สลับ") || text.includes("tab") || text.includes("window")) {
+      typeCounts["สลับหน้าจอ/แท็บ"]++;
+    } else if (text.includes("เต็มจอ") || text.includes("fullscreen")) {
+      typeCounts["หลุดจากโหมดเต็มจอ"]++;
+    } else if (text.includes("คัดลอก") || text.includes("copy") || text.includes("paste")) {
+      typeCounts["พยายามคัดลอก/วาง"]++;
+    } else {
+      typeCounts["เหตุการณ์อื่นๆ"]++;
+    }
+  });
+
+  const typeCanvas = document.getElementById("analyticsTypeChart");
+  if (typeCanvas) {
+    if (analyticsTypeChartInstance) {
+      analyticsTypeChartInstance.destroy();
+    }
+    const typeLabels = Object.keys(typeCounts);
+    const typeData = Object.values(typeCounts);
+    const hasAnyData = typeData.some(v => v > 0);
+
+    analyticsTypeChartInstance = new Chart(typeCanvas, {
+      type: "doughnut",
+      data: {
+        labels: hasAnyData ? typeLabels : ["ไม่มีเหตุการณ์ผิดปกติ"],
+        datasets: [{
+          data: hasAnyData ? typeData : [1],
+          backgroundColor: hasAnyData ? ["#ef4444", "#f97316", "#eab308", "#64748b"] : ["#10b981"],
+          borderWidth: 2,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  // 2. Incident Timeline Line Chart
+  const timelineCanvas = document.getElementById("analyticsTimelineChart");
+  if (timelineCanvas) {
+    if (analyticsTimelineChartInstance) {
+      analyticsTimelineChartInstance.destroy();
+    }
+
+    const timeBuckets = {};
+    allLogs.forEach(l => {
+      const vText = String(l.violation || "");
+      if (vText.includes("เริ่มเข้าทำข้อสอบ") || vText.includes("ส่งข้อสอบเรียบร้อย")) return;
+      let tStr = l.time || "";
+      if (tStr.length >= 5) {
+        const bucket = tStr.substring(0, 5); // "HH:MM"
+        timeBuckets[bucket] = (timeBuckets[bucket] || 0) + 1;
+      }
+    });
+
+    const labels = Object.keys(timeBuckets).slice(-15);
+    const dataVals = labels.map(k => timeBuckets[k]);
+
+    analyticsTimelineChartInstance = new Chart(timelineCanvas, {
+      type: "line",
+      data: {
+        labels: labels.length > 0 ? labels : ["ยังไม่มีเหตุการณ์"],
+        datasets: [{
+          label: "ความถี่การเกิดเหตุการณ์ผิดปกติ",
+          data: labels.length > 0 ? dataVals : [0],
+          borderColor: "#dc2626",
+          backgroundColor: "rgba(220, 38, 38, 0.12)",
+          tension: 0.35,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: "#dc2626"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } },
+          x: { grid: { display: false } }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+}
+
+function openOfficialExamReport() {
+  const modal = document.getElementById("officialReportModal");
+  if (!modal) return;
+
+  const selectedRoomFilter = (document.getElementById("monitorRoomFilterSelect") ? document.getElementById("monitorRoomFilterSelect").value : "all") || "all";
+  const targetRoom = allRooms.find(r => r.roomId === selectedRoomFilter);
+  const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+
+  // Metadata
+  const roomTitle = targetRoom ? targetRoom.title : "การคุมสอบออนไลน์ (ภาพรวมทุกห้องสอบ)";
+  const roomId = targetRoom ? targetRoom.roomId : "ALL-ROOMS";
+  const category = targetRoom ? (targetRoom.category || "ทั่วไป") : "ทุกหมวดหมู่วิชา";
+  const grade = targetRoom ? (targetRoom.gradeLevel || "ไม่ระบุ") : "ทุกระดับชั้น";
+  const creator = targetRoom ? (targetRoom.createdBy || targetRoom.creatorUsername || "-") : "-";
+  const proctor = currentUser ? (currentUser.displayName || currentUser.username) : "ผู้คุมสอบประจำระบบ";
+
+  document.getElementById("reportRoomTitle").textContent = roomTitle;
+  document.getElementById("reportRoomId").textContent = roomId;
+  document.getElementById("reportCategory").textContent = category;
+  document.getElementById("reportGrade").textContent = grade;
+  document.getElementById("reportExamDate").textContent = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+  document.getElementById("reportCreator").textContent = creator;
+  document.getElementById("reportProctorName").textContent = proctor;
+  document.getElementById("reportGenTime").textContent = new Date().toLocaleTimeString("th-TH");
+  document.getElementById("reportSigProctor1").textContent = proctor;
+
+  // Numbers
+  const studentsList = Object.values(studentsData).filter(s => !s.isTestPing);
+  const total = studentsList.length;
+  const submitted = studentsList.filter(s => s.isSubmitted).length;
+  const active = total - submitted;
+  const violators = studentsList.filter(s => s.hasAlert || s.violationCount > 0);
+  const normal = studentsList.filter(s => !s.hasAlert && s.violationCount === 0);
+  const totalAlerts = studentsList.reduce((sum, s) => sum + (s.violationCount || 0), 0);
+  const integrity = total > 0 ? Math.round((normal.length / total) * 100) : 100;
+
+  document.getElementById("reportStatTotal").textContent = `${total} คน`;
+  document.getElementById("reportStatSubmitted").textContent = `${submitted} คน`;
+  document.getElementById("reportStatActive").textContent = `${active} คน`;
+  document.getElementById("reportStatViolators").textContent = `${violators.length} คน`;
+  document.getElementById("reportStatAlerts").textContent = `${totalAlerts} ครั้ง`;
+  document.getElementById("reportStatIntegrity").textContent = `${integrity}%`;
+
+  // Violators Table
+  const tbody = document.getElementById("reportViolatorsTableBody");
+  if (tbody) {
+    violators.sort((a, b) => b.violationCount - a.violationCount);
+    if (violators.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 18px; color: #166534; font-weight: 600; background: #f0fdf4;">✅ ยอดเยี่ยม ไม่พบประวัติการแจ้งเตือนหรือการทุจริตในรอบการสอบนี้ ผู้สอบทุกคนปฏิบัติตามกฎอย่างเคร่งครัด</td></tr>`;
+    } else {
+      tbody.innerHTML = violators.map((s, idx) => {
+        const startStr = s.startTime ? formatDisplayTime(s.startTime) : "-";
+        const endStr = s.submitTime ? formatDisplayTime(s.submitTime) : (s.isSubmitted ? "ส่งแล้ว" : "ยังไม่ส่ง");
+        const violationsSummary = s.logs
+          .filter(l => !String(l.violation || "").includes("เริ่มเข้าทำข้อสอบ") && !String(l.violation || "").includes("ส่งข้อสอบเรียบร้อย"))
+          .map(l => `[${formatDisplayTime(l.time, l.timestamp)}] ${escapeHtml(l.violation || "-")}`)
+          .slice(-3)
+          .join("<br>");
+
+        return `
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${idx + 1}</td>
+            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-family: monospace; font-weight: bold; color: #0284c7;">${escapeHtml(s.studentId)}</td>
+            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #475569;">${startStr} - ${endStr}</td>
+            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #b91c1c;">${s.violationCount} ครั้ง</td>
+            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; line-height: 1.4;">${violationsSummary || "-"}</td>
+            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; font-size: 10.5px;">${s.isAcknowledged ? "🟢 ตรวจสอบแล้ว" : "⚠️ ยังไม่ตรวจ"}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+  }
+
+  modal.style.display = "flex";
 }
 
 function testWebhookPing() {
@@ -1928,6 +2246,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const exportCsvBtn = document.getElementById("exportCsvBtn");
   if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportLogsToCsv);
 
+  const toggleAnalyticsBtn = document.getElementById("toggleAnalyticsViewBtn");
+  if (toggleAnalyticsBtn) toggleAnalyticsBtn.addEventListener("click", () => switchToMonitorTab("analytics"));
+
+  const printReportBtn = document.getElementById("printReportBtn");
+  if (printReportBtn) printReportBtn.addEventListener("click", openOfficialExamReport);
+
+  const triggerPrintBtn = document.getElementById("triggerPrintBtn");
+  if (triggerPrintBtn) triggerPrintBtn.addEventListener("click", () => window.print());
+
+  const closeReportModalBtn = document.getElementById("closeReportModalBtn");
+  const officialReportModal = document.getElementById("officialReportModal");
+  if (closeReportModalBtn && officialReportModal) {
+    closeReportModalBtn.addEventListener("click", () => {
+      officialReportModal.style.display = "none";
+    });
+  }
+  if (officialReportModal) {
+    officialReportModal.addEventListener("click", (e) => {
+      if (e.target === officialReportModal) officialReportModal.style.display = "none";
+    });
+  }
+
   const testWebhookBtn = document.getElementById("testWebhookBtn");
   if (testWebhookBtn) testWebhookBtn.addEventListener("click", testWebhookPing);
 
@@ -1938,11 +2278,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupLiveBroadcastListener();
   fetchMonitorLogs();
+  connectSSEStream();
 
-  // Smart Adaptive Polling System:
+  const roomSelect = document.getElementById("monitorRoomFilterSelect");
+  if (roomSelect) {
+    roomSelect.addEventListener("change", () => {
+      fetchMonitorLogs();
+      connectSSEStream();
+    });
+  }
+
+  // Smart Adaptive Polling System (Fallback when SSE is reconnecting):
   function startMonitorPolling() {
     stopMonitorPolling();
-    monitorInterval = setInterval(fetchMonitorLogs, MONITOR_POLL_INTERVAL_MS);
+    monitorInterval = setInterval(() => {
+      if (!isSSEConnected) {
+        fetchMonitorLogs();
+      }
+    }, MONITOR_POLL_INTERVAL_MS);
   }
 
   function stopMonitorPolling() {
@@ -1952,16 +2305,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // เริ่มต้น Polling อัตโนมัติ
+  // เริ่มต้น Polling อัตโนมัติ (Fallback)
   startMonitorPolling();
 
   // Tab Visibility API: เมื่อผู้ใช้ย่อหน้าจอหรือสลับไปแท็บอื่น ให้หยุด Polling ทันที
-  // ช่วยลดภาระ Google Apps Script ลง 90% และประหยัดโควตาเซิร์ฟเวอร์
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       stopMonitorPolling();
     } else {
-      fetchMonitorLogs();
+      if (!isSSEConnected) {
+        fetchMonitorLogs();
+      }
       startMonitorPolling();
     }
   });

@@ -62,6 +62,66 @@ function verifyPassword(password, storedPasscode) {
   }
 }
 
+/* ===================================================================
+   RFC 6238 Standard Time-based One-Time Password (TOTP / 2FA) Engine
+   Zero external dependencies — Native Node.js crypto
+   =================================================================== */
+
+function generateBase32Secret(length = 20) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const bytes = crypto.randomBytes(length);
+  let secret = "";
+  for (let i = 0; i < length; i++) {
+    secret += chars[bytes[i] % chars.length];
+  }
+  return secret;
+}
+
+function base32Decode(secret) {
+  const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  const clean = String(secret || "").toUpperCase().replace(/=+$/, "").replace(/[\s-]/g, "");
+  for (let i = 0; i < clean.length; i++) {
+    const val = base32chars.indexOf(clean.charAt(i));
+    if (val === -1) continue;
+    bits += val.toString(2).padStart(5, "0");
+  }
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    bytes.push(parseInt(bits.substr(i, 8), 2));
+  }
+  return Buffer.from(bytes);
+}
+
+function generateTOTP(secret, step = 30, digits = 6, timeOffset = 0) {
+  try {
+    const key = base32Decode(secret);
+    if (!key || key.length === 0) return null;
+    const counter = Math.floor((Math.floor(Date.now() / 1000) + timeOffset * step) / step);
+    const buf = Buffer.alloc(8);
+    buf.writeBigInt64BE(BigInt(counter));
+    const hmac = crypto.createHmac("sha1", key).update(buf).digest();
+    const offset = hmac[hmac.length - 1] & 0xf;
+    const code = ((hmac[offset] & 0x7f) << 24 | (hmac[offset + 1] & 0xff) << 16 | (hmac[offset + 2] & 0xff) << 8 | (hmac[offset + 3] & 0xff)) % Math.pow(10, digits);
+    return code.toString().padStart(digits, "0");
+  } catch (_) {
+    return null;
+  }
+}
+
+function verifyTOTP(token, secret, window = 1) {
+  if (!token || !secret) return false;
+  const cleanToken = String(token).trim().replace(/\s+/g, "");
+  if (cleanToken.length !== 6) return false;
+  for (let i = -window; i <= window; i++) {
+    const expected = generateTOTP(secret, 30, 6, i);
+    if (expected && expected === cleanToken) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function createSessionToken(user) {
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
   const payload = Buffer.from(JSON.stringify({
@@ -97,8 +157,10 @@ function extractAuthUser(req, bodyData, queryParams) {
     token = authHeader.substring(7).trim();
   } else if (bodyData && bodyData.authToken) {
     token = String(bodyData.authToken).trim();
+  } else if (queryParams && (queryParams.action === "streamLogs" || queryParams.action === "getLogs") && queryParams.authToken) {
+    // Only permit query token for SSE EventSource / direct media where browser forbids custom headers
+    token = String(queryParams.authToken).trim();
   }
-  // M-05: ปิดรับ token จาก queryParams เพื่อป้องกัน Token Leak ใน Browser History, Server Logs และ Referrer Header
   return verifySessionToken(token);
 }
 
@@ -279,7 +341,7 @@ module.exports = async function handler(req, res) {
       }
 
       const rows = await sql`
-        SELECT user_id, username, display_name, role, passcode, status
+        SELECT user_id, username, display_name, role, passcode, status, totp_secret, totp_enabled
         FROM users
         WHERE LOWER(username) = ${username}
         LIMIT 1;
@@ -294,6 +356,24 @@ module.exports = async function handler(req, res) {
       }
 
       const user = rows[0];
+
+      // Two-Factor Authentication (2FA / TOTP) Check
+      if (user.totp_enabled && user.totp_secret) {
+        const totpCode = String(bodyData.totpCode || queryParams.totpCode || "").trim();
+        if (!totpCode) {
+          return res.status(200).json({
+            status: "2fa_required",
+            message: "บัญชีนี้เปิดใช้งานการยืนยันตัวตน 2 ชั้น (2FA) กรุณากรอกรหัส Authenticator 6 หลัก"
+          });
+        }
+        if (!verifyTOTP(totpCode, user.totp_secret)) {
+          recordLoginAttempt(clientIp, false);
+          return res.status(200).json({
+            status: "error",
+            message: "รหัส 2FA (Authenticator Code) ไม่ถูกต้อง กรุณาตรวจสอบรหัสในแอปพลิเคชัน"
+          });
+        }
+      }
 
       // C-03: ตรวจสอบสถานะ ACTIVE ก่อน auto-upgrade เพื่อป้องกันไม่ให้บัญชีที่ถูกระงับเข้าถึงหรือเขียน DB
       if (String(user.status).toUpperCase() !== "ACTIVE") {
@@ -478,6 +558,78 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         status: "success",
         message: "ลบผู้ใช้งานออกจากระบบเรียบร้อยแล้ว"
+      });
+    }
+
+    if (action === "setup2FA") {
+      if (!authUser) {
+        return res.status(401).json({ status: "error", message: "กรุณาเข้าสู่ระบบก่อนตั้งค่า 2FA" });
+      }
+
+      const secret = generateBase32Secret(20);
+      const appName = "ExamProctor";
+      const otpauthUrl = `otpauth://totp/${appName}:${encodeURIComponent(authUser.username)}?secret=${secret}&issuer=${appName}`;
+
+      return res.status(200).json({
+        status: "success",
+        secret: secret,
+        otpauthUrl: otpauthUrl,
+        message: "สร้าง Secret Key สำหรับ 2FA เรียบร้อยแล้ว กรุณาสแกน QR Code หรือกรอก Key ในแอป Authenticator เพื่อยืนยัน"
+      });
+    }
+
+    if (action === "verifyAndEnable2FA") {
+      if (!authUser) {
+        return res.status(401).json({ status: "error", message: "กรุณาเข้าสู่ระบบก่อนเปิดใช้งาน 2FA" });
+      }
+
+      const secret = String(bodyData.secret || "").trim();
+      const code = String(bodyData.totpCode || bodyData.code || "").trim();
+
+      if (!secret || !code) {
+        return res.status(200).json({ status: "error", message: "กรุณาระบุ secret และรหัสยืนยัน 6 หลัก" });
+      }
+
+      if (!verifyTOTP(code, secret)) {
+        return res.status(200).json({ status: "error", message: "รหัสยืนยัน 6 หลักไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง" });
+      }
+
+      await sql`
+        UPDATE users
+        SET totp_secret = ${secret}, totp_enabled = TRUE, updated_at = NOW()
+        WHERE user_id = ${authUser.userId};
+      `;
+
+      return res.status(200).json({
+        status: "success",
+        message: "เปิดใช้งานการยืนยันตัวตน 2 ชั้น (2FA) เรียบร้อยแล้ว บัญชีของคุณได้รับการปกป้องสูงสุด"
+      });
+    }
+
+    if (action === "disable2FA") {
+      if (!authUser) {
+        return res.status(401).json({ status: "error", message: "กรุณาเข้าสู่ระบบก่อนปิดใช้งาน 2FA" });
+      }
+
+      const passcode = String(bodyData.passcode || "").trim();
+      if (!passcode) {
+        return res.status(200).json({ status: "error", message: "กรุณาระบุรหัสผ่านเพื่อยืนยันการปิด 2FA" });
+      }
+
+      const rows = await sql`SELECT passcode FROM users WHERE user_id = ${authUser.userId} LIMIT 1;`;
+      if (rows.length === 0 || !verifyPassword(passcode, rows[0].passcode)) {
+        return res.status(200).json({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" });
+      }
+
+      await sql`
+        UPDATE users
+        SET totp_secret = NULL, totp_enabled = FALSE, updated_at = NOW()
+        WHERE user_id = ${authUser.userId};
+      `;
+
+      return res.status(200).json({
+        status: "success",
+        message: "ปิดใช้งาน 2FA เรียบร้อยแล้ว"
       });
     }
 
@@ -856,6 +1008,80 @@ module.exports = async function handler(req, res) {
       }
 
       return res.status(200).json({ status: "success", data: logs });
+    }
+
+    // Ultra Low-Latency Real-Time SSE Stream (<1s Latency)
+    if (action === "streamLogs") {
+      if (!authUser) {
+        return res.status(401).json({ status: "error", message: "กรุณาเข้าสู่ระบบก่อนติดตาม Live Stream" });
+      }
+
+      // ตั้งค่า Header สำหรับ Server-Sent Events (SSE)
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no"
+      });
+
+      res.write(`data: ${JSON.stringify({ type: "connected", message: "Real-time SSE Stream Connected" })}\n\n`);
+
+      let lastSeenDate = new Date();
+      const filterRoomId = String(queryParams.roomId || bodyData.roomId || "").trim();
+
+      const streamInterval = setInterval(async () => {
+        try {
+          let rows;
+          if (filterRoomId) {
+            rows = await sql`
+              SELECT log_id, room_id, room_title, student_id, event_type,
+                     violation_detail, violation_count, severity, formatted_time, iso_timestamp
+              FROM exam_logs
+              WHERE iso_timestamp > ${lastSeenDate} AND room_id = ${filterRoomId}
+              ORDER BY iso_timestamp ASC
+              LIMIT 50;
+            `;
+          } else {
+            rows = await sql`
+              SELECT log_id, room_id, room_title, student_id, event_type,
+                     violation_detail, violation_count, severity, formatted_time, iso_timestamp
+              FROM exam_logs
+              WHERE iso_timestamp > ${lastSeenDate}
+              ORDER BY iso_timestamp ASC
+              LIMIT 50;
+            `;
+          }
+
+          if (rows && rows.length > 0) {
+            lastSeenDate = new Date(rows[rows.length - 1].iso_timestamp);
+            const newLogs = rows.map((r) => ({
+              logId: r.log_id,
+              roomId: r.room_id || "",
+              roomTitle: r.room_title || "",
+              studentId: r.student_id,
+              eventType: r.event_type,
+              violation: r.violation_detail,
+              violationCount: Number(r.violation_count || 0),
+              severity: r.severity,
+              time: r.formatted_time || "",
+              timestamp: r.iso_timestamp ? new Date(r.iso_timestamp).toISOString() : ""
+            }));
+            res.write(`data: ${JSON.stringify({ type: "logs", data: newLogs })}\n\n`);
+          } else {
+            // Heartbeat comment to keep connection alive through proxies
+            res.write(": ping\n\n");
+          }
+        } catch (e) {
+          console.warn("SSE stream error:", e.message);
+        }
+      }, 850);
+
+      req.on("close", () => {
+        clearInterval(streamInterval);
+        res.end();
+      });
+
+      return;
     }
 
     // L-02: ฟังก์ชันสำหรับ Admin เพื่อลบหรือล้าง Log

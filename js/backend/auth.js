@@ -151,12 +151,19 @@ async function authenticateUser(credentials) {
       body: JSON.stringify({
         action: "verifyLogin",
         username: username,
-        passcode: passcode
+        passcode: passcode,
+        totpCode: credentials.totpCode || ""
       })
     }, 6000);
 
     if (response && response.ok) {
       const result = await response.json();
+      if (result && result.status === "2fa_required") {
+        return {
+          requires2FA: true,
+          message: result.message || "กรุณากรอกรหัส Authenticator 6 หลัก"
+        };
+      }
       if (result && result.status === "success" && result.user) {
         const cloudUser = {
           ...result.user,

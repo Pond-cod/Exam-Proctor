@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(20) NOT NULL DEFAULT 'TEACHER', -- 'ADMIN' | 'TEACHER'
     passcode VARCHAR(255) NOT NULL, -- Hashed with scrypt (scrypt$<salt>$<hash>)
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE' | 'INACTIVE'
+    totp_secret VARCHAR(64),
+    totp_enabled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     last_login TIMESTAMPTZ

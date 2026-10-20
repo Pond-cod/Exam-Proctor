@@ -142,6 +142,7 @@
   </div>
 
   <script src="../js/shared/config.js?v=6.0"></script>
+  <script src="../js/shared/i18n.js?v=6.0"></script>
   <script src="../js/shared/common.js?v=6.0"></script>
   <script src="../js/backend/auth.js?v=6.0"></script>
   <script>
@@ -210,10 +211,41 @@
         errBox.style.display = "none";
 
         try {
-          const authResult = await authenticateUser({
+          let authResult = await authenticateUser({
             username: username,
             passcode: passcode
           });
+
+          // Handle Two-Factor Authentication (2FA) Challenge
+          if (authResult.requires2FA) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origBtnText;
+
+            const totpCode = await showPrompt(authResult.message || "กรุณากรอกรหัส Authenticator 6 หลักจากแอปของคุณ:", {
+              title: "ยืนยันตัวตน 2 ชั้น (2FA) 🔐",
+              inputType: "text",
+              inputPlaceholder: "เช่น 123456",
+              confirmText: "ยืนยันรหัส",
+              cancelText: "ยกเลิก",
+              confirmClass: "primary",
+              icon: "🛡️"
+            });
+
+            if (!totpCode) {
+              errBox.textContent = "การเข้าสู่ระบบถูกยกเลิก (ต้องการรหัสยืนยัน 2FA)";
+              errBox.style.display = "block";
+              return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="btn-spinner"></span> กำลังยืนยันรหัส 2FA...`;
+
+            authResult = await authenticateUser({
+              username: username,
+              passcode: passcode,
+              totpCode: totpCode
+            });
+          }
 
           if (authResult.success && authResult.user) {
             setCurrentUser(authResult.user, authResult.token || "", true);

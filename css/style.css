@@ -70,6 +70,154 @@
 }
 
 /* ==========================================================================
+   Dark Theme Design Tokens & Overrides (Next-Gen Cyber/Midnight Glass Theme)
+   ========================================================================== */
+[data-theme="dark"] {
+  --primary: #38bdf8;
+  --primary-hover: #0ea5e9;
+  --primary-active: #0284c7;
+  --primary-gradient: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  --primary-light: rgba(2, 132, 199, 0.2);
+  --primary-border: #0369a1;
+  --primary-text: #38bdf8;
+
+  --secondary-brand: #60a5fa;
+  --purple-brand: #a78bfa;
+  --amber-brand: #fbbf24;
+
+  --success: #34d399;
+  --success-hover: #10b981;
+  --success-gradient: linear-gradient(135deg, #059669 0%, #34d399 100%);
+  --success-light: rgba(5, 150, 105, 0.22);
+  --success-border: #047857;
+  --success-text: #6ee7b7;
+
+  --danger: #f87171;
+  --danger-hover: #ef4444;
+  --danger-gradient: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
+  --danger-light: rgba(220, 38, 38, 0.22);
+  --danger-border: #991b1b;
+  --danger-text: #fca5a5;
+
+  --warning: #fbbf24;
+  --warning-hover: #f59e0b;
+  --warning-gradient: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+  --warning-light: rgba(217, 119, 6, 0.22);
+  --warning-border: #92400e;
+  --warning-text: #fde68a;
+
+  /* Modern Glass & Surface Colors (Dark) */
+  --bg-main: #090d16;
+  --bg-card: rgba(15, 23, 42, 0.88);
+  --bg-card-hover: rgba(30, 41, 59, 0.95);
+  --bg-card-border: rgba(51, 65, 85, 0.7);
+  --bg-subtle: #1e293b;
+  --bg-input: #0f172a;
+  --border-input: #334155;
+  --border-focus: #38bdf8;
+
+  /* High-Contrast Typography (Dark) */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #0f172a;
+
+  /* Shadows (Dark) */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 16px -2px rgba(0, 0, 0, 0.6), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 14px 28px -4px rgba(0, 0, 0, 0.75), 0 4px 10px -2px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 40px -8px rgba(0, 0, 0, 0.9), 0 8px 16px -4px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] body {
+  background-color: #060b18;
+  background-image: 
+    radial-gradient(1400px circle at 50% -60px, rgba(2, 132, 199, 0.2) 0%, rgba(3, 105, 161, 0.1) 40%, transparent 75%),
+    radial-gradient(950px circle at -5% 140px, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
+    radial-gradient(950px circle at 105% 180px, rgba(124, 58, 237, 0.16) 0%, transparent 60%),
+    linear-gradient(165deg, #060b18 0%, #0b1329 50%, #0f172a 100%);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .glass-nav,
+[data-theme="dark"] .glass-card,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .filter-card,
+[data-theme="dark"] .analytics-panel,
+[data-theme="dark"] .stat-card {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .glass-table th {
+  background: rgba(30, 41, 59, 0.95) !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .glass-table td {
+  color: #e2e8f0 !important;
+  border-bottom-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+[data-theme="dark"] .glass-table tbody tr:hover {
+  background: rgba(30, 41, 59, 0.6) !important;
+}
+
+[data-theme="dark"] .filter-input,
+[data-theme="dark"] .glass-select,
+[data-theme="dark"] .custom-input,
+[data-theme="dark"] select,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] textarea {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .stat-value {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+
+/* Theme toggle button styling */
+.theme-toggle-btn, .lang-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--bg-card-border);
+  color: var(--text-primary);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+[data-theme="dark"] .theme-toggle-btn,
+[data-theme="dark"] .lang-toggle-btn {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(71, 85, 105, 0.8);
+  color: #f8fafc;
+}
+
+.theme-toggle-btn:hover, .lang-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+/* ==========================================================================
    Universal Reset & Modern Canvas
    ========================================================================== */
 *, *::before, *::after {
@@ -3478,6 +3626,188 @@ img, svg, video, canvas, iframe {
   align-items: center;
   gap: 3px;
 }
+
+/* ==========================================================================
+   Phase A: Analytics & Official PDF Incident Report Styles
+   ========================================================================== */
+.analytics-metrics-grid .card {
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analytics-metrics-grid .card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #officialReportModal,
+  #officialReportModal .modal-dialog,
+  #officialReportModal .modal-body,
+  #printableReportArea,
+  #printableReportArea * {
+    visibility: visible;
+  }
+  #officialReportModal {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: #ffffff !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  #officialReportModal .modal-dialog {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+  }
+  #officialReportModal .modal-header,
+  #officialReportModal .no-print,
+  .navbar,
+  .brand,
+  .nav-links,
+  .btn,
+  .card-actions-group {
+    display: none !important;
+  }
+  #printableReportArea {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* ==========================================================================
+   AI Smart Proctor Floating Widget (Camera & Audio Analysis)
+   ========================================================================== */
+.ai-proctor-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  width: 170px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(2, 132, 199, 0.25);
+  color: #f8fafc;
+  font-family: var(--font-sans);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.ai-proctor-widget:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.35);
+}
+
+.ai-proctor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.ai-proctor-badge {
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+}
+
+.ai-proctor-status {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+.ai-video-box {
+  position: relative;
+  width: 100%;
+  height: 114px;
+  background: #020617;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#aiProctorVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror camera */
+}
+
+.ai-face-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border-radius: 8px;
+  pointer-events: none;
+  border: 2px dashed rgba(52, 211, 153, 0.8);
+  transition: border-color 0.25s ease;
+}
+
+.ai-face-indicator.alert {
+  border-color: rgba(239, 68, 68, 0.95);
+  box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.4);
+  animation: pulse-border 1.2s infinite;
+}
+
+.ai-face-indicator.warning {
+  border-color: rgba(245, 158, 11, 0.95);
+  box-shadow: inset 0 0 8px rgba(245, 158, 11, 0.35);
+}
+
+@keyframes pulse-border {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.ai-audio-meter-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  margin-top: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ai-audio-meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981 0%, #f59e0b 70%, #ef4444 100%);
+  border-radius: 999px;
+  transition: width 0.1s ease-out;
+}
+
+.ai-proctor-caption {
+  font-size: 8.5px;
+  color: #64748b;
+  text-align: center;
+  margin-top: 5px;
+  line-height: 1.2;
+}
+
 
 
 

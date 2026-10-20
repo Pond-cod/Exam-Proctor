@@ -358,6 +358,13 @@ function checkExamIntegrity() {
   if (!document.hasFocus()) {
     logViolation("คลิกออกนอกหน้าจอ หรือสลับโปรแกรมอื่นทับ");
   }
+
+  // 3. ตรวจจับการเปิด Developer Tools (วัดความแตกต่างระหว่าง outer และ inner window dimension)
+  const widthDiff = window.outerWidth - window.innerWidth;
+  const heightDiff = window.outerHeight - window.innerHeight;
+  if (widthDiff > 160 || heightDiff > 160) {
+    logViolation("ตรวจพบการเปิดหน้าต่าง Developer Tools หรือแทรกแซงหน้าต่างข้อสอบ", true);
+  }
 }
 
 // เริ่มระบบเฝ้าระวัง Heartbeat
@@ -455,6 +462,9 @@ async function startExam() {
   // เริ่ม Heartbeat ตรวจสอบความถูกต้องของการสอบทันที
   startIntegrityMonitor();
 
+  // เริ่มต้นระบบ AI Smart Proctor ตรวจจับกล้องและเสียง
+  initAIProctor();
+
   sendAlertToWebhook(`เริ่มเข้าทำข้อสอบ: ${examConfig.title}`);
 }
 
@@ -523,8 +533,17 @@ function setupAntiCheatListeners() {
     return false;
   }, true);
 
-  // 7. บล็อกคีย์ลัดโกงข้อสอบทุกรูปแบบ
-  document.addEventListener("keydown", (e) => {
+  // 7. บล็อกการคัดลอก ลากวาง และคลุมข้อความ (Anti-Clipboard & Anti-Selection)
+  ["copy", "cut", "paste", "selectstart", "dragstart"].forEach((evtName) => {
+    document.addEventListener(evtName, (e) => {
+      if (!isExamActive || isExamSubmitted) return;
+      e.preventDefault();
+      return false;
+    }, true);
+  });
+
+  // 8. บล็อกคีย์ลัดโกงข้อสอบทุกรูปแบบ + PrintScreen Clipboard Scrubber
+  const handleKeyPrevention = (e) => {
     if (!isExamActive || isExamSubmitted) return;
     const isCtrlOrCmd = e.ctrlKey || e.metaKey;
     const key = e.key ? e.key.toLowerCase() : "";
@@ -532,21 +551,26 @@ function setupAntiCheatListeners() {
     // ป้องกัน F12 เปิด DevTools
     if (e.key === "F12") {
       e.preventDefault();
-      logViolation("กด F12 พยายามเปิด Developer Tools");
+      logViolation("กด F12 พยายามเปิด Developer Tools", true);
       return false;
     }
 
-    // ป้องกัน PrintScreen บันทึกภาพ
-    if (e.key === "PrintScreen") {
+    // ป้องกัน PrintScreen บันทึกภาพ พร้อมล้างคลิปบอร์ดทันที
+    if (e.key === "PrintScreen" || e.code === "PrintScreen" || e.keyCode === 44) {
       e.preventDefault();
-      logViolation("พยายามกดปุ่มบันทึกภาพหน้าจอ (PrintScreen)");
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText("");
+        }
+      } catch (_) {}
+      logViolation("พยายามกดปุ่มบันทึกภาพหน้าจอ (PrintScreen)", true);
       return false;
     }
 
-    // ป้องกัน DevTools ผ่าน Ctrl+Shift+I / J / C
+    // ป้องกัน DevTools ผ่าน Ctrl+Shift+I / J / C / S
     if (isCtrlOrCmd && e.shiftKey && (key === "i" || key === "j" || key === "c" || key === "s")) {
       e.preventDefault();
-      logViolation("กดคีย์ลัดเปิด Developer Tools / บันทึกภาพ");
+      logViolation("กดคีย์ลัดเปิด Developer Tools / บันทึกภาพ", true);
       return false;
     }
 
@@ -565,10 +589,221 @@ function setupAntiCheatListeners() {
         return false;
       }
     }
+  };
+
+  document.addEventListener("keydown", handleKeyPrevention, true);
+  document.addEventListener("keyup", (e) => {
+    if (!isExamActive || isExamSubmitted) return;
+    if (e.key === "PrintScreen" || e.code === "PrintScreen" || e.keyCode === 44) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText("");
+        }
+      } catch (_) {}
+    }
   }, true);
 }
 
+/* ==========================================================================
+   AI Smart Proctor Engine (Client-Side Face & Audio Monitoring)
+   Zero raw media uploaded — 100% On-Device Privacy Architecture
+   ========================================================================== */
+
+let aiMediaStream = null;
+let aiAudioContext = null;
+let aiAudioAnalyser = null;
+let aiFaceInterval = null;
+let aiAudioInterval = null;
+let consecutiveAbsenceCount = 0;
+let consecutiveVoiceCount = 0;
+let nativeFaceDetector = null;
+
+async function initAIProctor() {
+  const checkbox = document.getElementById("enableAiProctorCheckbox");
+  if (checkbox && !checkbox.checked) {
+    console.log("AI Proctor disabled by user setting");
+    return;
+  }
+
+  const widget = document.getElementById("aiProctorWidget");
+  const videoEl = document.getElementById("aiProctorVideo");
+  const canvasEl = document.getElementById("aiProctorCanvas");
+  const indicatorEl = document.getElementById("aiFaceIndicator");
+  const faceBadge = document.getElementById("aiFaceCountBadge");
+  const statusEl = document.getElementById("aiProctorStatusText");
+  const meterFill = document.getElementById("aiAudioMeterFill");
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    console.warn("MediaDevices API not supported on this device/browser");
+    return;
+  }
+
+  try {
+    aiMediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 320, height: 240, facingMode: "user" },
+      audio: true
+    });
+
+    if (widget) widget.style.display = "block";
+    if (videoEl) {
+      videoEl.srcObject = aiMediaStream;
+      await videoEl.play().catch(() => {});
+    }
+
+    // 1. Setup Audio Volume Analyser
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        aiAudioContext = new AudioContextClass();
+        const source = aiAudioContext.createMediaStreamSource(aiMediaStream);
+        aiAudioAnalyser = aiAudioContext.createAnalyser();
+        aiAudioAnalyser.fftSize = 256;
+        source.connect(aiAudioAnalyser);
+
+        const dataArray = new Uint8Array(aiAudioAnalyser.frequencyBinCount);
+
+        aiAudioInterval = setInterval(() => {
+          if (!isExamActive || isExamSubmitted) return;
+          aiAudioAnalyser.getByteFrequencyData(dataArray);
+
+          // Calculate RMS Volume
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            const normalized = dataArray[i] / 255;
+            sum += normalized * normalized;
+          }
+          const rms = Math.sqrt(sum / dataArray.length);
+          const percent = Math.min(100, Math.round(rms * 250));
+
+          if (meterFill) {
+            meterFill.style.width = `${percent}%`;
+          }
+
+          // Voice / Talking threshold check
+          if (rms > 0.35) {
+            consecutiveVoiceCount++;
+            if (consecutiveVoiceCount >= 3) {
+              logViolation("ตรวจพบเสียงพูดคุยหรือเสียงผิดปกติในบริเวณสอบ (Audio/Voice Detected)");
+              consecutiveVoiceCount = 0;
+            }
+          } else {
+            consecutiveVoiceCount = Math.max(0, consecutiveVoiceCount - 1);
+          }
+        }, 300);
+      }
+    } catch (audioErr) {
+      console.warn("AI Audio Analyser init error:", audioErr);
+    }
+
+    // 2. Setup Native FaceDetector if available
+    try {
+      if ("FaceDetector" in window) {
+        nativeFaceDetector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 5 });
+      }
+    } catch (_) {}
+
+    // 3. Face Detection Loop (Every 1100ms)
+    aiFaceInterval = setInterval(async () => {
+      if (!isExamActive || isExamSubmitted || !videoEl || videoEl.readyState < 2) return;
+
+      let detectedFaces = 0;
+
+      if (nativeFaceDetector) {
+        try {
+          const faces = await nativeFaceDetector.detect(videoEl);
+          detectedFaces = faces ? faces.length : 0;
+        } catch (_) {}
+      } else if (canvasEl) {
+        // Fallback: Fast Canvas Skin-tone & Contour Luminance Analysis
+        try {
+          const ctx = canvasEl.getContext("2d", { willReadFrequently: true });
+          ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+          const imgData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
+          const data = imgData.data;
+
+          let skinPixelCount = 0;
+          for (let i = 0; i < data.length; i += 16) {
+            const r = data[i], g = data[i + 1], b = data[i + 2];
+            if (r > 60 && g > 40 && b > 20 && r > g && r > b && (r - Math.min(g, b)) > 15) {
+              skinPixelCount++;
+            }
+          }
+          if (skinPixelCount > 60) {
+            detectedFaces = 1;
+          }
+        } catch (_) {}
+      }
+
+      // Update UI Indicators
+      if (detectedFaces === 0) {
+        consecutiveAbsenceCount++;
+        if (indicatorEl) indicatorEl.className = "ai-face-indicator alert";
+        if (faceBadge) {
+          faceBadge.className = "badge badge-danger";
+          faceBadge.textContent = "ไม่พบใบหน้า";
+        }
+        if (statusEl) statusEl.textContent = "เตือน: ไม่พบผู้สอบ";
+
+        if (consecutiveAbsenceCount >= 3) {
+          logViolation("ไม่พบใบหน้าผู้เข้าสอบในกล้อง (Face Absence)", true);
+          consecutiveAbsenceCount = 0;
+        }
+      } else if (detectedFaces > 1) {
+        consecutiveAbsenceCount = 0;
+        if (indicatorEl) indicatorEl.className = "ai-face-indicator alert";
+        if (faceBadge) {
+          faceBadge.className = "badge badge-danger";
+          faceBadge.textContent = `${detectedFaces} คน!`;
+        }
+        if (statusEl) statusEl.textContent = "เตือน: พบบุคคลอื่น";
+
+        logViolation(`ตรวจพบบุคคลอื่นในกล้อง (${detectedFaces} คน)`, true);
+      } else {
+        // Exactly 1 face (Normal)
+        consecutiveAbsenceCount = 0;
+        if (indicatorEl) indicatorEl.className = "ai-face-indicator";
+        if (faceBadge) {
+          faceBadge.className = "badge badge-success";
+          faceBadge.textContent = "ปกติ (1 คน)";
+        }
+        if (statusEl) statusEl.textContent = "เฝ้าระวังปกติ";
+      }
+    }, 1100);
+
+  } catch (camErr) {
+    console.warn("AI Proctor camera/audio access denied or not available:", camErr.message);
+    if (widget) widget.style.display = "none";
+  }
+}
+
+function stopAIProctor() {
+  if (aiFaceInterval) {
+    clearInterval(aiFaceInterval);
+    aiFaceInterval = null;
+  }
+  if (aiAudioInterval) {
+    clearInterval(aiAudioInterval);
+    aiAudioInterval = null;
+  }
+  if (aiAudioContext && aiAudioContext.state !== "closed") {
+    aiAudioContext.close().catch(() => {});
+    aiAudioContext = null;
+  }
+  if (aiMediaStream) {
+    aiMediaStream.getTracks().forEach((track) => {
+      try {
+        track.stop();
+      } catch (_) {}
+    });
+    aiMediaStream = null;
+  }
+  const widget = document.getElementById("aiProctorWidget");
+  if (widget) widget.style.display = "none";
+}
+
 function showCompletedScreen(reason = "ส่งข้อสอบสำเร็จ") {
+  stopAIProctor();
+
   const portalView = document.getElementById("examPortalView");
   const activeView = document.getElementById("examActiveView");
   const completedView = document.getElementById("examCompletedView");
