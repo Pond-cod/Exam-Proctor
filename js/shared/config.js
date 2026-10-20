@@ -16,6 +16,28 @@ function getEffectiveWebhookUrl() {
 }
 
 /**
+ * fetchWithTimeout — Wrapper สำหรับ fetch พร้อมระบบตัดรอบเวลา (Timeout Guard)
+ * ป้องกันปัญหาระบบหมุนค้างจาก Google Apps Script Cold Start หรือเน็ตกระตุก
+ * @param {string|Request} resource
+ * @param {object} options
+ * @param {number} timeoutMs - มิลลิวินาที (ค่าเริ่มต้น 4000ms)
+ * @returns {Promise<Response>}
+ */
+async function fetchWithTimeout(resource, options = {}, timeoutMs = 4000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: options.signal || controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
  * Helper ป้องกัน XSS และแปลงข้อความสำหรับแสดงผลใน HTML
  */
 function escapeHtml(str) {

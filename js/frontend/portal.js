@@ -148,8 +148,9 @@ async function fetchPortalAnnouncement() {
       : (localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL);
     const url = new URL(webhookUrl);
     url.searchParams.set("action", "getSystemConfig");
-    const res = await fetch(url.toString());
-    if (!res.ok) return;
+    const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
+    const res = await fetchFn(url.toString(), {}, 4000);
+    if (!res || !res.ok) return;
     const json = await res.json();
     if (json && json.status === "success" && json.data) {
       const ann = String(json.data.portalAnnouncement || "").trim();

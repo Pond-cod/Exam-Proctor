@@ -110,62 +110,8 @@ async function authenticateUser(credentials) {
     return { success: false, message: "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร/หลัก" };
   }
 
-  const webhookUrl = typeof getEffectiveWebhookUrl === "function" 
-    ? getEffectiveWebhookUrl() 
-    : (localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL);
-
-  // 2. พยายามตรวจสอบกับ Google Apps Script Webhook ก่อน
-  if (webhookUrl) {
-    try {
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "verifyLogin",
-          username: username,
-          passcode: passcode
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result && result.status === "success" && result.user) {
-          const cloudUser = {
-            ...result.user,
-            role: String(result.user.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
-          };
-          return { success: true, user: cloudUser };
-        } else if (result && result.status === "error") {
-          return { success: false, message: result.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
-        }
-      }
-    } catch (netErr) {
-      console.warn("Cloud auth POST failed, trying GET fallback:", netErr);
-      try {
-        const getUrl = new URL(webhookUrl);
-        getUrl.searchParams.set("action", "verifyLogin");
-        getUrl.searchParams.set("username", username);
-        getUrl.searchParams.set("passcode", passcode);
-        const getRes = await fetch(getUrl.toString());
-        if (getRes.ok) {
-          const getResult = await getRes.json();
-          if (getResult && getResult.status === "success" && getResult.user) {
-            const cloudUser = {
-              ...getResult.user,
-              role: String(getResult.user.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
-            };
-            return { success: true, user: cloudUser };
-          } else if (getResult && getResult.status === "error") {
-            return { success: false, message: getResult.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
-          }
-        }
-      } catch (getErr) {
-        console.warn("Cloud auth GET fallback offline, using local verification fallback:", getErr);
-      }
-    }
-  }
-
-  // 3. Fallback ตรวจสอบกับข้อมูลผู้ใช้งานในระบบ (Strict User Database)
+  // 2. FAST PATH: ตรวจสอบกับฐานข้อมูลในเครื่องก่อนทันที (Local-First Instant Auth: 0ms)
+  // ให้เข้าใช้งานได้ทันทีโดยไม่ต้องรอ Cold Start ของ Google Apps Script
   try {
     const users = typeof getStoredUsers === "function" 
       ? getStoredUsers() 
@@ -182,7 +128,7 @@ async function authenticateUser(credentials) {
         return { success: false, message: "บัญชีผู้ใช้นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" };
       }
 
-      // อัปเดตเวลาเข้าสู่ระบบล่าสุด (Last Login)
+      // อัปเดตเวลาเข้าสู่ระบบล่าสุด (Last Login) ในเครื่องทันที
       try {
         matched.lastLogin = new Date().toISOString();
         if (typeof setStoredUsers === "function") {
@@ -192,6 +138,13 @@ async function authenticateUser(credentials) {
         }
       } catch (_) {}
 
+      // ส่งสัญญาณอัปเดต Last Login ไปยัง Cloud แบบ Background Async (ไม่บล็อกหน้าจอผู้ใช้)
+      if (typeof syncUserToCloud === "function") {
+        try {
+          syncUserToCloud("updateUser", { userId: matched.userId, lastLogin: matched.lastLogin });
+        } catch (_) {}
+      }
+
       return { 
         success: true, 
         user: {
@@ -200,7 +153,58 @@ async function authenticateUser(credentials) {
         } 
       };
     }
-  } catch (_) {}
+  } catch (localErr) {
+    console.warn("Local auth check error:", localErr);
+  }
+
+  // 3. SLOW PATH: กรณีไม่พบบัญชีในเครื่อง (เช่น บัญชีเพิ่งสร้างใหม่จากเครื่องอื่น) จึงส่งไปตรวจกับ Cloud
+  // มี Timeout คุมไม่เกิน 2.5 วินาที เพื่อป้องกันหน้าเว็บหมุนค้าง
+  const webhookUrl = typeof getEffectiveWebhookUrl === "function" 
+    ? getEffectiveWebhookUrl() 
+    : (localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL);
+
+  if (webhookUrl) {
+    try {
+      const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
+      const response = await fetchFn(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "verifyLogin",
+          username: username,
+          passcode: passcode
+        })
+      }, 2500);
+
+      if (response && response.ok) {
+        const result = await response.json();
+        if (result && result.status === "success" && result.user) {
+          const cloudUser = {
+            ...result.user,
+            role: String(result.user.role).toUpperCase() === "ADMIN" ? USER_ROLES.ADMIN : USER_ROLES.TEACHER
+          };
+
+          // แคชผู้ใช้ลง Local ทันทีสำหรับการล็อกอินครั้งถัดไป
+          try {
+            const users = typeof getStoredUsers === "function" ? getStoredUsers() : [];
+            const idx = users.findIndex(u => u.username && u.username.toLowerCase() === username);
+            if (idx >= 0) {
+              users[idx] = { ...users[idx], ...cloudUser };
+            } else {
+              users.push(cloudUser);
+            }
+            if (typeof setStoredUsers === "function") setStoredUsers(users);
+          } catch (_) {}
+
+          return { success: true, user: cloudUser };
+        } else if (result && result.status === "error") {
+          return { success: false, message: result.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
+        }
+      }
+    } catch (netErr) {
+      console.warn("Cloud auth check timed out or failed:", netErr);
+    }
+  }
 
   return {
     success: false,

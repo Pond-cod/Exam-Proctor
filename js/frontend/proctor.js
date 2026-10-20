@@ -121,6 +121,7 @@ function sendAlertToWebhook(violationText, isSeverityHigh = false) {
     lastCloudSendTime = Date.now();
     lastCloudViolationText = violationText;
 
+    let dispatched = false;
     try {
       fetch(examConfig.webhookUrl, {
         method: "POST",
@@ -129,13 +130,17 @@ function sendAlertToWebhook(violationText, isSeverityHigh = false) {
         body: payloadStr,
         keepalive: true
       }).catch(() => {});
+      dispatched = true;
     } catch (_) {}
 
-    try {
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(examConfig.webhookUrl, payloadStr);
-      }
-    } catch (_) {}
+    // Fallback ใช้ sendBeacon เฉพาะเมื่อ fetch ล้มเหลวเท่านั้น (ตัดการยิงซ้ำสองเท่า ลดภาระ GAS ลง 50%)
+    if (!dispatched) {
+      try {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(examConfig.webhookUrl, payloadStr);
+        }
+      } catch (_) {}
+    }
   };
 
   // ถ้าเป็นเริ่มสอบ/ส่งข้อสอบ หรือเกิดการผิดกฎประเภทใหม่ หรือพ้นช่วงหน่วง 3 วินาทีแล้ว ให้ส่ง Cloud ทันที

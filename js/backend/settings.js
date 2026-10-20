@@ -23,8 +23,9 @@ async function loadSystemSettings() {
     const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
     const url = new URL(webhookUrl);
     url.searchParams.set("action", "getSystemConfig");
-    const res = await fetch(url.toString());
-    if (res.ok) {
+    const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
+    const res = await fetchFn(url.toString(), {}, 4000);
+    if (res && res.ok) {
       const json = await res.json();
       if (json && json.status === "success" && json.data) {
         const d = json.data;

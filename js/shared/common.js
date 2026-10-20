@@ -121,8 +121,9 @@ async function fetchCloudRooms(callback) {
   try {
     const url = new URL(webhookUrl);
     url.searchParams.set("action", "getAllRooms");
-    const res = await fetch(url.toString());
-    if (!res.ok) return;
+    const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
+    const res = await fetchFn(url.toString(), {}, 5000);
+    if (!res || !res.ok) return;
     const json = await res.json();
     if (json && json.status === "success" && Array.isArray(json.data)) {
       const cloudRooms = json.data;
@@ -258,8 +259,9 @@ async function fetchCloudUsers(callback) {
   try {
     const url = new URL(webhookUrl);
     url.searchParams.set("action", "getAllUsers");
-    const res = await fetch(url.toString());
-    if (!res.ok) return;
+    const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
+    const res = await fetchFn(url.toString(), {}, 5000);
+    if (!res || !res.ok) return;
     const json = await res.json();
     if (json && json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
       allUsers = json.data;

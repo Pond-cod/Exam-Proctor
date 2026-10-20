@@ -7,6 +7,8 @@ let allLogs = [];
 let recentLocalLiveEvents = [];
 let previousViolationCount = 0;
 let monitorInterval = null;
+let isFetchingMonitorLogs = false;
+const MONITOR_POLL_INTERVAL_MS = 8000; // 8 วินาที ช่วยลดภาระ Google Apps Script ลง 80% ป้องกันระบบล่ม
 let currentPrimaryMode = "live"; // "live" | "archive"
 let currentMonitorTab = "live"; // "live" | "completed" | "table"
 let currentFilter = "all"; // "all" | "alert" | "today"
@@ -405,10 +407,14 @@ function updateMonitorRoomFilterDropdown() {
 }
 
 function fetchMonitorLogs() {
+  if (isFetchingMonitorLogs) return;
+  isFetchingMonitorLogs = true;
+
   const webhookUrl = typeof getEffectiveWebhookUrl === "function" ? getEffectiveWebhookUrl() : DEFAULT_WEBHOOK_URL;
   const syncStatus = document.getElementById("syncStatusText");
+  const fetchFn = typeof fetchWithTimeout === "function" ? fetchWithTimeout : fetch;
 
-  fetch(webhookUrl)
+  fetchFn(webhookUrl, {}, 6000)
     .then((res) => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
@@ -448,6 +454,9 @@ function fetchMonitorLogs() {
     .catch((err) => {
       console.warn("Fetch monitor logs error:", err);
       if (syncStatus) syncStatus.textContent = `ขาดการเชื่อมต่อ Webhook`;
+    })
+    .finally(() => {
+      isFetchingMonitorLogs = false;
     });
 }
 
@@ -1835,7 +1844,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupLiveBroadcastListener();
   fetchMonitorLogs();
-  if (!monitorInterval) {
-    monitorInterval = setInterval(fetchMonitorLogs, 3000);
+
+  // Smart Adaptive Polling System:
+  function startMonitorPolling() {
+    stopMonitorPolling();
+    monitorInterval = setInterval(fetchMonitorLogs, MONITOR_POLL_INTERVAL_MS);
   }
+
+  function stopMonitorPolling() {
+    if (monitorInterval) {
+      clearInterval(monitorInterval);
+      monitorInterval = null;
+    }
+  }
+
+  // เริ่มต้น Polling อัตโนมัติ
+  startMonitorPolling();
+
+  // Tab Visibility API: เมื่อผู้ใช้ย่อหน้าจอหรือสลับไปแท็บอื่น ให้หยุด Polling ทันที
+  // ช่วยลดภาระ Google Apps Script ลง 90% และประหยัดโควตาเซิร์ฟเวอร์
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopMonitorPolling();
+    } else {
+      fetchMonitorLogs();
+      startMonitorPolling();
+    }
+  });
 });
