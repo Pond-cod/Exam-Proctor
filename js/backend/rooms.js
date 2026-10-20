@@ -144,10 +144,6 @@ function renderRoomHistory() {
 
   container.innerHTML = filtered.map((r) => {
     const isOpen = r.status === "OPEN";
-    const statusBadge = isOpen
-      ? `<span class="badge badge-success" style="font-weight: 700; font-size: 15px;">กำลังเปิดสอบ (OPEN)</span>`
-      : `<span class="badge badge-neutral" style="font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; font-size: 15px;">ปิดห้องสอบ (CLOSED)</span>`;
-
     const canManage = isAdmin || isRoomOwnedByUser(r, currentUser);
 
     // Ensure full exam URL is present
@@ -164,24 +160,40 @@ function renderRoomHistory() {
       }
     }
 
-    const creatorDisplayName = r.createdBy || r.creatorUsername || "ครูผู้สอน";
-    const creatorUserTag = r.creatorUsername ? ` (@${escapeHtml(r.creatorUsername)})` : "";
+    // ทำความสะอาดชื่อผู้สร้าง ไม่ให้เกิดการแสดง (@username) ซ้ำซ้อน เช่น teacher2 (@teacher2) (@teacher2)
+    let creatorClean = r.createdBy || r.creatorUsername || "ครูผู้สอน";
+    if (r.creatorUsername && !creatorClean.includes(`@${r.creatorUsername}`)) {
+      creatorClean = `${creatorClean} (@${r.creatorUsername})`;
+    }
+    creatorClean = creatorClean.replace(/(\(@[^)]+\))\s*\1+/g, "$1").trim();
+
+    // ปรับชื่อหมวดหมู่และระดับชั้นให้สะอาด ไม่มีวงเล็บภาษาอังกฤษรกรุงรัง
+    const cleanLabel = (text, fallback) => {
+      if (!text) return fallback;
+      const cleaned = String(text).replace(/\s*\([^)]*\)/g, "").trim();
+      return cleaned || fallback;
+    };
+    const categoryClean = cleanLabel(r.category, "ทั่วไป");
+    const gradeClean = cleanLabel(r.gradeLevel, "ทุกระดับชั้น");
 
     return `
       <div class="room-mgmt-card">
         <div class="room-card-header">
           <div class="room-card-title-group">
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="room-title-row">
               <span class="room-card-title">${escapeHtml(r.title)}</span>
-              ${statusBadge}
-            </div>
-            <div class="room-card-meta-chips">
-              <span class="room-meta-chip">${escapeHtml(r.category || "ทั่วไป")}</span>
-              <span class="room-meta-chip">${escapeHtml(r.gradeLevel || "ไม่ระบุ")}</span>
-              <span class="room-meta-chip room-meta-creator">
-                ผู้สร้าง: <strong>${escapeHtml(creatorDisplayName)}</strong>${creatorUserTag}
+              <span class="room-status-badge ${isOpen ? "status-open" : "status-closed"}">
+                <span class="room-status-dot"></span>${isOpen ? "เปิดสอบ" : "ปิดสอบ"}
               </span>
-              <span style="font-size: 14.5px; color: var(--text-muted);">รหัสห้อง: <code style="font-weight: 700;">${escapeHtml(r.roomId || "-")}</code></span>
+            </div>
+            <div class="room-minimal-meta">
+              <span class="meta-item">${escapeHtml(categoryClean)}</span>
+              <span class="meta-sep">•</span>
+              <span class="meta-item">${escapeHtml(gradeClean)}</span>
+              <span class="meta-sep">•</span>
+              <span class="meta-item">รหัสห้อง: <code class="meta-code">${escapeHtml(r.roomId || "-")}</code></span>
+              <span class="meta-sep">•</span>
+              <span class="meta-item">ผู้สร้าง: <span class="meta-creator">${escapeHtml(creatorClean)}</span></span>
             </div>
           </div>
 
@@ -190,21 +202,20 @@ function renderRoomHistory() {
             ${canManage ? `
               <button 
                 type="button" 
-                class="btn ${isOpen ? "btn-soft-warning" : "btn-soft-success"} btn-toggle-status" 
+                class="btn btn-action ${isOpen ? "btn-soft-warning" : "btn-soft-success"} btn-toggle-status" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
                 title="${isOpen ? "คลิกเพื่อพักการสอบชั่วคราว" : "คลิกเพื่อเปิดรับนักเรียนเข้าสอบ"}"
               >
-                ${isOpen ? "พักการสอบ" : "เปิดรับเข้าสอบ"}
+                ${isOpen ? "พักการสอบ" : "เปิดรับสอบ"}
               </button>
             ` : ""}
 
             <!-- คัดลอกลิงก์ -->
             <button 
               type="button" 
-              class="btn btn-soft-primary btn-copy-room-link" 
+              class="btn btn-action btn-soft-primary btn-copy-room-link" 
               data-url="${escapeHtml(roomExamUrl)}" 
-              style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
+              title="คัดลอกลิงก์สำหรับส่งให้นักเรียน"
             >
               คัดลอกลิงก์
             </button>
@@ -212,9 +223,9 @@ function renderRoomHistory() {
             <!-- แสดง QR Code -->
             <button 
               type="button" 
-              class="btn btn-soft-secondary btn-show-room-qr" 
+              class="btn btn-action btn-soft-secondary btn-show-room-qr" 
               data-room-id="${escapeHtml(r.roomId)}" 
-              style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
+              title="แสดง QR Code สำหรับฉายโปรเจกเตอร์"
             >
               QR Code
             </button>
@@ -223,17 +234,17 @@ function renderRoomHistory() {
             ${canManage ? `
               <button 
                 type="button" 
-                class="btn btn-soft-secondary btn-edit-room" 
+                class="btn btn-action btn-soft-secondary btn-edit-room" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
+                title="แก้ไขข้อมูลห้องสอบ"
               >
                 แก้ไข
               </button>
               <button 
                 type="button" 
-                class="btn btn-soft-danger btn-delete-room" 
+                class="btn btn-action btn-soft-danger btn-delete-room" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 38px; padding: 6px 14px; font-size: 15px; border-radius: 8px;"
+                title="ลบห้องสอบนี้"
               >
                 ลบ
               </button>
@@ -241,18 +252,20 @@ function renderRoomHistory() {
           </div>
         </div>
 
-        <!-- แถบแสดงรหัส 2 รูปแบบ (Security Credential Chips) -->
-        <div class="room-credentials-bar">
-          <div class="credential-chip credential-student">
-            <span style="font-weight: 700; color: #1e40af;">รหัสเข้าสอบนักเรียน:</span>
-            <code class="credential-code">${escapeHtml(r.entryCode || "-")}</code>
+        <!-- แถบด้านล่างแบบมินิมอล แสดงรหัสเข้าสอบและเวลาสร้าง -->
+        <div class="room-card-footer">
+          <div class="room-codes-row">
+            <div class="room-code-badge badge-student">
+              <span class="code-lbl">รหัสเข้าสอบนักเรียน:</span>
+              <code class="code-val">${escapeHtml(r.entryCode || "-")}</code>
+            </div>
+            <div class="room-code-badge badge-passcode">
+              <span class="code-lbl">รหัสคุมสอบ (Passcode 6 หลัก):</span>
+              <code class="code-val">${escapeHtml(r.adminPasscode || "-")}</code>
+            </div>
           </div>
-          <div class="credential-chip credential-admin">
-            <span style="font-weight: 700; color: #991b1b;">รหัสคุมสอบ (Passcode 6 หลัก):</span>
-            <code class="credential-code">${escapeHtml(r.adminPasscode || "-")}</code>
-          </div>
-          <div class="credential-time">
-            สร้างเมื่อ: ${formatThaiDateTime(r.createdAt)}
+          <div class="room-time-stamp">
+            สร้างเมื่อ ${formatThaiDateTime(r.createdAt)}
           </div>
         </div>
       </div>
