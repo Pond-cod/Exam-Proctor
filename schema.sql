@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(64) UNIQUE NOT NULL,
     display_name TEXT NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'TEACHER', -- 'ADMIN' | 'TEACHER'
-    passcode VARCHAR(128) NOT NULL,
+    passcode VARCHAR(255) NOT NULL, -- Hashed with scrypt (scrypt$<salt>$<hash>)
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE' | 'INACTIVE'
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),

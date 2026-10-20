@@ -3,7 +3,16 @@
  * Run: node scripts/migrate-from-sheets.js
  */
 
+const crypto = require("crypto");
 const { neon } = require("@neondatabase/serverless");
+
+function hashPassword(password) {
+  if (!password || typeof password !== "string") return "";
+  if (password.startsWith("scrypt$")) return password;
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = crypto.scryptSync(password, salt, 32);
+  return `scrypt$${salt}$${derivedKey.toString("hex")}`;
+}
 
 const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec";
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -61,7 +70,7 @@ async function runMigration() {
               ${String(u.username).toLowerCase()},
               ${u.displayName || u.username},
               ${String(u.role).toUpperCase()},
-              ${String(u.passcode)},
+              ${hashPassword(String(u.passcode))},
               ${String(u.status || 'ACTIVE').toUpperCase()},
               ${u.createdAt ? new Date(u.createdAt) : new Date()},
               ${u.updatedAt ? new Date(u.updatedAt) : new Date()},

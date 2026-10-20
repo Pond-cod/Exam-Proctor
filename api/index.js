@@ -31,6 +31,37 @@ function parseRequestBody(req) {
 // Secret key derived from database URL or environment variable
 const AUTH_SECRET = process.env.AUTH_SECRET || crypto.createHash("sha256").update(process.env.DATABASE_URL || "exam_proctor_secret_key_2026").digest("hex");
 
+/**
+ * Password Hashing & Verification (scrypt - RFC 7914)
+ * Provides military-grade protection against brute-force and dictionary attacks.
+ * Format: scrypt$<salt_hex>$<derived_key_hex>
+ */
+function hashPassword(password) {
+  if (!password || typeof password !== "string") return "";
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = crypto.scryptSync(password, salt, 32);
+  return `scrypt$${salt}$${derivedKey.toString("hex")}`;
+}
+
+function verifyPassword(password, storedPasscode) {
+  if (!password || !storedPasscode || typeof storedPasscode !== "string") return false;
+  try {
+    if (storedPasscode.startsWith("scrypt$")) {
+      const parts = storedPasscode.split("$");
+      if (parts.length !== 3) return false;
+      const [, salt, expectedHashHex] = parts;
+      const expectedKey = Buffer.from(expectedHashHex, "hex");
+      const derivedKey = crypto.scryptSync(password, salt, 32);
+      if (derivedKey.length !== expectedKey.length) return false;
+      return crypto.timingSafeEqual(derivedKey, expectedKey);
+    }
+    // Backward compatibility: If still legacy plaintext
+    return storedPasscode.trim() === password.trim();
+  } catch (_) {
+    return false;
+  }
+}
+
 function createSessionToken(user) {
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
   const payload = Buffer.from(JSON.stringify({
@@ -184,7 +215,7 @@ module.exports = async function handler(req, res) {
         LIMIT 1;
       `;
 
-      if (rows.length === 0 || String(rows[0].passcode).trim() !== passcode) {
+      if (rows.length === 0 || !verifyPassword(passcode, rows[0].passcode)) {
         return res.status(200).json({
           status: "error",
           message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบใหม่อีกครั้ง"
@@ -192,6 +223,12 @@ module.exports = async function handler(req, res) {
       }
 
       const user = rows[0];
+
+      // Auto-upgrade legacy plaintext passwords to scrypt hash upon successful login
+      if (!String(user.passcode).startsWith("scrypt$")) {
+        const upgradedHash = hashPassword(passcode);
+        await sql`UPDATE users SET passcode = ${upgradedHash} WHERE user_id = ${user.user_id};`;
+      }
       if (String(user.status).toUpperCase() !== "ACTIVE") {
         return res.status(200).json({
           status: "error",
@@ -283,9 +320,10 @@ module.exports = async function handler(req, res) {
       }
 
       const userId = "USR-" + Math.floor(100000 + Math.random() * 900000);
+      const hashedPasscode = hashPassword(passcode);
       await sql`
         INSERT INTO users (user_id, username, display_name, role, passcode, status, created_at, updated_at)
-        VALUES (${userId}, ${username}, ${displayName}, ${role}, ${passcode}, ${status}, NOW(), NOW());
+        VALUES (${userId}, ${username}, ${displayName}, ${role}, ${hashedPasscode}, ${status}, NOW(), NOW());
       `;
 
       return res.status(200).json({
@@ -306,7 +344,8 @@ module.exports = async function handler(req, res) {
       const userId = String(bodyData.userId || "").trim();
       const displayName = bodyData.displayName ? String(bodyData.displayName).trim() : null;
       const role = bodyData.role ? String(bodyData.role).toUpperCase() : null;
-      const passcode = bodyData.passcode ? String(bodyData.passcode).trim() : null;
+      const rawPasscode = bodyData.passcode ? String(bodyData.passcode).trim() : null;
+      const hashedPasscode = rawPasscode ? hashPassword(rawPasscode) : null;
       const status = bodyData.status ? String(bodyData.status).toUpperCase() : null;
 
       const result = await sql`
@@ -314,7 +353,7 @@ module.exports = async function handler(req, res) {
         SET
           display_name = COALESCE(${displayName}, display_name),
           role = COALESCE(${role}, role),
-          passcode = COALESCE(${passcode}, passcode),
+          passcode = COALESCE(${hashedPasscode}, passcode),
           status = COALESCE(${status}, status),
           updated_at = NOW()
         WHERE user_id = ${userId}
