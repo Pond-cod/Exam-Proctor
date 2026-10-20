@@ -1,15 +1,25 @@
 /**
  * Config & Utilities for Exam Proctor Web App
  */
-const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec";
+const NEON_API_URL = "https://examproctor-jade.vercel.app/api";
+const DEFAULT_WEBHOOK_URL = "https://examproctor-jade.vercel.app/api";
+const FALLBACK_GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzN0bSpaAbWaIfgIA3kNfZyDGLr-U0965UDPy27IiQkotdXF576SghQrH8MGQuHGNi_/exec";
 const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1aDO0taJC_7itVhA4Ft0Pp01muyXPEcNhYtiqdwRvQGU/edit?usp=sharing";
 
 /**
- * ดึง Webhook URL ปัจจุบัน (รองรับการตั้งค่าผ่านหน้า Settings ในเครื่อง หรือใช้ค่าเริ่มต้น)
+ * ดึง Webhook URL ปัจจุบัน (รองรับ Neon Serverless Postgres API บน Vercel หรือใช้ค่า Custom ใน Settings)
  */
 function getEffectiveWebhookUrl() {
   try {
-    return localStorage.getItem("examCustomWebhookUrl") || DEFAULT_WEBHOOK_URL;
+    const custom = localStorage.getItem("examCustomWebhookUrl");
+    if (custom && custom.trim()) return custom.trim();
+
+    // หากรันอยู่บนโดเมน Vercel ให้ใช้ /api แบบ relative ทันทีเพื่อความเร็วสูงสุด (<30ms)
+    if (typeof window !== "undefined" && window.location && window.location.hostname && window.location.hostname.includes("vercel.app")) {
+      return `${window.location.origin}/api`;
+    }
+
+    return DEFAULT_WEBHOOK_URL;
   } catch (_) {
     return DEFAULT_WEBHOOK_URL;
   }

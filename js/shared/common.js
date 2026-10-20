@@ -180,7 +180,7 @@ function getStoredUsers() {
         username: "admin",
         displayName: "ผู้ดูแลระบบหลัก (Super Admin)",
         role: "ADMIN",
-        passcode: "admin1234",
+        passcode: "admin123",
         status: "ACTIVE",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -190,7 +190,17 @@ function getStoredUsers() {
         username: "teacher",
         displayName: "ครูผู้สอน / ผู้คุมสอบ",
         role: "TEACHER",
-        passcode: "teacher1234",
+        passcode: "teacher123",
+        status: "ACTIVE",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        userId: "USR-407272",
+        username: "teacher2",
+        displayName: "ครูผู้สอน 2",
+        role: "TEACHER",
+        passcode: "teacher2",
         status: "ACTIVE",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -206,18 +216,23 @@ function getStoredUsers() {
       localStorage.setItem("examProctorUsersList", JSON.stringify(defaultUsers));
       return defaultUsers;
     }
-    // อัปเดตรหัสผ่านตั้งต้นของ admin / teacher หากยังเป็นรหัส 6 หลักเดิม
+    // อัปเดตรหัสผ่านตั้งต้นของ admin / teacher ให้ตรงกับฐานข้อมูล Neon ล่าสุด
     let updated = false;
     parsed.forEach(u => {
-      if (u.username === "admin" && u.passcode === "999888") {
-        u.passcode = "admin1234";
+      if (u.username === "admin" && (u.passcode === "999888" || u.passcode === "admin1234")) {
+        u.passcode = "admin123";
         updated = true;
       }
-      if (u.username === "teacher" && u.passcode === "111222") {
-        u.passcode = "teacher1234";
+      if (u.username === "teacher" && (u.passcode === "111222" || u.passcode === "teacher1234")) {
+        u.passcode = "teacher123";
         updated = true;
       }
     });
+    // เพิ่ม teacher2 หากยังไม่มี
+    if (!parsed.some(u => u.username === "teacher2")) {
+      parsed.push(defaultUsers[2]);
+      updated = true;
+    }
     if (updated) {
       localStorage.setItem("examProctorUsersList", JSON.stringify(parsed));
     }
