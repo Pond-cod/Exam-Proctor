@@ -78,11 +78,11 @@ function updateSoundButtonUI() {
   const btn = document.getElementById("toggleSoundBtn");
   if (!btn) return;
   if (soundAlertEnabled) {
-    btn.innerHTML = `🔔 เสียงเตือน: เปิด`;
+    btn.innerHTML = `เสียงเตือน: เปิด`;
     btn.classList.remove("muted");
     btn.title = "คลิกเพื่อปิดเสียงแจ้งเตือน";
   } else {
-    btn.innerHTML = `🔕 เสียงเตือน: ปิด`;
+    btn.innerHTML = `เสียงเตือน: ปิด`;
     btn.classList.add("muted");
     btn.title = "คลิกเพื่อเปิดเสียงแจ้งเตือน";
   }
@@ -131,7 +131,7 @@ function updateLiveIncidentTicker(alertInfo) {
 
   if (alertInfo && alertInfo.s && alertInfo.log) {
     ticker.className = "live-incident-ticker danger compact-ticker";
-    badge.textContent = "🚨 แจ้งเตือนสลับหน้าจอสด!";
+    badge.textContent = "แจ้งเตือนสลับหน้าจอสด!";
     const sId = alertInfo.s.studentId;
     const roomInfo = alertInfo.s.roomTitle ? ` (ห้อง: ${alertInfo.s.roomTitle})` : "";
     const eventText = alertInfo.log.violation || "หลุดจากโหมดเต็มจอ";
@@ -142,7 +142,7 @@ function updateLiveIncidentTicker(alertInfo) {
     ticker.onclick = () => openStudentDetail(alertInfo.s);
   } else {
     ticker.className = "live-incident-ticker normal compact-ticker";
-    badge.textContent = "🟢 สถานะปกติ";
+    badge.textContent = "สถานะปกติ";
     const activeCount = liveStudents.length;
     msg.textContent = activeCount > 0 
       ? `ระบบกำลังติดตามผู้สอบสด ${activeCount} คนแบบเรียลไทม์ • ทุกคนกำลังทำข้อสอบอย่างซื่อสัตย์` 
@@ -167,15 +167,15 @@ function updateArchiveSummaryTicker(completedList, violationsCount) {
 
   if (alertStudents.length > 0) {
     ticker.className = "live-incident-ticker archive-ticker has-alert compact-ticker";
-    badge.textContent = "⚠️ พบบันทึกสลับจอ";
+    badge.textContent = "พบบันทึกสลับจอ";
     msg.innerHTML = `คลังประวัติบันทึกการส่งข้อสอบ <strong>${total} คน</strong> • พบบันทึกสลับจอสะสม <strong>${violationsCount} ครั้ง</strong> (ใน ${alertStudents.length} คน) • ประวัติถูกเก็บอย่างปลอดภัย`;
   } else if (total > 0) {
     ticker.className = "live-incident-ticker archive-ticker normal compact-ticker";
-    badge.textContent = "✅ ประวัติสมบูรณ์";
+    badge.textContent = "ประวัติสมบูรณ์";
     msg.innerHTML = `คลังประวัติบันทึกการส่งข้อสอบ <strong>${total} คน</strong> เรียบร้อยแล้ว • ไม่พบการทำผิดกฎการสอบ • ตรวจสอบประวัติย้อนหลังได้`;
   } else {
     ticker.className = "live-incident-ticker archive-ticker normal compact-ticker";
-    badge.textContent = "📁 คลังประวัติ";
+    badge.textContent = "คลังประวัติ";
     msg.textContent = "ยังไม่มีประวัติการส่งข้อสอบที่บันทึกไว้ในคลัง";
   }
 
@@ -331,7 +331,7 @@ function handleIncomingLiveEvent(payload) {
 
   const syncStatus = document.getElementById("syncStatusText");
   if (syncStatus) {
-    syncStatus.textContent = `⚡ อัปเดตสด: ${sId} (${new Date().toLocaleTimeString("th-TH")})`;
+    syncStatus.textContent = `อัปเดตสด: ${sId} (${new Date().toLocaleTimeString("th-TH")})`;
   }
 }
 
@@ -523,7 +523,7 @@ function connectSSEStream() {
       isSSEConnected = true;
       const syncStatus = document.getElementById("syncStatusText");
       if (syncStatus) {
-        syncStatus.innerHTML = `⚡ สตรีมสด <span style="color: #10b981; font-weight: 700;">เรียลไทม์ (&lt;1s)</span>`;
+        syncStatus.innerHTML = `สตรีมสด <span style="color: #10b981; font-weight: 700;">เรียลไทม์ (&lt;1s)</span>`;
       }
     };
 
@@ -539,7 +539,7 @@ function connectSSEStream() {
           let hasAlert = false;
           newItems.forEach(i => {
             mergedMap.set(i.logId || `${i.studentId}_${i.violation}_${i.timestamp}`, i);
-            if (i.eventType === "VIOLATION" || (i.severity && i.severity.includes("🚨"))) {
+            if (i.eventType === "VIOLATION" || (i.severity && (i.severity.includes("🚨") || i.severity.includes("ร้ายแรง") || i.severity.includes("แจ้งเตือน")))) {
               hasAlert = true;
             }
           });
@@ -553,7 +553,7 @@ function connectSSEStream() {
 
           const syncStatus = document.getElementById("syncStatusText");
           if (syncStatus) {
-            syncStatus.innerHTML = `⚡ สตรีมสด <span style="color: #10b981; font-weight: 700;">(&lt;1s)</span> ${new Date().toLocaleTimeString("th-TH")}`;
+            syncStatus.innerHTML = `สตรีมสด <span style="color: #10b981; font-weight: 700;">(&lt;1s)</span> ${new Date().toLocaleTimeString("th-TH")}`;
           }
         }
       } catch (_) {}
@@ -753,7 +753,7 @@ function renderMonitorLogs() {
     return tB - tA;
   });
 
-  // --- 1. สถิติและตัวชี้วัดสำหรับ 🔴 ศูนย์คุมสอบสด (Live Proctoring Center) ---
+  // --- 1. สถิติและตัวชี้วัดสำหรับ ศูนย์คุมสอบสด (Live Proctoring Center) ---
   // การ์ดและตัวชี้วัดในแท็บนี้ ต้องแสดงเฉพาะเหตุการณ์สดที่กำลังเกิดขึ้น ณ ขณะนี้เท่านั้น
   const totalActive = liveStudents.length;
 
@@ -787,7 +787,7 @@ function renderMonitorLogs() {
   const activeProgressFill = document.getElementById("statActiveProgressFill");
   const activeSubDetail = document.getElementById("statActiveSubDetail");
   if (activeProgressFill) activeProgressFill.style.width = `${activePercent}%`;
-  if (activeSubDetail) activeSubDetail.textContent = totalActive > 0 ? `🟢 กำลังคุมสอบสด ${totalActive} คน (${activePercent}%)` : `🟢 รอผู้เข้าทำข้อสอบ`;
+  if (activeSubDetail) activeSubDetail.textContent = totalActive > 0 ? `กำลังคุมสอบสด ${totalActive} คน (${activePercent}%)` : `รอผู้เข้าทำข้อสอบ`;
 
   const violationsProgressFill = document.getElementById("statViolationsProgressFill");
   const violationsSubDetail = document.getElementById("statViolationsSubDetail");
@@ -796,11 +796,11 @@ function renderMonitorLogs() {
   if (violationsProgressFill) violationsProgressFill.style.width = `${liveAlertPercent}%`;
   if (violationsSubDetail) {
     if (unacknowledgedLiveCount > 0) {
-      violationsSubDetail.innerHTML = `🚨 ยังไม่ได้ตรวจ ${unacknowledgedLiveCount} คน • เตือนสด ${liveViolationsCount} ครั้ง`;
+      violationsSubDetail.innerHTML = `ยังไม่ได้ตรวจ ${unacknowledgedLiveCount} คน • เตือนสด ${liveViolationsCount} ครั้ง`;
     } else if (liveViolationsCount > 0) {
-      violationsSubDetail.innerHTML = `🟢 ตรวจแล้วครบทุกเหตุการณ์`;
+      violationsSubDetail.innerHTML = `ตรวจแล้วครบทุกเหตุการณ์`;
     } else {
-      violationsSubDetail.textContent = `✅ ไม่พบการกระทำผิดสด`;
+      violationsSubDetail.textContent = `ไม่พบการกระทำผิดสด`;
     }
   }
 
@@ -811,7 +811,7 @@ function renderMonitorLogs() {
   const latestLiveTimeStr = latestLiveStudent && latestLiveStudent.submitTime ? formatDisplayTime(latestLiveStudent.submitTime) : "-";
   if (submittedSubDetail) submittedSubDetail.textContent = `ส่งล่าสุด: ${latestLiveTimeStr}`;
 
-  // --- 2. สถิติและตัวชี้วัดสำหรับ 📁 คลังประวัติและรายงานย้อนหลัง (Exam Archives) ---
+  // --- 2. สถิติและตัวชี้วัดสำหรับ คลังประวัติและรายงานย้อนหลัง (Exam Archives) ---
   const totalArchiveCount = completedStudents.length;
   const archiveViolationsCount = completedStudents.reduce((sum, s) => sum + (s.violationCount || 0), 0);
   const archiveAlertStudentsCount = completedStudents.filter(s => s.hasAlert || s.violationCount > 0).length;
@@ -960,7 +960,7 @@ function updateFilterBadges() {
 function renderStudentCardHtml(s, isCompletedView) {
   let cardClass = "student-screen-card";
   let statusBadge = "";
-  let statusText = "🟢 ปกติ";
+  let statusText = "ปกติ";
 
   if (s.isSubmitted) {
     cardClass += " is-submitted";
@@ -969,26 +969,26 @@ function renderStudentCardHtml(s, isCompletedView) {
       statusBadge = `
         <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
           <span class="badge badge-danger" title="พบเหตุการณ์สลับหน้าจอ (ยังไม่ได้ตรวจ)">
-            ⚠️ เตือน ${s.violationCount} ครั้ง
+            เตือน ${s.violationCount} ครั้ง
           </span>
           <span class="badge badge-success">ส่งข้อสอบแล้ว</span>
         </div>
       `;
-      statusText = `⚠️ ส่งแล้ว (เตือน ${s.violationCount} ครั้ง)`;
+      statusText = `ส่งแล้ว (เตือน ${s.violationCount} ครั้ง)`;
     } else if (s.isAcknowledged) {
       cardClass += " is-acknowledged";
       statusBadge = `
         <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
           <span class="badge badge-acknowledged" title="ผู้คุมสอบตรวจรับทราบแล้ว">
-            🟢 ตรวจแล้ว (${s.violationCount} ครั้ง)
+            ตรวจแล้ว (${s.violationCount} ครั้ง)
           </span>
           <span class="badge badge-success">ส่งข้อสอบแล้ว</span>
         </div>
       `;
-      statusText = `✅ ส่งแล้ว (ตรวจแล้ว ${s.violationCount} ครั้ง)`;
+      statusText = `ส่งแล้ว (ตรวจแล้ว ${s.violationCount} ครั้ง)`;
     } else {
       statusBadge = `<span class="badge badge-success">ส่งข้อสอบแล้ว</span>`;
-      statusText = "✅ ส่งข้อสอบแล้ว";
+      statusText = "ส่งข้อสอบแล้ว";
     }
   } else if (s.hasActiveAlert) {
     cardClass += " has-alert";
@@ -998,38 +998,38 @@ function renderStudentCardHtml(s, isCompletedView) {
         เตือน ${s.violationCount} ครั้ง
       </span>
     `;
-    statusText = "🚨 พบการแจ้งเตือนสลับจอ";
+    statusText = "พบการแจ้งเตือนสลับจอ";
   } else if (s.isAcknowledged) {
     cardClass += " is-acknowledged";
     statusBadge = `
       <span class="badge badge-acknowledged">
-        🟢 ตรวจแล้ว (${s.violationCount} ครั้ง)
+        ตรวจแล้ว (${s.violationCount} ครั้ง)
       </span>
     `;
-    statusText = "🟢 ปกติ (ตรวจแล้ว)";
+    statusText = "ปกติ (ตรวจแล้ว)";
   } else {
     statusBadge = `<span class="badge badge-primary">กำลังสอบ</span>`;
   }
 
   const startTimeStr = formatDisplayTime(s.startTime);
   const lastTimeStr = formatDisplayTime(s.lastEventTime, s.lastEventIso);
-  const datePrefix = isCompletedView && s.dateMeta && s.dateMeta.titleShort ? `📅 ${escapeHtml(s.dateMeta.titleShort)} • ` : "";
+  const datePrefix = isCompletedView && s.dateMeta && s.dateMeta.titleShort ? `${escapeHtml(s.dateMeta.titleShort)} • ` : "";
   const durationText = getStudentElapsedDuration(s);
 
   return `
     <div class="${cardClass}" data-student-id="${escapeHtml(s.studentId)}">
       <div class="screen-card-header">
         <div class="screen-card-identity">
-          <div class="screen-device-icon" style="font-size: 18px;">
-            🎓
+          <div class="screen-device-icon" style="font-size: 13px; font-weight: 700; color: var(--primary);">
+            ID
           </div>
           <div class="screen-station-text">
             <span class="screen-station-label">รหัสประจำตัวนักเรียน</span>
             <span class="screen-station-id">${escapeHtml(s.studentId)}</span>
             <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-              ${datePrefix}⏱️ ${escapeHtml(durationText)} (เริ่ม: ${startTimeStr})
+              ${datePrefix}เวลา: ${escapeHtml(durationText)} (เริ่ม: ${startTimeStr})
             </div>
-            ${s.roomTitle ? `<div style="font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 170px;" title="${escapeHtml(s.roomTitle)}">📚 ${escapeHtml(s.roomTitle)}</div>` : ""}
+            ${s.roomTitle ? `<div style="font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 170px;" title="${escapeHtml(s.roomTitle)}">วิชา: ${escapeHtml(s.roomTitle)}</div>` : ""}
           </div>
         </div>
         ${statusBadge}
@@ -1046,7 +1046,6 @@ function renderStudentCardHtml(s, isCompletedView) {
           <div class="screen-content-area">
             ${s.isSubmitted ? `
               <div class="screen-status-center ${s.hasActiveAlert ? "alert" : (s.isAcknowledged ? "acknowledged" : "success")}">
-                <div style="font-size: 26px;">${s.hasActiveAlert ? "⚠️" : "📝"}</div>
                 <div style="font-size: 13px; font-weight: 700; color: ${s.hasActiveAlert ? "#b91c1c" : "#059669"}; margin-top: 4px;">
                   ${s.hasActiveAlert 
                     ? `ส่งแล้ว (เตือน ${s.violationCount} ครั้ง - ยังไม่ตรวจ)` 
@@ -1057,13 +1056,11 @@ function renderStudentCardHtml(s, isCompletedView) {
               </div>
             ` : (s.hasActiveAlert ? `
               <div class="screen-status-center alert">
-                <div style="font-size: 28px;">🚨</div>
                 <div style="font-size: 12.5px; font-weight: 700; color: #dc2626; margin-top: 4px;">ตรวจพบการสลับจอ / หลุดเต็มจอ</div>
                 <div style="font-size: 11px; color: #991b1b; max-width: 180px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(s.lastEventText)}</div>
               </div>
             ` : (s.isAcknowledged ? `
               <div class="screen-status-center acknowledged">
-                <div style="font-size: 26px;">🟢</div>
                 <div style="font-size: 12.5px; font-weight: 600; color: #059669; margin-top: 4px;">สถานะปกติ (ตรวจสอบแล้ว)</div>
                 <div style="font-size: 11px; color: var(--text-muted);">ตรวจแล้ว ${s.violationCount} ครั้ง • เฝ้าระวังต่อ</div>
               </div>
@@ -1088,7 +1085,7 @@ function renderStudentCardHtml(s, isCompletedView) {
         <div style="display: flex; gap: 6px; align-items: center;">
           ${s.hasActiveAlert ? `
             <button type="button" class="screen-ack-btn" data-student-id="${escapeHtml(s.studentId)}" title="คลิกเมื่อตรวจสอบแล้ว เพื่อรีเซ็ตสถานะกลับเป็นปกติ">
-              ✅ ตรวจแล้ว
+              ตรวจแล้ว
             </button>
           ` : ""}
           <button class="btn btn-secondary screen-view-detail-btn" data-student-id="${escapeHtml(s.studentId)}" style="min-height: 32px; padding: 4px 10px; font-size: 12px;">
@@ -1191,17 +1188,17 @@ function renderSelectedCategoryGrid(query) {
     case "alert":
       pool = liveAlertStudents;
       categoryTitle = "ผู้สอบสดที่พบการแจ้งเตือนสลับจอ (Live Violations)";
-      categoryIcon = "⚠️";
-      emptyTitle = "✅ ไม่พบการแจ้งเตือนสด";
+      categoryIcon = "";
+      emptyTitle = "ไม่พบการแจ้งเตือนสด";
       emptyDesc = "ผู้เข้าสอบสดทุกคนอยู่ในโหมดเต็มหน้าจอและทำข้อสอบด้วยความซื่อสัตย์";
       break;
 
     case "completed":
       pool = liveRecentSubmitted;
       categoryTitle = "ผู้ที่ส่งข้อสอบแล้วในรอบสด (Submitted in Live Session)";
-      categoryIcon = "🏆";
+      categoryIcon = "";
       emptyTitle = "ยังไม่มีผู้ส่งข้อสอบในรอบสด";
-      emptyDesc = "ประวัติผู้ที่ส่งข้อสอบทั้งหมดจะถูกจัดเก็บไว้ใน '📁 คลังประวัติ & รายงานย้อนหลัง'";
+      emptyDesc = "ประวัติผู้ที่ส่งข้อสอบทั้งหมดจะถูกจัดเก็บไว้ใน 'คลังประวัติและรายงานย้อนหลัง'";
       break;
 
     case "all":
@@ -1271,11 +1268,11 @@ function renderSelectedCategoryGrid(query) {
         ${totalCompleted > 0 && pool.length === 0 ? `
           <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
             <button type="button" class="btn btn-sm btn-outline-primary" id="btnEmptyViewArchive" style="font-size: 12px; padding: 5px 14px; border-radius: 99px;">
-              📁 ดูคลังประวัติผู้ส่งข้อสอบแล้ว (${totalCompleted} คน)
+              ดูคลังประวัติผู้ส่งข้อสอบแล้ว (${totalCompleted} คน)
             </button>
             ${totalAlert > 0 ? `
               <button type="button" class="btn btn-sm btn-outline-danger" id="btnEmptyViewArchiveAlert" style="font-size: 12px; padding: 5px 14px; border-radius: 99px; color: #dc2626; border-color: #fecaca; background: #fff1f2;">
-                ⚠️ ดูประวัติการแจ้งเตือน (${totalAlert} คน)
+                ดูประวัติการแจ้งเตือน (${totalAlert} คน)
               </button>
             ` : ""}
           </div>
@@ -1447,12 +1444,11 @@ function renderCompletedScreensGrid(query) {
       <div class="completed-date-section" data-date-key="${escapeHtml(grp.dateKey)}">
         <div class="completed-date-header">
           <div class="completed-date-title-box">
-            <span class="completed-date-icon">📅</span>
             <span class="completed-date-title">${escapeHtml(grp.titleFull)}</span>
-            <span class="badge badge-neutral" style="font-weight: 700; font-size: 12px;">👥 ส่งแล้ว ${grp.students.length} คน</span>
+            <span class="badge badge-neutral" style="font-weight: 700; font-size: 12px;">ส่งแล้ว ${grp.students.length} คน</span>
             ${grp.totalViolations > 0 
-              ? `<span class="badge badge-danger" style="font-size: 11.5px;">⚠️ แจ้งเตือนรวม ${grp.totalViolations} ครั้ง</span>` 
-              : `<span class="badge badge-success" style="font-size: 11.5px;">✅ การสอบปกติ</span>`}
+              ? `<span class="badge badge-danger" style="font-size: 11.5px;">แจ้งเตือนรวม ${grp.totalViolations} ครั้ง</span>` 
+              : `<span class="badge badge-success" style="font-size: 11.5px;">การสอบปกติ</span>`}
           </div>
           <div class="completed-date-actions">
             <span style="font-size: 12px; color: var(--text-muted);">
@@ -1587,16 +1583,16 @@ function updateModalContent(s) {
   if (statusVal) {
     if (s.isSubmitted) {
       statusVal.innerHTML = s.hasActiveAlert 
-        ? `<span style="color:#dc2626; font-weight:700;">ส่งแล้ว (⚠️ เตือน ${s.violationCount} ครั้ง - ยังไม่ตรวจ)</span>` 
+        ? `<span style="color:#dc2626; font-weight:700;">ส่งแล้ว (เตือน ${s.violationCount} ครั้ง - ยังไม่ตรวจ)</span>` 
         : (s.isAcknowledged 
-          ? `<span style="color:#059669; font-weight:700;">ส่งแล้ว (🟢 ตรวจแล้ว ${s.violationCount} ครั้ง)</span>` 
+          ? `<span style="color:#059669; font-weight:700;">ส่งแล้ว (ตรวจแล้ว ${s.violationCount} ครั้ง)</span>` 
           : `<span style="color:#059669; font-weight:700;">ส่งข้อสอบแล้ว (ปกติ)</span>`);
     } else {
       statusVal.innerHTML = s.hasActiveAlert 
-        ? `<span style="color:#dc2626; font-weight:700;">🚨 พบแจ้งเตือนสลับจอ (ยังไม่ตรวจ)</span>` 
+        ? `<span style="color:#dc2626; font-weight:700;">พบแจ้งเตือนสลับจอ (ยังไม่ตรวจ)</span>` 
         : (s.isAcknowledged 
-          ? `<span style="color:#059669; font-weight:700;">🟢 สถานะปกติ (ตรวจแล้ว ${s.violationCount} ครั้ง)</span>` 
-          : `<span style="color:#2563eb; font-weight:700;">🟢 กำลังสอบ (ปกติ)</span>`);
+          ? `<span style="color:#059669; font-weight:700;">สถานะปกติ (ตรวจแล้ว ${s.violationCount} ครั้ง)</span>` 
+          : `<span style="color:#2563eb; font-weight:700;">กำลังสอบ (ปกติ)</span>`);
     }
   }
   if (violationVal) violationVal.textContent = `${s.violationCount} ครั้ง`;
@@ -1608,14 +1604,14 @@ function updateModalContent(s) {
     if (s.hasActiveAlert) {
       ackBtn.style.display = "inline-flex";
       ackBtn.disabled = false;
-      ackBtn.innerHTML = `✅ ตรวจสอบแล้ว (กลับสู่สถานะปกติ)`;
+      ackBtn.innerHTML = `ตรวจสอบแล้ว (กลับสู่สถานะปกติ)`;
       ackBtn.onclick = () => {
         acknowledgeStudentAlert(s.studentId);
       };
     } else if (s.isAcknowledged) {
       ackBtn.style.display = "inline-flex";
       ackBtn.disabled = true;
-      ackBtn.innerHTML = `✓ ตรวจสอบแล้ว (${s.violationCount} ครั้ง)`;
+      ackBtn.innerHTML = `ตรวจสอบแล้ว (${s.violationCount} ครั้ง)`;
       ackBtn.onclick = null;
     } else {
       ackBtn.style.display = "none";
@@ -1631,13 +1627,10 @@ function updateModalContent(s) {
       const isAlert = !isStart && !isEnd;
 
       let dotClass = "normal";
-      let icon = "ℹ️";
       if (isAlert) {
         dotClass = "danger";
-        icon = "🚨";
       } else if (isEnd) {
         dotClass = "success";
-        icon = "📝";
       }
 
       return `
@@ -1645,7 +1638,7 @@ function updateModalContent(s) {
           <div class="timeline-dot ${dotClass}"></div>
           <div class="timeline-content">
             <div class="timeline-time">${formatDisplayTime(l.time, l.timestamp)}</div>
-            <div class="timeline-text">${icon} ${escapeHtml(l.violation || "-")}</div>
+            <div class="timeline-text">${escapeHtml(l.violation || "-")}</div>
           </div>
         </div>
       `;
@@ -1939,7 +1932,7 @@ function openOfficialExamReport() {
   if (tbody) {
     violators.sort((a, b) => b.violationCount - a.violationCount);
     if (violators.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 18px; color: #166534; font-weight: 600; background: #f0fdf4;">✅ ยอดเยี่ยม ไม่พบประวัติการแจ้งเตือนหรือการทุจริตในรอบการสอบนี้ ผู้สอบทุกคนปฏิบัติตามกฎอย่างเคร่งครัด</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 18px; color: #166534; font-weight: 600; background: #f0fdf4;">ไม่พบประวัติการแจ้งเตือนหรือการทุจริตในรอบการสอบนี้ ผู้สอบทุกคนปฏิบัติตามกฎอย่างเคร่งครัด</td></tr>`;
     } else {
       tbody.innerHTML = violators.map((s, idx) => {
         const startStr = s.startTime ? formatDisplayTime(s.startTime) : "-";
@@ -1957,7 +1950,7 @@ function openOfficialExamReport() {
             <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-size: 10.5px; color: #475569;">${startStr} - ${endStr}</td>
             <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #b91c1c;">${s.violationCount} ครั้ง</td>
             <td style="padding: 6px 8px; border: 1px solid #cbd5e1; line-height: 1.4;">${violationsSummary || "-"}</td>
-            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; font-size: 10.5px;">${s.isAcknowledged ? "🟢 ตรวจสอบแล้ว" : "⚠️ ยังไม่ตรวจ"}</td>
+            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; text-align: center; font-size: 10.5px;">${s.isAcknowledged ? "ตรวจสอบแล้ว" : "ยังไม่ตรวจ"}</td>
           </tr>
         `;
       }).join("");
@@ -2024,7 +2017,7 @@ function exportLogsToCsv() {
     const eType = item.eventType || "VIOLATION";
     const detail = item.violation || "-";
     const vCount = item.violationCount || 0;
-    const severity = item.severity || "⚠️ ทั่วไป";
+    const severity = (item.severity ? String(item.severity).replace(/[⚠️🚨🟢✅]/g, "").trim() : "") || "ทั่วไป";
 
     const escapeCsv = (val) => `"${String(val).replace(/"/g, '""')}"`;
 
@@ -2187,9 +2180,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (resetSessionBtn) {
     resetSessionBtn.addEventListener("click", async () => {
       const confirmed = await showConfirm(
-        "ต้องการเริ่มรอบการสอบใหม่หรือไม่?\n\nระบบจะย้ายหน้าจอผู้สอบชุดก่อนหน้าทั้งหมดไปยัง '📁 ประวัติผู้ส่งข้อสอบแล้ว' เพื่อให้หน้าจอคุมสอบสดว่างพร้อมรับนักเรียนรอบใหม่",
+        "ต้องการเริ่มรอบการสอบใหม่หรือไม่?\n\nระบบจะย้ายหน้าจอผู้สอบชุดก่อนหน้าทั้งหมดไปยัง 'ประวัติผู้ส่งข้อสอบแล้ว' เพื่อให้หน้าจอคุมสอบสดว่างพร้อมรับนักเรียนรอบใหม่",
         {
-          title: "✨ เริ่มรอบสอบใหม่ (Reset Live Monitor)",
+          title: "เริ่มรอบสอบใหม่ (Reset Live Monitor)",
           confirmText: "เริ่มรอบใหม่ทันที",
           cancelText: "ยกเลิก"
         }

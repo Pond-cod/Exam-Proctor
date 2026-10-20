@@ -151,25 +151,25 @@ async function handleTestWebhook() {
 
     if (res.ok) {
       if (statusEl) {
-        statusEl.innerHTML = "🟢 การเชื่อมต่อสมบูรณ์: Neon Serverless API ตอบสนองปกติ";
+        statusEl.innerHTML = "การเชื่อมต่อสมบูรณ์: Neon Serverless API ตอบสนองปกติ";
         statusEl.style.color = "#059669";
       }
       showAlert("การเชื่อมต่อ API สำเร็จ! ระบบสามารถบันทึกข้อมูลลงฐานข้อมูล Neon ได้ตามปกติ", { type: "success" });
     } else {
       if (statusEl) {
-        statusEl.innerHTML = `⚠️ ได้รับสถานะ HTTP ${res.status}`;
+        statusEl.innerHTML = `ได้รับสถานะ HTTP ${res.status}`;
         statusEl.style.color = "#d97706";
       }
     }
   } catch (err) {
     if (statusEl) {
-      statusEl.innerHTML = "🔴 การเชื่อมต่อขัดข้อง: ไม่สามารถส่งข้อมูลไปยัง API ได้";
+      statusEl.innerHTML = "การเชื่อมต่อขัดข้อง: ไม่สามารถส่งข้อมูลไปยัง API ได้";
       statusEl.style.color = "#dc2626";
     }
   } finally {
     if (testBtn) {
       testBtn.disabled = false;
-      testBtn.innerHTML = "🔌 ทดสอบ Webhook";
+      testBtn.innerHTML = "ทดสอบ Webhook";
     }
   }
 }
@@ -196,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
     togglePassBtn.addEventListener("click", () => {
       const isPassword = adminPassInput.type === "password";
       adminPassInput.type = isPassword ? "text" : "password";
-      togglePassBtn.textContent = isPassword ? "🙈" : "👁️";
+      togglePassBtn.textContent = isPassword ? "ซ่อน" : "แสดง";
     });
   }
 

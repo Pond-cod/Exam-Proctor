@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" href="../logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/style.css?v=6.3">
   <style>
     .login-wrapper {
       min-height: 100vh;
@@ -97,8 +97,8 @@
             <label class="form-label" for="loginPasscodeInput" style="margin-bottom: 0;">
               รหัสผ่าน (Password) *
             </label>
-            <button type="button" id="togglePasswordBtn" style="background: none; border: none; font-size: 12.5px; color: var(--primary); cursor: pointer; padding: 0; font-weight: 600;">
-              👁️ แสดงรหัสผ่าน
+            <button type="button" id="togglePasswordBtn" style="background: none; border: none; font-size: 14px; color: var(--primary); cursor: pointer; padding: 0; font-weight: 600;">
+              แสดงรหัสผ่าน
             </button>
           </div>
           <input 
@@ -111,24 +111,24 @@
             required
             style="font-size: 16px; letter-spacing: 0.05em;"
           >
-          <div class="form-hint" style="color: var(--text-muted); font-size: 11.5px; margin-top: 5px;">
+          <div class="form-hint" style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">
             รหัสผ่านสำหรับเข้าใช้งานระบบ ต้องมีความยาวอย่างน้อย 8 ตัวอักษร
           </div>
         </div>
 
-        <div id="loginErrorMessage" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px;">
+        <div id="loginErrorMessage" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 15px; margin-bottom: 14px;">
           ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง
         </div>
 
-        <button type="submit" id="submitLoginBtn" class="btn btn-primary btn-lg btn-block" style="font-weight: 700; min-height: 46px; font-size: 15px;">
-          🚀 เข้าสู่ระบบ
+        <button type="submit" id="submitLoginBtn" class="btn btn-primary btn-lg btn-block" style="font-weight: 700; min-height: 46px; font-size: 16px;">
+          เข้าสู่ระบบ
         </button>
       </form>
 
-      <div style="margin-top: 18px; padding: 12px 14px; background: #eff6ff; border-radius: var(--radius-sm); border: 1px solid #bfdbfe; font-size: 12px; color: #1e40af; line-height: 1.6;">
-        <strong>🛡️ ระบบยืนยันตัวตนบุคลากรทางการศึกษา:</strong><br>
+      <div style="margin-top: 18px; padding: 12px 14px; background: #eff6ff; border-radius: var(--radius-sm); border: 1px solid #bfdbfe; font-size: 14px; color: #1e40af; line-height: 1.6;">
+        <strong>ระบบยืนยันตัวตนบุคลากรทางการศึกษา:</strong><br>
         กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่านที่ได้รับมอบหมายจากผู้ดูแลระบบหลัก
-        <div style="margin-top: 4px; font-size: 11px; color: #64748b; border-top: 1px dashed #bfdbfe; padding-top: 4px;">
+        <div style="margin-top: 4px; font-size: 13px; color: #64748b; border-top: 1px dashed #bfdbfe; padding-top: 4px;">
           * รหัสผ่านเข้าสู่ระบบ (8 หลักขึ้นไป) แยกขาดจากรหัสผ่านผู้คุมสอบ (6 หลัก) ประจำห้องสอบ
         </div>
       </div>
@@ -141,9 +141,9 @@
     </div>
   </div>
 
-  <script src="../js/shared/config.js?v=6.2"></script>
-  <script src="../js/shared/common.js?v=6.2"></script>
-  <script src="../js/backend/auth.js?v=6.2"></script>
+  <script src="../js/shared/config.js?v=6.3"></script>
+  <script src="../js/shared/common.js?v=6.3"></script>
+  <script src="../js/backend/auth.js?v=6.3"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       // ตรวจสอบว่าเข้าสู่ระบบอยู่แล้วหรือไม่ หากมี Session แล้วให้ข้ามไปหน้าปลายทาง
@@ -166,10 +166,10 @@
         togglePassBtn.addEventListener("click", () => {
           if (passInput.type === "password") {
             passInput.type = "text";
-            togglePassBtn.textContent = "🙈 ซ่อนรหัสผ่าน";
+            togglePassBtn.textContent = "ซ่อนรหัสผ่าน";
           } else {
             passInput.type = "password";
-            togglePassBtn.textContent = "👁️ แสดงรหัสผ่าน";
+            togglePassBtn.textContent = "แสดงรหัสผ่าน";
           }
         });
       }
@@ -221,13 +221,13 @@
             submitBtn.innerHTML = origBtnText;
 
             const totpCode = await showPrompt(authResult.message || "กรุณากรอกรหัส Authenticator 6 หลักจากแอปของคุณ:", {
-              title: "ยืนยันตัวตน 2 ชั้น (2FA) 🔐",
+              title: "ยืนยันตัวตน 2 ชั้น (2FA)",
               inputType: "text",
               inputPlaceholder: "เช่น 123456",
               confirmText: "ยืนยันรหัส",
               cancelText: "ยกเลิก",
               confirmClass: "primary",
-              icon: "🛡️"
+              icon: ""
             });
 
             if (!totpCode) {

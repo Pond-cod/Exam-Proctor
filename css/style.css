@@ -1,7 +1,7 @@
-/* Google Fonts are preconnected and loaded asynchronously via <link> in HTML <head> for zero render-blocking */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
 
 /* ==========================================================================
-   Design Tokens - Vibrant, Modern & High-Contrast Theme (v5.6)
+   Design Tokens - Official Academic & Vibrant Theme (v6.3)
    ========================================================================== */
 :root {
   /* Vibrant Brand Colors & Accents */
@@ -40,9 +40,9 @@
 
   /* Modern Glass & Surface Colors */
   --bg-main: #f8fafc;
-  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-card: rgba(255, 255, 255, 0.96);
   --bg-card-hover: #ffffff;
-  --bg-card-border: rgba(226, 232, 240, 0.85);
+  --bg-card-border: #cbd5e1;
   --bg-subtle: #f1f5f9;
   --bg-input: #ffffff;
   --border-input: #cbd5e1;
@@ -60,13 +60,14 @@
   --shadow-lg: 0 14px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(2, 132, 199, 0.06);
   --shadow-xl: 0 24px 40px -8px rgba(15, 23, 42, 0.12), 0 8px 16px -4px rgba(2, 132, 199, 0.08);
 
-  /* Curved Geometry */
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  /* Official Clean Geometry */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
 
-  --font-sans: 'Prompt', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Official Typography: TH Sarabun PSK primary with universal Sarabun web fallback */
+  --font-sans: 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ==========================================================================
@@ -227,14 +228,45 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 18px;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  margin-top: 0;
+}
+
+h1 {
+  font-size: 28px !important;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+h2 {
+  font-size: 22px !important;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+h3 {
+  font-size: 19px !important;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+p, span, label, input, select, textarea, button, td, th {
+  font-family: var(--font-sans);
+}
+
 body {
   font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.55;
   background-color: #f0f7ff;
   background-image: 
     /* 1. Top Wide Atmospheric Glow: Royal / Deep Navy Blue */
@@ -349,18 +381,19 @@ img, svg, video, canvas, iframe {
 }
 
 .brand-title {
-  font-size: 18px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #0369a1 0%, #0284c7 40%, #2563eb 80%, #7c3aed 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: 21px !important;
+  font-weight: 700;
+  color: #1e40af;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+[data-theme="dark"] .brand-title {
+  color: #38bdf8;
 }
 
 .brand-subtitle {
-  font-size: 11.5px;
+  font-size: 15px !important;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -663,7 +696,7 @@ img, svg, video, canvas, iframe {
 
 .form-label {
   display: block;
-  font-size: 14px;
+  font-size: 17px !important;
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--text-primary);
@@ -671,14 +704,14 @@ img, svg, video, canvas, iframe {
 
 .form-control {
   width: 100%;
-  min-height: 44px;
+  min-height: 46px;
   padding: 10px 14px;
   background: var(--bg-input);
   border: 1.5px solid var(--border-input);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 17px !important;
   font-weight: 500;
   outline: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
@@ -690,7 +723,7 @@ img, svg, video, canvas, iframe {
 }
 
 .form-hint {
-  font-size: 12px;
+  font-size: 15px !important;
   color: var(--text-muted);
   margin-top: 6px;
   line-height: 1.45;
@@ -719,9 +752,9 @@ img, svg, video, canvas, iframe {
   gap: 8px;
   min-height: 44px;
   padding: 10px 20px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 17px !important;
   font-weight: 700;
   border: 1.5px solid transparent;
   cursor: pointer;
@@ -2658,10 +2691,10 @@ img, svg, video, canvas, iframe {
   background: #ecfdf5;
   color: #065f46;
   border: 1px solid #a7f3d0;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 15px !important;
+  font-weight: 600;
   padding: 3px 10px;
-  border-radius: 99px;
+  border-radius: var(--radius-sm);
   margin-bottom: 10px;
 }
 .monitor-live-badge .live-dot {
@@ -2690,11 +2723,11 @@ img, svg, video, canvas, iframe {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 15px !important;
+  font-weight: 600;
   padding: 4px 12px;
-  border-radius: var(--radius-full);
-  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.01em;
   transition: all 0.2s ease;
 }
 
@@ -2705,10 +2738,9 @@ img, svg, video, canvas, iframe {
 }
 
 .role-badge-admin {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: #fef3c7;
   color: #92400e;
   border: 1px solid #f59e0b;
-  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.2);
 }
 
 .btn-outline-role {
@@ -2820,26 +2852,25 @@ img, svg, video, canvas, iframe {
   -webkit-backdrop-filter: blur(8px);
   padding: 5px 16px;
   border-radius: var(--radius-full);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-size: 15px !important;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   margin-bottom: 12px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .portal-hero-title {
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 28px !important;
+  font-weight: 700;
   margin-bottom: 10px;
-  letter-spacing: -0.02em;
   color: #ffffff;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .portal-hero-desc {
-  font-size: 14.5px;
-  line-height: 1.65;
+  font-size: 18px !important;
+  line-height: 1.6;
   color: rgba(255, 255, 255, 0.95);
   max-width: 680px;
 }
@@ -2884,10 +2915,10 @@ img, svg, video, canvas, iframe {
 }
 
 .portal-card-title {
-  font-size: 16px;
+  font-size: 19px !important;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.45;
+  line-height: 1.4;
   margin-bottom: 10px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -2900,7 +2931,7 @@ img, svg, video, canvas, iframe {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 15px !important;
   color: #059669;
   font-weight: 600;
   margin-top: auto;
@@ -2908,7 +2939,8 @@ img, svg, video, canvas, iframe {
 }
 
 .portal-enter-btn {
-  font-size: 14px;
+  font-size: 17px !important;
+  font-weight: 700;
   padding: 10px 16px;
   border-radius: var(--radius-sm);
 }
@@ -2996,10 +3028,6 @@ img, svg, video, canvas, iframe {
   
   .portal-hero-banner {
     padding: 24px 18px;
-  }
-  
-  .portal-hero-title {
-    font-size: 21px;
   }
   
   .passcode-card-grid, .result-passcodes-grid {
@@ -3397,7 +3425,7 @@ img, svg, video, canvas, iframe {
   color: #ffffff;
 }
 
-/* Compact Primary Mode Switcher (🔴 Live Monitor VS 📁 Archive) */
+/* Compact Primary Mode Switcher (Live Monitor VS Archive) */
 .monitor-primary-nav {
   display: flex;
   gap: 6px;

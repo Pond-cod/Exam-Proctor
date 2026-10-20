@@ -263,11 +263,11 @@ function showDialog(opts) {
     const inputEl  = document.getElementById("customDialogInput");
     const actionsEl = document.getElementById("customDialogActions");
 
-    // Icon
-    const iconMap = { info: "ℹ️", success: "✅", danger: "🚨", warning: "⚠️", question: "❓", lock: "🔒" };
-    const colorMap = { info: "icon-info", success: "icon-success", danger: "icon-danger", warning: "icon-warning", question: "icon-info", lock: "icon-info" };
-    iconEl.className = `custom-dialog-icon ${colorMap[opts.type] || "icon-info"}`;
-    iconEl.textContent = opts.icon || iconMap[opts.type] || "ℹ️";
+    // Icon (Disabled for clean official appearance)
+    if (iconEl) {
+      iconEl.style.display = "none";
+      iconEl.textContent = "";
+    }
 
     titleEl.textContent  = opts.title || "";
     msgEl.textContent    = opts.message || "";
@@ -342,7 +342,7 @@ function showAlert(message, opts = {}) {
 function showConfirm(message, opts = {}) {
   return showDialog({
     type: opts.type || "question",
-    icon: opts.icon || "❓",
+    icon: opts.icon || "",
     title: opts.title || "ยืนยันการดำเนินการ",
     message,
     confirmText: opts.confirmText || "ยืนยัน",
@@ -355,7 +355,7 @@ function showConfirm(message, opts = {}) {
 function showPrompt(message, opts = {}) {
   return showDialog({
     type: opts.type || "lock",
-    icon: opts.icon || "🔒",
+    icon: opts.icon || "",
     title: opts.title || "",
     message,
     inputType: opts.inputType || "text",

@@ -1,10 +1,10 @@
 /**
  * Exam Proctor Studio - PWA Service Worker
  * Fast caching of app shell, styles, and assets
- * Version: 6.0
+ * Version: 6.3
  */
 
-const CACHE_NAME = "exam-proctor-shell-v6.2";
+const CACHE_NAME = "exam-proctor-shell-v6.3";
 const SHELL_ASSETS = [
   "/",
   "/index.html",

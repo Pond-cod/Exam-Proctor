@@ -211,7 +211,7 @@ function logViolation(detail, isSeverityHigh = false) {
 function showToastAlert(msg) {
   const toast = document.getElementById("toastAlert");
   if (!toast) return;
-  toast.innerHTML = `<span style="font-size: 16px; margin-right: 6px;">⚠️</span> ${escapeHtml(msg)}`;
+  toast.innerHTML = `<span style="font-weight: 700; margin-right: 6px;">[แจ้งเตือน]</span> ${escapeHtml(msg)}`;
   toast.classList.add("active");
   clearTimeout(window.toastTimer);
   window.toastTimer = setTimeout(() => {
@@ -857,7 +857,7 @@ async function handleStudentFinished() {
       confirmText: "ยืนยันส่งข้อสอบ",
       cancelText: "ยังทำไม่เสร็จ",
       confirmClass: "success",
-      icon: "📝"
+      icon: ""
     }
   );
 
@@ -888,7 +888,7 @@ async function handleAdminUnlock() {
     confirmText: "ปลดล็อก",
     cancelText: "ยกเลิก",
     confirmClass: "primary",
-    icon: "🔒"
+    icon: ""
   });
 
   if (!pass) return;

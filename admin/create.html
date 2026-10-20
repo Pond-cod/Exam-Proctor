@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" href="../logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/style.css?v=6.3">
 </head>
 <body>
 
@@ -33,24 +33,24 @@
 
       <!-- เมนูนำทางหลังบ้าน -->
       <div class="nav-links" id="navLinksMenu">
-        <a href="create.html" class="nav-tab-btn active">➕ สร้างห้องสอบ</a>
-        <a href="monitor.html" class="nav-tab-btn">🖥️ หน้าจอคุมสอบสด</a>
-        <a href="rooms.html" class="nav-tab-btn">📁 จัดการห้องสอบ</a>
-        <a href="users.html" class="nav-tab-btn admin-only-nav-item">👥 จัดการผู้ใช้</a>
-        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">⚙️ ตั้งค่าระบบ</a>
+        <a href="create.html" class="nav-tab-btn active">สร้างห้องสอบ</a>
+        <a href="monitor.html" class="nav-tab-btn">หน้าจอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn">จัดการห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">จัดการผู้ใช้</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่าระบบ</a>
       </div>
 
       <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
       <div class="nav-role-box">
         <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
           <span id="navRoleBadge" class="role-badge role-badge-user">ครูผู้สอน / ผู้คุมสอบ</span>
-          <span id="navUserNameDisplay" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"></span>
+          <span id="navUserNameDisplay" style="font-size: 14px; color: var(--text-muted); margin-top: 2px;"></span>
         </div>
         <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
-          🚪 ออกจากระบบ
+          ออกจากระบบ
         </button>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
-          🌐 หน้าบ้าน
+          หน้าบ้าน
         </a>
       </div>
     </div>
@@ -117,8 +117,8 @@
             <div class="form-group">
               <label class="form-label" for="examStatusSelect">5. สถานะเปิดรับนักเรียน *</label>
               <select id="examStatusSelect" class="form-control">
-                <option value="OPEN" selected>🟢 OPEN - เปิดรับนักเรียนเข้าสอบทันที</option>
-                <option value="CLOSED">🔴 CLOSED - ปิดห้องสอบชั่วคราว (ยังไม่เปิดสอบ)</option>
+                <option value="OPEN" selected>OPEN - เปิดรับนักเรียนเข้าสอบทันที</option>
+                <option value="CLOSED">CLOSED - ปิดห้องสอบชั่วคราว (ยังไม่เปิดสอบ)</option>
               </select>
               <div class="form-hint">ห้องที่เปิดสถานะ OPEN จะปรากฏบนหน้ารวมข้อสอบให้นักเรียนเข้าทำได้ทันที</div>
             </div>
@@ -126,7 +126,7 @@
             <div class="form-group admin-only-field" id="webhookInputGroup">
               <label class="form-label" for="examWebhookInput">
                 6. Webhook URL (Google Apps Script บันทึกผล)
-                <span class="badge badge-warning" style="font-size: 11px;">Admin Only</span>
+                <span class="badge badge-warning" style="font-size: 14px;">Admin Only</span>
               </label>
               <input 
                 type="url" 
@@ -145,9 +145,9 @@
             <div class="passcode-box passcode-box-entry">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                 <label class="form-label" for="examEntryCodeInput" style="margin-bottom: 0; font-weight: 700; color: #1e3a8a;">
-                  🎓 รหัสเข้าห้องสอบสำหรับนักเรียน (Entry Code) *
+                  รหัสเข้าห้องสอบสำหรับนักเรียน (Entry Code) *
                 </label>
-                <span class="badge badge-primary" style="font-size: 11.5px; font-weight: 700;">6 หลัก</span>
+                <span class="badge badge-primary" style="font-size: 14px; font-weight: 700;">6 หลัก</span>
               </div>
               <div style="display: flex; gap: 8px;">
                 <input 
@@ -162,8 +162,8 @@
                   style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #1d4ed8; text-align: center; background: #fff;"
                   required
                 >
-                <button type="button" id="randomEntryCodeBtn" class="btn btn-secondary" style="min-height: 44px; padding: 0 14px; white-space: nowrap; font-size: 13px;" title="สุ่มรหัสเข้าสอบนักเรียนใหม่">
-                  🎲 สุ่มใหม่
+                <button type="button" id="randomEntryCodeBtn" class="btn btn-secondary" style="min-height: 44px; padding: 0 14px; white-space: nowrap; font-size: 16px;" title="สุ่มรหัสเข้าสอบนักเรียนใหม่">
+                  สุ่มใหม่
                 </button>
               </div>
               <div class="form-hint" style="color: #1e40af; margin-top: 6px;">
@@ -175,9 +175,9 @@
             <div class="passcode-box passcode-box-admin">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                 <label class="form-label" for="examPasscodeInput" style="margin-bottom: 0; font-weight: 700; color: #7f1d1d;">
-                  🔒 รหัสผ่านผู้คุมสอบ (Admin Passcode) *
+                  รหัสผ่านผู้คุมสอบ (Admin Passcode) *
                 </label>
-                <span class="badge badge-danger" style="font-size: 11.5px; font-weight: 700;">6 หลัก (ครูเท่านั้น)</span>
+                <span class="badge badge-danger" style="font-size: 14px; font-weight: 700;">6 หลัก (ครูเท่านั้น)</span>
               </div>
               <div style="display: flex; gap: 8px;">
                 <input 
@@ -192,8 +192,8 @@
                   style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #b91c1c; text-align: center; background: #fff;"
                   required
                 >
-                <button type="button" id="randomPasscodeBtn" class="btn btn-secondary" style="min-height: 44px; padding: 0 14px; white-space: nowrap; font-size: 13px;" title="สุ่มรหัสผ่านผู้คุมสอบใหม่">
-                  🎲 สุ่มใหม่
+                <button type="button" id="randomPasscodeBtn" class="btn btn-secondary" style="min-height: 44px; padding: 0 14px; white-space: nowrap; font-size: 16px;" title="สุ่มรหัสผ่านผู้คุมสอบใหม่">
+                  สุ่มใหม่
                 </button>
               </div>
               <div class="form-hint" style="color: #991b1b; margin-top: 6px;">
@@ -203,35 +203,35 @@
           </div>
 
           <button type="button" id="generateLinkBtn" class="btn btn-primary btn-lg btn-block" style="margin-top: 16px;">
-            ✨ สร้างห้องสอบและบันทึกลงระบบ
+            สร้างห้องสอบและบันทึกลงระบบ
           </button>
         </form>
 
         <!-- ผลลัพธ์ลิงก์ห้องสอบ -->
         <div id="linkResultBox" class="link-result-box">
-          <div class="link-result-title">🎉 สร้างห้องสอบเรียบร้อยแล้ว!</div>
+          <div class="link-result-title">สร้างห้องสอบเรียบร้อยแล้ว</div>
           <div class="link-result-subtitle">คัดลอกลิงก์หรือแสดง QR Code ให้นักเรียนสแกนเข้าทำข้อสอบได้ทันที</div>
 
           <!-- แถบแสดงรหัสผ่าน 2 ระดับ -->
           <div class="result-passcodes-grid">
             <div class="result-passcode-card" style="border-color: #93c5fd; background: #eff6ff;">
               <div>
-                <span style="font-size: 12px; color: #1e40af; font-weight: 700; display: block; margin-bottom: 2px;">
-                  🎓 รหัสเข้าห้องสอบสำหรับนักเรียน (Entry Code):
+                <span style="font-size: 15px; color: #1e40af; font-weight: 700; display: block; margin-bottom: 2px;">
+                  รหัสเข้าห้องสอบสำหรับนักเรียน (Entry Code):
                 </span>
                 <span style="font-size: 24px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.18em; font-family: monospace;" id="generatedEntryCodeDisplay">------</span>
               </div>
-              <button type="button" id="copyEntryCodeBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">คัดลอกรหัสเข้าสอบ</button>
+              <button type="button" id="copyEntryCodeBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">คัดลอกรหัสเข้าสอบ</button>
             </div>
 
             <div class="result-passcode-card" style="border-color: #fca5a5; background: #fef2f2;">
               <div>
-                <span style="font-size: 12px; color: #991b1b; font-weight: 700; display: block; margin-bottom: 2px;">
-                  🔒 รหัสผ่านผู้คุมสอบ (Admin Passcode สำหรับครู):
+                <span style="font-size: 15px; color: #991b1b; font-weight: 700; display: block; margin-bottom: 2px;">
+                  รหัสผ่านผู้คุมสอบ (Admin Passcode สำหรับครู):
                 </span>
                 <span style="font-size: 24px; font-weight: 800; color: #b91c1c; letter-spacing: 0.18em; font-family: monospace;" id="generatedPasscodeDisplay">------</span>
               </div>
-              <button type="button" id="copyPasscodeBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">คัดลอกรหัสคุมสอบ</button>
+              <button type="button" id="copyPasscodeBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">คัดลอกรหัสคุมสอบ</button>
             </div>
           </div>
 
@@ -250,16 +250,16 @@
               <img id="examQrImage" src="" alt="Exam QR Code" style="display: none;">
             </div>
             <div class="qr-info-content" style="flex: 1;">
-              <strong style="display: block; margin-bottom: 6px; font-size: 15.5px; color: var(--text-primary);">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
-              <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+              <strong style="display: block; margin-bottom: 6px; font-size: 18px; color: var(--text-primary);">สแกน QR Code เพื่อเข้าสู่ห้องสอบ</strong>
+              <p style="font-size: 16px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
                 QR Code ถูกย่อข้อมูลให้กะทัดรัด คมชัด และสแกนติดง่ายบนสมาร์ตโฟน/แท็บเล็ตทุกรุ่น เหมาะสำหรับการฉายขึ้นจอโปรเจกเตอร์หรือพิมพ์ใส่กระดาษ
               </p>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" id="zoomQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;">
-                  🔍 ขยายเต็มจอ (ฉายโปรเจกเตอร์)
+                <button type="button" id="zoomQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
+                  ขยายเต็มจอ (ฉายโปรเจกเตอร์)
                 </button>
-                <button type="button" id="downloadQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 13px;">
-                  💾 บันทึกรูปภาพ QR (.png)
+                <button type="button" id="downloadQrBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
+                  บันทึกรูปภาพ QR (.png)
                 </button>
               </div>
             </div>
@@ -284,17 +284,17 @@
       <!-- รหัส 2 ชุดในโปรเจกเตอร์ -->
       <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px;">
         <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: var(--radius-sm); padding: 6px 14px; display: inline-flex; align-items: center; gap: 8px;">
-          <span style="font-size: 12px; color: #1e40af; font-weight: 700;">🎓 รหัสเข้าสอบนักเรียน:</span>
+          <span style="font-size: 15px; color: #1e40af; font-weight: 700;">รหัสเข้าสอบนักเรียน:</span>
           <strong style="font-size: 18px; color: #1d4ed8; font-family: monospace; letter-spacing: 0.12em;" id="projectorEntryCodeDisplay">------</strong>
         </div>
         <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: var(--radius-sm); padding: 6px 14px; display: inline-flex; align-items: center; gap: 8px;">
-          <span style="font-size: 12px; color: #991b1b; font-weight: 700;">🔒 รหัสคุมสอบ:</span>
+          <span style="font-size: 15px; color: #991b1b; font-weight: 700;">รหัสคุมสอบ:</span>
           <strong style="font-size: 18px; color: #b91c1c; font-family: monospace; letter-spacing: 0.12em;" id="projectorPasscodeDisplay">------</strong>
         </div>
       </div>
 
       <div>
-        <button type="button" id="closeProjectorBtn" class="btn btn-primary" style="min-width: 130px; font-size: 13.5px;">
+        <button type="button" id="closeProjectorBtn" class="btn btn-primary" style="min-width: 130px; font-size: 16px;">
           ปิดหน้าต่าง
         </button>
       </div>
@@ -304,9 +304,9 @@
 
 
   <script src="../js/shared/qrcode.min.js"></script>
-  <script src="../js/shared/config.js?v=6.2"></script>
-  <script src="../js/shared/common.js?v=6.2"></script>
-  <script src="../js/backend/auth.js?v=6.2"></script>
-  <script src="../js/backend/creator.js?v=6.2"></script>
+  <script src="../js/shared/config.js?v=6.3"></script>
+  <script src="../js/shared/common.js?v=6.3"></script>
+  <script src="../js/backend/auth.js?v=6.3"></script>
+  <script src="../js/backend/creator.js?v=6.3"></script>
 </body>
 </html>

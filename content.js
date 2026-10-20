@@ -305,8 +305,8 @@ function injectProctorBanner(studentId) {
         <strong>ระบบคุมสอบกำลังทำงาน (Exam Proctor Active)</strong>
         <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:12px; font-size:12px;">รหัสนักเรียน: ${studentId || "กำลังสอบ"}</span>
       </div>
-      <div style="font-size:12px; color:#ffdddd;">
-        ⚠️ ห้ามสลับหน้าจอ ห้ามเปิดแท็บใหม่ หรือคลิกออกนอกหน้าข้อสอบ
+      <div style="font-size:13px; color:#ffdddd;">
+        ห้ามสลับหน้าจอ ห้ามเปิดแท็บใหม่ หรือคลิกออกนอกหน้าข้อสอบ
       </div>
     </div>
   `;
@@ -318,8 +318,8 @@ function injectProctorBanner(studentId) {
     width: 100%;
     background: linear-gradient(90deg, #1a73e8, #d93025);
     color: white;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 13px;
+    font-family: 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16px;
     padding: 7px 16px;
     z-index: 9999999;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -368,8 +368,8 @@ function triggerViolationWarning(msg) {
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(217, 48, 37, 0.4);
       z-index: 10000000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 14px;
+      font-family: 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
       font-weight: 500;
       display: flex;
       align-items: center;
@@ -381,10 +381,10 @@ function triggerViolationWarning(msg) {
   }
 
   warningToast.innerHTML = `
-    <span style="font-size: 18px;">🚨</span>
+    <span style="background: rgba(0,0,0,0.25); padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 700;">แจ้งเตือน</span>
     <div>
       <div style="font-weight:bold;">ตรวจพบการกระทำผิดกฎ!</div>
-      <div style="font-size:12px; opacity:0.9;">${msg} (รายงานไปยังผู้คุมสอบแล้ว)</div>
+      <div style="font-size:14px; opacity:0.9;">${msg} (รายงานไปยังผู้คุมสอบแล้ว)</div>
     </div>
   `;
   warningToast.style.display = "flex";
@@ -408,8 +408,8 @@ function showSubmissionSuccessBanner() {
       width: 100%;
       background: #1e8e3e;
       color: white;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 13px;
+      font-family: 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
       padding: 10px 16px;
       z-index: 9999999;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -422,8 +422,8 @@ function showSubmissionSuccessBanner() {
   }
 
   banner.innerHTML = `
-    <div style="text-align:center; width:100%; font-weight:bold; font-size:14px;">
-      ✅ ส่งข้อสอบเรียบร้อยแล้ว ระบบปลดล็อกการคุมสอบ คุณสามารถปิดหน้าต่างนี้ได้ตามปกติ
+    <div style="text-align:center; width:100%; font-weight:bold; font-size:16px;">
+      ส่งข้อสอบเรียบร้อยแล้ว ระบบปลดล็อกการคุมสอบ คุณสามารถปิดหน้าต่างนี้ได้ตามปกติ
     </div>
   `;
   banner.style.display = "block";

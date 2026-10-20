@@ -67,7 +67,7 @@ async function sendAlertToAdmin(violationDetail, isSeverityHigh = false, customS
       time: now.toLocaleTimeString("th-TH"),
       date: now.toLocaleDateString("th-TH"),
       isSeverityHigh: isSeverityHigh,
-      content: `🚨 **แจ้งเตือนการสอบ (${now.toLocaleTimeString("th-TH")})**\n👤 **ผู้สอบ**: ${finalStudentId}\n⚠️ **เหตุการณ์**: ${violationDetail}`
+      content: `**แจ้งเตือนการสอบ (${now.toLocaleTimeString("th-TH")})**\n**ผู้สอบ**: ${finalStudentId}\n**เหตุการณ์**: ${violationDetail}`
     };
 
     console.log("[ExamProctor] กำลังส่งรายงานไปที่ Webhook:", payload);
@@ -108,7 +108,7 @@ chrome.tabs.onCreated.addListener((tab) => {
     // ตรวจสอบเฉพาะเมื่อเปิดสอบแล้ว และมี examTabId ชัดเจน (เพื่อไม่ให้ปิดแท็บข้อสอบที่กำลังเปิด)
     if (data.isExamActive && data.examTabId && tab.id !== data.examTabId) {
       chrome.tabs.remove(tab.id).catch(() => {});
-      debouncedAlert("⚠️ พยายามเปิดแท็บใหม่ (ระบบสั่งปิดแท็บอัตโนมัติแล้ว)");
+      debouncedAlert("พยายามเปิดแท็บใหม่ (ระบบสั่งปิดแท็บอัตโนมัติแล้ว)");
 
       if (data.examTabId) {
         chrome.tabs.update(data.examTabId, { active: true }).catch(() => {});
@@ -125,7 +125,7 @@ chrome.windows.onCreated.addListener((win) => {
   chrome.storage.local.get(["isExamActive", "examWindowId", "examTabId"], (data) => {
     if (data.isExamActive && win.id !== data.examWindowId) {
       chrome.windows.remove(win.id).catch(() => {});
-      debouncedAlert("⚠️ พยายามเปิดหน้าต่างเบราว์เซอร์ใหม่ (ระบบสั่งปิดหน้าต่างอัตโนมัติแล้ว)");
+      debouncedAlert("พยายามเปิดหน้าต่างเบราว์เซอร์ใหม่ (ระบบสั่งปิดหน้าต่างอัตโนมัติแล้ว)");
       if (data.examWindowId) {
         chrome.windows.update(data.examWindowId, { focused: true, state: "fullscreen" }).catch(() => {});
       }
@@ -142,7 +142,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       // ดักจับการพยายามเข้าไปปิด Extension
       if (url.startsWith("chrome://extensions") || url.startsWith("chrome://settings") || url.startsWith("edge://extensions")) {
         chrome.tabs.remove(tabId).catch(() => {});
-        sendAlertToAdmin("🚨 ตรวจพบความพยายามเปิดหน้าจัดการ Extension เพื่อปิดระบบ (ถูกบล็อกทันที)", true);
+        sendAlertToAdmin("ตรวจพบความพยายามเปิดหน้าจัดการ Extension เพื่อปิดระบบ (ถูกบล็อกทันที)", true);
         return;
       }
 
@@ -169,7 +169,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             }
           });
         }
-        debouncedAlert(`⚠️ พยายามเปิดหน้าเว็บที่ไม่ได้รับอนุญาต: ${changeInfo.url}`);
+        debouncedAlert(`พยายามเปิดหน้าเว็บที่ไม่ได้รับอนุญาต: ${changeInfo.url}`);
       }
     }
   });
@@ -179,7 +179,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
   chrome.storage.local.get(["isExamActive", "examTabId"], (data) => {
     if (data.isExamActive && tabId === data.examTabId) {
-      sendAlertToAdmin("🚨 แท็บข้อสอบถูกปิดก่อนส่งคำตอบ!", true);
+      sendAlertToAdmin("แท็บข้อสอบถูกปิดก่อนส่งคำตอบ!", true);
       chrome.storage.local.set({ isExamActive: false, examTabId: null, examWindowId: null });
       updateBadge(false);
     }
@@ -192,7 +192,7 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
     if (!data.isExamActive) return;
 
     if (windowId === chrome.windows.WINDOW_ID_NONE || (data.examWindowId && windowId !== data.examWindowId)) {
-      debouncedAlert("⚠️ ตรวจพบการสลับหน้าต่างไปโปรแกรมอื่น หรือย่อหน้าจอเบราว์เซอร์");
+      debouncedAlert("ตรวจพบการสลับหน้าต่างไปโปรแกรมอื่น หรือย่อหน้าจอเบราว์เซอร์");
 
       // บังคับดึงหน้าต่างสอบกลับมาโฟกัส และเข้าโหมด Fullscreen ทันที
       if (data.examWindowId) {
@@ -248,7 +248,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }).catch(() => {});
           });
         }
-        sendAlertToAdmin(`🟢 เริ่มเข้าทำข้อสอบ: ${formTitle}`, false, studentId);
+        sendAlertToAdmin(`เริ่มเข้าทำข้อสอบ: ${formTitle}`, false, studentId);
         sendResponse({ success: true });
       });
     };
@@ -280,12 +280,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     sendResponse({ received: true });
   } else if (message.type === "EXAM_STARTED") {
-    sendAlertToAdmin(`🟢 เริ่มเข้าทำข้อสอบ: ${message.formTitle || "Google Forms"}`, false, message.studentId);
+    sendAlertToAdmin(`เริ่มเข้าทำข้อสอบ: ${message.formTitle || "Google Forms"}`, false, message.studentId);
     sendResponse({ received: true });
   } else if (message.type === "EXAM_SUBMITTED") {
     chrome.storage.local.get(["isExamActive", "examWindowId"], (data) => {
       if (data.isExamActive) {
-        sendAlertToAdmin("✅ ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ระบบปลดล็อกอัตโนมัติ)");
+        sendAlertToAdmin("ผู้สอบส่งข้อสอบเรียบร้อยแล้ว (ระบบปลดล็อกอัตโนมัติ)");
         if (data.examWindowId) {
           chrome.windows.update(data.examWindowId, { state: "maximized" }).catch(() => {});
         }

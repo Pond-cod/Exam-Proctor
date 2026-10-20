@@ -958,7 +958,7 @@ module.exports = async function handler(req, res) {
       if (violation.includes("เริ่มเข้าทำข้อสอบ")) eventType = "START";
       if (violation.includes("ส่งข้อสอบเรียบร้อย")) eventType = "FINISH";
 
-      const severity = bodyData.isSeverityHigh ? "🚨 วิกฤต" : "⚠️ ทั่วไป";
+      const severity = bodyData.isSeverityHigh ? "วิกฤต" : "ทั่วไป";
       const formattedTime = bodyData.time || new Date().toLocaleTimeString("th-TH");
       const isoTimestamp = bodyData.timestamp ? new Date(bodyData.timestamp) : new Date();
 

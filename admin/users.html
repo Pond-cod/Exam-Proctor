@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" href="../logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/style.css?v=6.3">
 </head>
 <body>
 
@@ -33,24 +33,24 @@
 
       <!-- เมนูนำทางหลังบ้าน -->
       <div class="nav-links" id="navLinksMenu">
-        <a href="create.html" class="nav-tab-btn">➕ สร้างห้องสอบ</a>
-        <a href="monitor.html" class="nav-tab-btn">🖥️ หน้าจอคุมสอบสด</a>
-        <a href="rooms.html" class="nav-tab-btn">📁 จัดการห้องสอบ</a>
-        <a href="users.html" class="nav-tab-btn active admin-only-nav-item">👥 จัดการผู้ใช้</a>
-        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">⚙️ ตั้งค่าระบบ</a>
+        <a href="create.html" class="nav-tab-btn">สร้างห้องสอบ</a>
+        <a href="monitor.html" class="nav-tab-btn">หน้าจอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn">จัดการห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn active admin-only-nav-item">จัดการผู้ใช้</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่าระบบ</a>
       </div>
 
       <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
       <div class="nav-role-box">
         <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
-          <span id="navRoleBadge" class="role-badge role-badge-admin">ผู้ดูแลระบบ (Admin) 🛡️</span>
-          <span id="navUserNameDisplay" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"></span>
+          <span id="navRoleBadge" class="role-badge role-badge-admin">ผู้ดูแลระบบ (Admin)</span>
+          <span id="navUserNameDisplay" style="font-size: 14px; color: var(--text-muted); margin-top: 2px;"></span>
         </div>
         <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
-          🚪 ออกจากระบบ
+          ออกจากระบบ
         </button>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
-          🌐 หน้าบ้าน
+          หน้าบ้าน
         </a>
       </div>
     </div>
@@ -63,17 +63,17 @@
       <div class="card">
         <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
-            <div class="card-title">👥 ระบบจัดการผู้ใช้งาน (User Management)</div>
-            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+            <div class="card-title">ระบบจัดการผู้ใช้งาน (User Management)</div>
+            <div style="font-size: 15px; color: var(--text-muted); margin-top: 2px;">
               เพิ่ม แก้ไข ลบ บัญชีผู้ใช้ กำหนดสิทธิ์ครูผู้สอน/ผู้ดูแลระบบ และรหัสผ่านเข้าสู่ระบบ
             </div>
           </div>
           <div class="card-actions-group">
-            <button id="refreshUsersBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">
-              🔄 รีเฟรชข้อมูล
+            <button id="refreshUsersBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 16px;">
+              รีเฟรชข้อมูล
             </button>
-            <button id="openAddUserModalBtn" class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px; font-weight: 700;">
-              ➕ เพิ่มผู้ใช้งานใหม่
+            <button id="openAddUserModalBtn" class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 16px; font-weight: 700;">
+              เพิ่มผู้ใช้งานใหม่
             </button>
           </div>
         </div>
@@ -85,21 +85,21 @@
               type="text" 
               id="userSearchInput" 
               class="form-control" 
-              placeholder="🔍 ค้นหาด้วยชื่อผู้ใช้ หรือชื่อ-นามสกุล..."
+              placeholder="ค้นหาด้วยชื่อผู้ใช้ หรือชื่อ-นามสกุล..."
             >
           </div>
           <div style="flex: 1; min-width: 170px;">
             <select id="userRoleFilter" class="form-control">
               <option value="all">ทุกสิทธิ์ (All Roles)</option>
-              <option value="ADMIN">🛡️ เฉพาะผู้ดูแลระบบ (Admin)</option>
-              <option value="TEACHER">👨‍🏫 เฉพาะครูผู้สอน (Teacher)</option>
+              <option value="ADMIN">เฉพาะผู้ดูแลระบบ (Admin)</option>
+              <option value="TEACHER">เฉพาะครูผู้สอน (Teacher)</option>
             </select>
           </div>
           <div style="flex: 1; min-width: 160px;">
             <select id="userStatusFilter" class="form-control">
               <option value="all">ทุกสถานะ (All Status)</option>
-              <option value="ACTIVE">🟢 ใช้งานได้ (Active)</option>
-              <option value="INACTIVE">🔴 ระงับการใช้งาน (Inactive)</option>
+              <option value="ACTIVE">ใช้งานได้ (Active)</option>
+              <option value="INACTIVE">ระงับการใช้งาน (Inactive)</option>
             </select>
           </div>
         </div>
@@ -137,10 +137,9 @@
     <div class="modal-dialog" style="max-width: 480px;">
       <div class="modal-header">
         <div class="modal-header-title">
-          <div class="modal-header-icon" style="background: #f5f3ff; color: #7c3aed;">👤</div>
           <div>
-            <div class="modal-title-text" id="userModalTitle">เพิ่มผู้ใช้งานใหม่</div>
-            <div class="modal-subtitle-text">กำหนดข้อมูลบัญชีผู้ใช้และรหัสผ่าน</div>
+            <div class="modal-title-text" id="userModalTitle" style="font-size: 19px;">เพิ่มผู้ใช้งานใหม่</div>
+            <div class="modal-subtitle-text" style="font-size: 15px;">กำหนดข้อมูลบัญชีผู้ใช้และรหัสผ่าน</div>
           </div>
         </div>
         <button class="modal-close-btn" id="closeUserModalBtn" title="ปิดหน้าต่าง">✕</button>
@@ -177,16 +176,16 @@
           <div class="form-group">
             <label class="form-label" for="modalRoleSelect">สิทธิ์การใช้งาน (Role) *</label>
             <select id="modalRoleSelect" class="form-control" required>
-              <option value="TEACHER">👨‍🏫 ครูผู้สอน (Teacher)</option>
-              <option value="ADMIN">🛡️ ผู้ดูแลระบบ (Admin)</option>
+              <option value="TEACHER">ครูผู้สอน (Teacher)</option>
+              <option value="ADMIN">ผู้ดูแลระบบ (Admin)</option>
             </select>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="modalStatusSelect">สถานะบัญชี *</label>
             <select id="modalStatusSelect" class="form-control" required>
-              <option value="ACTIVE">🟢 ใช้งานได้ (Active)</option>
-              <option value="INACTIVE">🔴 ระงับการใช้งาน (Inactive)</option>
+              <option value="ACTIVE">ใช้งานได้ (Active)</option>
+              <option value="INACTIVE">ระงับการใช้งาน (Inactive)</option>
             </select>
           </div>
         </div>
@@ -201,10 +200,10 @@
               placeholder="กรอกรหัสผ่านอย่างน้อย 8 ตัวอักษร/หลัก"
               minlength="8"
               required
-              style="font-family: monospace; font-size: 15.5px; font-weight: 700; letter-spacing: 0.08em; color: #1d4ed8;"
+              style="font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 0.08em; color: #1d4ed8;"
             >
-            <button type="button" id="randomUserPasscodeBtn" class="btn btn-secondary" style="white-space: nowrap;">
-              🎲 สุ่ม 8 หลัก
+            <button type="button" id="randomUserPasscodeBtn" class="btn btn-secondary" style="white-space: nowrap; font-size: 15px;">
+              สุ่ม 8 หลัก
             </button>
           </div>
           <div class="form-hint" style="color: var(--text-muted);">
@@ -212,23 +211,23 @@
           </div>
         </div>
 
-        <div id="userModalError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 10px;">
+        <div id="userModalError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 15px; margin-top: 10px;">
           กรุณากรอกข้อมูลให้ครบถ้วน
         </div>
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="cancelUserModalBtn">ยกเลิก</button>
-        <button type="button" class="btn btn-primary" id="saveUserBtn" style="font-weight: 700;">
+        <button type="button" class="btn btn-secondary" id="cancelUserModalBtn" style="font-size: 16px;">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" id="saveUserBtn" style="font-weight: 700; font-size: 16px;">
           บันทึกข้อมูลผู้ใช้
         </button>
       </div>
     </div>
   </div>
 
-  <script src="../js/shared/config.js?v=6.2"></script>
-  <script src="../js/shared/common.js?v=6.2"></script>
-  <script src="../js/backend/auth.js?v=6.2"></script>
-  <script src="../js/backend/users.js?v=6.2"></script>
+  <script src="../js/shared/config.js?v=6.3"></script>
+  <script src="../js/shared/common.js?v=6.3"></script>
+  <script src="../js/backend/auth.js?v=6.3"></script>
+  <script src="../js/backend/users.js?v=6.3"></script>
 </body>
 </html>

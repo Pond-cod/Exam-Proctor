@@ -22,10 +22,10 @@ function applyRoleUI() {
 
   if (badge) {
     if (isAdmin) {
-      badge.textContent = "ผู้ดูแลระบบ (Admin) 🛡️";
+      badge.textContent = "ผู้ดูแลระบบ (Admin)";
       badge.className = "role-badge role-badge-admin";
     } else {
-      badge.textContent = "ครูผู้สอน / ผู้คุมสอบ 👨‍🏫";
+      badge.textContent = "ครูผู้สอน / ผู้คุมสอบ";
       badge.className = "role-badge role-badge-user";
     }
   }
@@ -292,8 +292,8 @@ function applyTheme(theme) {
   // Update theme toggle buttons across the UI
   document.querySelectorAll(".theme-toggle-btn").forEach((btn) => {
     btn.innerHTML = theme === "dark" 
-      ? '<span class="icon">☀️</span> <span class="theme-text">โหมดสว่าง</span>' 
-      : '<span class="icon">🌙</span> <span class="theme-text">โหมดมืด</span>';
+      ? '<span class="theme-text">โหมดสว่าง</span>' 
+      : '<span class="theme-text">โหมดมืด</span>';
     btn.setAttribute("aria-label", theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode");
   });
 }

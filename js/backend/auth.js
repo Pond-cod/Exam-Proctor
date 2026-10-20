@@ -104,7 +104,7 @@ function requireAuth(requiredRole = null) {
  */
 async function handleLogout() {
   const confirmed = await showConfirm("คุณต้องการออกจากระบบหลังบ้านใช่หรือไม่?", {
-    title: "ยืนยันการออกจากระบบ 🚪",
+    title: "ยืนยันการออกจากระบบ",
     confirmText: "ออกจากระบบ",
     cancelText: "ยกเลิก"
   });

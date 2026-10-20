@@ -44,7 +44,7 @@ function populateRoomsDropdowns() {
         if (name) creatorSet.add(name);
       });
       const creatorList = Array.from(creatorSet);
-      creatorFilter.innerHTML = `<option value="all">👥 ทุกผู้สร้างห้องสอบ</option>` +
+      creatorFilter.innerHTML = `<option value="all">ทุกผู้สร้างห้องสอบ</option>` +
         creatorList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
     } else {
       creatorFilterBox.style.display = "none";
@@ -63,11 +63,11 @@ function renderRoomHistory() {
   const scopeBadge = document.getElementById("roomsScopeBadge");
   if (scopeBadge) {
     if (isAdmin) {
-      scopeBadge.textContent = "🛡️ สิทธิ์ Admin: แสดงห้องสอบทั้งหมดในระบบ (All Rooms)";
+      scopeBadge.textContent = "สิทธิ์ Admin: แสดงห้องสอบทั้งหมดในระบบ (All Rooms)";
       scopeBadge.className = "badge badge-danger";
     } else {
       const uName = currentUser ? (currentUser.displayName || currentUser.username || "ครูผู้สอน") : "ฉัน";
-      scopeBadge.textContent = `👨‍🏫 สิทธิ์ครู: แสดงเฉพาะห้องสอบของ ${uName}`;
+      scopeBadge.textContent = `สิทธิ์ครู: แสดงเฉพาะห้องสอบของ ${uName}`;
       scopeBadge.className = "badge badge-primary";
     }
   }
@@ -86,9 +86,8 @@ function renderRoomHistory() {
   if (accessibleRooms.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
-        <div style="font-size: 42px; margin-bottom: 10px;">📋</div>
         <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${isAdmin ? "ยังไม่มีข้อมูลห้องสอบในระบบ" : "คุณยังไม่มีห้องสอบที่สร้างไว้"}</h4>
-        <p style="font-size: 13px;">คุณสามารถสร้างห้องสอบแรกได้ที่เมนู <a href="create.html" style="color: var(--primary); font-weight: 700; text-decoration: underline;">➕ สร้างห้องสอบ</a></p>
+        <p style="font-size: 13px;">คุณสามารถสร้างห้องสอบแรกได้ที่เมนู <a href="create.html" style="color: var(--primary); font-weight: 700; text-decoration: underline;">สร้างห้องสอบ</a></p>
       </div>
     `;
     return;
@@ -126,8 +125,8 @@ function renderRoomHistory() {
   container.innerHTML = filtered.map((r) => {
     const isOpen = r.status === "OPEN";
     const statusBadge = isOpen
-      ? `<span class="badge badge-success" style="font-weight: 700;">🟢 กำลังเปิดสอบ (OPEN)</span>`
-      : `<span class="badge badge-neutral" style="font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca;">🔴 ปิดห้องสอบ (CLOSED)</span>`;
+      ? `<span class="badge badge-success" style="font-weight: 700; font-size: 15px;">กำลังเปิดสอบ (OPEN)</span>`
+      : `<span class="badge badge-neutral" style="font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; font-size: 15px;">ปิดห้องสอบ (CLOSED)</span>`;
 
     const canManage = isAdmin || isRoomOwnedByUser(r, currentUser);
 
@@ -149,20 +148,20 @@ function renderRoomHistory() {
     const creatorUserTag = r.creatorUsername ? ` (@${escapeHtml(r.creatorUsername)})` : "";
 
     return `
-      <div class="room-mgmt-card" style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm);">
+      <div class="room-mgmt-card" style="background: #ffffff; border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-sm); padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
           <div style="flex: 1; min-width: 240px;">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
-              <strong style="font-size: 16px; color: var(--text-primary);">${escapeHtml(r.title)}</strong>
+              <strong style="font-size: 19px; color: var(--text-primary);">${escapeHtml(r.title)}</strong>
               ${statusBadge}
             </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px;">
-              <span class="badge badge-neutral" style="font-size: 11.5px;">📁 ${escapeHtml(r.category || "ทั่วไป")}</span>
-              <span class="badge badge-neutral" style="font-size: 11.5px;">🎓 ${escapeHtml(r.gradeLevel || "ไม่ระบุ")}</span>
-              <span class="badge badge-neutral" style="font-size: 11.5px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">
-                👤 ผู้สร้าง: <strong>${escapeHtml(creatorDisplayName)}</strong>${creatorUserTag}
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px;">
+              <span class="badge badge-neutral" style="font-size: 15px;">${escapeHtml(r.category || "ทั่วไป")}</span>
+              <span class="badge badge-neutral" style="font-size: 15px;">${escapeHtml(r.gradeLevel || "ไม่ระบุ")}</span>
+              <span class="badge badge-neutral" style="font-size: 15px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">
+                ผู้สร้าง: <strong>${escapeHtml(creatorDisplayName)}</strong>${creatorUserTag}
               </span>
-              <span style="font-size: 12px; color: var(--text-muted);">รหัสห้อง: <code>${escapeHtml(r.roomId || "-")}</code></span>
+              <span style="font-size: 15px; color: var(--text-muted);">รหัสห้อง: <code>${escapeHtml(r.roomId || "-")}</code></span>
             </div>
           </div>
 
@@ -173,10 +172,10 @@ function renderRoomHistory() {
                 type="button" 
                 class="btn ${isOpen ? "btn-secondary" : "btn-success"} btn-toggle-status" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+                style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
                 title="${isOpen ? "คลิกเพื่อปิดห้องสอบชั่วคราว" : "คลิกเพื่อเปิดรับนักเรียนเข้าสอบ"}"
               >
-                ${isOpen ? "⏸️ พักการสอบ" : "▶️ เปิดรับเข้าสอบ"}
+                ${isOpen ? "พักการสอบ" : "เปิดรับเข้าสอบ"}
               </button>
             ` : ""}
 
@@ -185,9 +184,9 @@ function renderRoomHistory() {
               type="button" 
               class="btn btn-secondary btn-copy-room-link" 
               data-url="${escapeHtml(roomExamUrl)}" 
-              style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+              style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
             >
-              📋 คัดลอกลิงก์
+              คัดลอกลิงก์
             </button>
 
             <!-- แสดง QR Code -->
@@ -195,9 +194,9 @@ function renderRoomHistory() {
               type="button" 
               class="btn btn-secondary btn-show-room-qr" 
               data-room-id="${escapeHtml(r.roomId)}" 
-              style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+              style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
             >
-              🔍 QR Code
+              QR Code
             </button>
 
             <!-- แก้ไข และ ลบ (เจ้าของห้อง หรือ Admin) -->
@@ -206,17 +205,17 @@ function renderRoomHistory() {
                 type="button" 
                 class="btn btn-secondary btn-edit-room" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+                style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
               >
-                ✏️ แก้ไข
+                แก้ไข
               </button>
               <button 
                 type="button" 
                 class="btn btn-danger btn-delete-room" 
                 data-room-id="${escapeHtml(r.roomId)}" 
-                style="min-height: 36px; padding: 6px 12px; font-size: 12.5px;"
+                style="min-height: 38px; padding: 6px 14px; font-size: 15px;"
               >
-                🗑️ ลบ
+                ลบ
               </button>
             ` : ""}
           </div>
@@ -224,15 +223,15 @@ function renderRoomHistory() {
 
         <!-- แถบแสดงรหัส 2 รูปแบบ -->
         <div style="display: flex; gap: 12px; flex-wrap: wrap; background: var(--bg-subtle); padding: 8px 14px; border-radius: var(--radius-sm); align-items: center;">
-          <div style="font-size: 12.5px;">
-            <span style="color: #1e40af; font-weight: 700;">🎓 รหัสเข้าสอบนักเรียน:</span>
-            <code style="font-size: 15px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.entryCode || "-")}</code>
+          <div style="font-size: 15px;">
+            <span style="color: #1e40af; font-weight: 700;">รหัสเข้าสอบนักเรียน:</span>
+            <code style="font-size: 18px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.entryCode || "-")}</code>
           </div>
-          <div style="font-size: 12.5px; border-left: 1.5px solid #cbd5e1; padding-left: 12px;">
-            <span style="color: #991b1b; font-weight: 700;">🔒 รหัสคุมสอบ (Passcode 6 หลัก):</span>
-            <code style="font-size: 15px; font-weight: 800; color: #b91c1c; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.adminPasscode || "-")}</code>
+          <div style="font-size: 15px; border-left: 1.5px solid #cbd5e1; padding-left: 12px;">
+            <span style="color: #991b1b; font-weight: 700;">รหัสคุมสอบ (Passcode 6 หลัก):</span>
+            <code style="font-size: 18px; font-weight: 800; color: #b91c1c; letter-spacing: 0.1em; margin-left: 4px;">${escapeHtml(r.adminPasscode || "-")}</code>
           </div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-left: auto;">
+          <div style="font-size: 15px; color: var(--text-muted); margin-left: auto;">
             สร้างเมื่อ: ${escapeHtml(r.createdAt || "-")}
           </div>
         </div>
@@ -364,8 +363,7 @@ async function deleteRoom(roomId) {
       title: "ยืนยันการลบห้องสอบ",
       confirmText: "ลบห้องสอบ",
       cancelText: "ยกเลิก",
-      confirmClass: "danger",
-      icon: "🗑️"
+      confirmClass: "danger"
     }
   );
 

@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" href="../logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/style.css?v=6.3">
   <link rel="manifest" href="../manifest.webmanifest">
   <meta name="theme-color" content="#0284c7">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -39,27 +39,27 @@
 
       <!-- เมนูนำทางหลังบ้านแบบกะทัดรัด -->
       <div class="nav-links" id="navLinksMenu">
-        <a href="create.html" class="nav-tab-btn">➕ สร้างห้อง</a>
-        <a href="monitor.html" class="nav-tab-btn active">🖥️ จอคุมสอบสด</a>
-        <a href="rooms.html" class="nav-tab-btn">📁 ห้องสอบ</a>
-        <a href="users.html" class="nav-tab-btn admin-only-nav-item">👥 ผู้ใช้งาน</a>
-        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">⚙️ ตั้งค่า</a>
+        <a href="create.html" class="nav-tab-btn">สร้างห้อง</a>
+        <a href="monitor.html" class="nav-tab-btn active">จอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn">ห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">ผู้ใช้งาน</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่า</a>
       </div>
 
       <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
       <div class="nav-role-box">
         <button type="button" class="theme-toggle-btn" title="สลับโหมดมืด/สว่าง">
-          <span class="icon">🌙</span> <span class="theme-text">โหมดมืด</span>
+          <span class="theme-text">โหมดมืด</span>
         </button>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span id="navRoleBadge" class="role-badge role-badge-user">ผู้คุมสอบ</span>
-          <span id="navUserNameDisplay" style="font-size: 12px; font-weight: 700; color: var(--text-primary);"></span>
+          <span id="navUserNameDisplay" style="font-size: 14px; font-weight: 700; color: var(--text-primary);"></span>
         </div>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
-          🌐 หน้าบ้าน
+          หน้าบ้าน
         </a>
         <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
-          🚪 ออก
+          ออกจากระบบ
         </button>
       </div>
     </div>
@@ -73,11 +73,11 @@
       <div class="monitor-primary-nav compact-primary-nav">
         <button id="primaryModeLiveBtn" class="primary-mode-tab active" type="button">
           <span class="pulse-ring-dot"></span>
-          <span>🔴 1. ศูนย์คุมสอบสด (Live Proctoring)</span>
+          <span>1. ศูนย์คุมสอบสด (Live Proctoring)</span>
           <span class="primary-count-pill" id="primaryLiveCountPill">0</span>
         </button>
         <button id="primaryModeArchiveBtn" class="primary-mode-tab" type="button">
-          <span>📁 2. คลังประวัติ & รายงานย้อนหลัง</span>
+          <span>2. คลังประวัติและรายงานย้อนหลัง</span>
           <span class="primary-count-pill secondary" id="primaryArchiveCountPill">0</span>
         </button>
       </div>
@@ -87,7 +87,7 @@
         <!-- แถบประกาศ & การแจ้งเตือนด้านบน สำหรับศูนย์คุมสอบสด (Live Incident Ticker) -->
         <div id="liveIncidentTicker" class="live-incident-ticker normal compact-ticker">
           <div class="ticker-left">
-            <span class="ticker-badge" id="tickerBadge">🟢 ปกติ</span>
+            <span class="ticker-badge" id="tickerBadge">สถานะปกติ</span>
             <span class="ticker-text" id="tickerMessage">ระบบกำลังติดตามผู้เข้าสอบแบบเรียลไทม์ ผู้สอบทุกคนอยู่ในโหมดเต็มหน้าจออย่างซื่อสัตย์</span>
           </div>
           <div class="ticker-right">
@@ -100,8 +100,8 @@
           <div class="stat-card compact-stat-card" id="statCardAll" data-category="all" title="คลิกเพื่อแสดงผู้เข้าสอบทั้งหมดในรอบนี้" role="button" tabindex="0">
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-blue">
-                👥 ทั้งหมดรอบสด
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                ทั้งหมดรอบสด
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
               <span class="compact-stat-num" id="statTotalStudents">0 คน</span>
             </div>
@@ -117,7 +117,7 @@
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-emerald">
                 <span class="live-pulse-dot"></span> กำลังสอบสด
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
               <span class="compact-stat-num" id="statActiveStudents" style="color: #047857;">0 คน</span>
             </div>
@@ -125,15 +125,15 @@
               <div class="stat-progress-bar compact-bar">
                 <div id="statActiveProgressFill" class="stat-progress-fill" style="width: 0%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
               </div>
-              <div class="stat-sub-detail" id="statActiveSubDetail">🟢 รอผู้เข้าทำข้อสอบ</div>
+              <div class="stat-sub-detail" id="statActiveSubDetail">รอผู้เข้าทำข้อสอบ</div>
             </div>
           </div>
 
           <div class="stat-card compact-stat-card" id="statCardViolations" data-category="alert" title="คลิกเพื่อแสดงเฉพาะผู้เข้าสอบสดที่พบการแจ้งเตือนสลับจอ" role="button" tabindex="0">
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-rose">
-                ⚠️ แจ้งเตือนสลับจอสด
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                แจ้งเตือนสลับจอสด
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
               <span class="compact-stat-num" id="statTotalViolations" style="color: #be123c;">0 ครั้ง</span>
             </div>
@@ -148,8 +148,8 @@
           <div class="stat-card compact-stat-card" id="statCardSubmitted" data-category="completed" title="คลิกเพื่อแสดงเฉพาะผู้ที่ส่งข้อสอบแล้วในรอบนี้" role="button" tabindex="0">
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-violet">
-                🏆 ส่งแล้วรอบสด
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                ส่งข้อสอบแล้ว
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
               <span class="compact-stat-num" id="statTotalSubmitted" style="color: #6d28d9;">0 คน</span>
             </div>
@@ -179,12 +179,12 @@
 
             <!-- เครื่องมือควบคุมจำเป็นขณะคุมสอบ -->
             <div class="card-actions-group" style="gap: 6px;">
-              <span id="syncStatusText" style="font-size: 11px; color: var(--text-muted); margin-right: 2px;">กำลังเชื่อมต่อ...</span>
+              <span id="syncStatusText" style="font-size: 14px; color: var(--text-muted); margin-right: 2px;">กำลังเชื่อมต่อ...</span>
               <button id="toggleSoundBtn" type="button" class="btn btn-sound-modern compact-btn" title="เปิด/ปิดเสียงแจ้งเตือนเมื่อพบการสลับหน้าจอ">
-                🔔 เสียงเตือน: เปิด
+                เสียงเตือน: เปิด
               </button>
-              <button id="refreshLogsBtn" class="btn btn-refresh-modern compact-btn" title="รีเฟรชข้อมูลล่าสุด">🔄 รีเฟรช</button>
-              <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn compact-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">✨ เริ่มรอบใหม่</button>
+              <button id="refreshLogsBtn" class="btn btn-refresh-modern compact-btn" title="รีเฟรชข้อมูลล่าสุด">รีเฟรช</button>
+              <button id="resetSessionBtn" class="btn btn-reset-modern admin-only-btn compact-btn" title="เริ่มรอบการสอบใหม่และย้ายผู้สอบชุดเดิมไปประวัติ">เริ่มรอบใหม่</button>
             </div>
           </div>
 
@@ -209,8 +209,8 @@
                 type="text" 
                 id="searchLogInput" 
                 class="form-control" 
-                placeholder="🔍 ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
-                style="font-size: 12.5px; height: 32px; padding: 4px 10px;"
+                placeholder="ค้นหาด้วยรหัสนักเรียน หรือข้อความเหตุการณ์..."
+                style="font-size: 16px; height: 36px; padding: 4px 10px;"
               >
             </div>
           </div>
@@ -240,7 +240,7 @@
         <!-- แถบประกาศ & การแจ้งเตือนด้านบน สำหรับคลังประวัติ (Archive Summary & Alert Hub) -->
         <div id="archiveIncidentTicker" class="live-incident-ticker archive-ticker normal compact-ticker">
           <div class="ticker-left">
-            <span class="ticker-badge archive-badge" id="archiveTickerBadge">📁 คลังประวัติ</span>
+            <span class="ticker-badge archive-badge" id="archiveTickerBadge">คลังประวัติ</span>
             <span class="ticker-text" id="archiveTickerMessage">รวบรวมประวัติผู้ส่งข้อสอบและรายงานพฤติกรรมย้อนหลังทั้งหมด</span>
           </div>
           <div class="ticker-right">
@@ -253,8 +253,8 @@
           <div class="stat-card compact-stat-card active" id="statArchiveTotalCard" data-archive-filter="all" title="คลิกเพื่อแสดงประวัติทั้งหมด" role="button" tabindex="0">
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-blue">
-                📁 ส่งข้อสอบสะสม
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                ส่งข้อสอบสะสม
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
               <span class="compact-stat-num" id="statArchiveTotal">0 คน</span>
             </div>
@@ -269,8 +269,8 @@
           <div class="stat-card compact-stat-card" id="statArchiveRoomsCard" data-archive-filter="rooms" title="จำนวนห้องสอบที่มีบันทึก" role="button" tabindex="0">
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-indigo" style="background: #e0e7ff; color: #4338ca;">
-                🏫 ห้องสอบในคลัง
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                ห้องสอบในคลัง
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
               <span class="compact-stat-num" id="statArchiveRooms" style="color: #4338ca;">0 ห้อง</span>
             </div>
@@ -285,8 +285,8 @@
           <div class="stat-card compact-stat-card" id="statArchiveViolationsCard" data-archive-filter="alert" title="คลิกเพื่อแสดงเฉพาะผู้สอบที่มีประวัติการแจ้งเตือนสลับจอ" role="button" tabindex="0">
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-amber" style="background: #fef3c7; color: #b45309;">
-                ⚠️ บันทึกเตือนสะสม
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                บันทึกเตือนสะสม
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
               <span class="compact-stat-num" id="statArchiveViolations" style="color: #b45309;">0 ครั้ง</span>
             </div>
@@ -301,10 +301,10 @@
           <div class="stat-card compact-stat-card" id="statArchiveLatestCard" data-archive-filter="latest" title="ส่งข้อสอบล่าสุด" role="button" tabindex="0">
             <div class="compact-stat-top">
               <span class="stat-badge stat-badge-violet">
-                🕒 บันทึกส่งล่าสุด
-                <span class="stat-card-active-pill">แสดงอยู่ ✓</span>
+                บันทึกส่งล่าสุด
+                <span class="stat-card-active-pill">แสดงอยู่</span>
               </span>
-              <span class="compact-stat-num" id="statArchiveLatest" style="color: #6d28d9; font-size: 16px;">-</span>
+              <span class="compact-stat-num" id="statArchiveLatest" style="color: #6d28d9; font-size: 18px;">-</span>
             </div>
             <div class="compact-stat-bottom">
               <div class="stat-progress-bar compact-bar">
@@ -319,8 +319,8 @@
           <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
             <div class="card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span>📁 คลังประวัติและการส่งข้อสอบ (Exam Archives & Audit Logs)</span>
-              <span id="archiveRoleBadge" class="badge badge-neutral" style="font-size: 11.5px; padding: 2px 8px;">กำลังโหลดสิทธิ์...</span>
+              <span>คลังประวัติและการส่งข้อสอบ (Exam Archives & Audit Logs)</span>
+              <span id="archiveRoleBadge" class="badge badge-neutral" style="font-size: 15px; padding: 2px 8px;">กำลังโหลดสิทธิ์...</span>
             </div>
             <div class="zone-subtitle-lead" id="archiveScopeLead">รวบรวมประวัตินักเรียนที่ส่งข้อสอบแล้ว แยกตามวันที่ และตารางบันทึกเหตุการณ์ทั้งหมด</div>
           </div>
@@ -328,39 +328,39 @@
           <!-- สวิตช์สลับมุมมองย่อยในคลังประวัติ -->
           <div class="monitor-view-toggle">
             <button id="toggleCompletedViewBtn" class="view-toggle-btn active" type="button">
-              📁 ประวัติผู้ส่งข้อสอบแล้ว (<span id="countCompletedBadge">0</span>)
+              ประวัติผู้ส่งข้อสอบแล้ว (<span id="countCompletedBadge">0</span>)
             </button>
             <button id="toggleTableViewBtn" class="view-toggle-btn" type="button">
-              📋 บันทึกเหตุการณ์ทั้งหมด
+              บันทึกเหตุการณ์ทั้งหมด
             </button>
             <button id="toggleAnalyticsViewBtn" class="view-toggle-btn" type="button">
-              📊 สถิติ & กราฟวิเคราะห์
+              สถิติและกราฟวิเคราะห์
             </button>
           </div>
 
           <!-- เครื่องมือเชื่อมต่อ Cloud / ส่งออกข้อมูล -->
           <div class="card-actions-group">
-            <button id="printReportBtn" class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;" title="พิมพ์รายงานสรุปผลการคุมสอบราชการ (Print / PDF)">🖨️ พิมพ์รายงาน PDF</button>
-            <button id="exportCsvBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;" title="ดาวน์โหลดประวัติผู้สอบและเหตุการณ์ทั้งหมดเป็นไฟล์ CSV (เปิดใน Excel ได้ทันที)">📥 ส่งออก CSV</button>
-            <button id="testWebhookBtn" class="btn btn-webhook-modern admin-only-btn" title="ทดสอบเชื่อมต่อ API">⚡ ทดสอบ API</button>
-            <button id="openSheetBtn" class="btn btn-sheet-modern admin-only-btn" title="เปิดหน้าต่าง Google Sheets">📊 เปิด Google Sheets</button>
+            <button id="printReportBtn" class="btn btn-primary" style="min-height: 38px; padding: 6px 14px; font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;" title="พิมพ์รายงานสรุปผลการคุมสอบราชการ (Print / PDF)">พิมพ์รายงาน PDF</button>
+            <button id="exportCsvBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;" title="ดาวน์โหลดประวัติผู้สอบและเหตุการณ์ทั้งหมดเป็นไฟล์ CSV (เปิดใน Excel ได้ทันที)">ส่งออก CSV</button>
+            <button id="testWebhookBtn" class="btn btn-webhook-modern admin-only-btn" title="ทดสอบเชื่อมต่อ API">ทดสอบ API</button>
+            <button id="openSheetBtn" class="btn btn-sheet-modern admin-only-btn" title="เปิดหน้าต่าง Google Sheets">เปิด Google Sheets</button>
           </div>
         </div>
 
         <!-- 2.1 มุมมองประวัติผู้ส่งข้อสอบแล้ว (Completed / Archive Grid) -->
         <div id="completedGridContainer">
           <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-            <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
-              📁 ประวัติผู้สอบที่ส่งข้อสอบเรียบร้อยแล้ว (<span id="completedHeaderCount">0</span> คน)
+            <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+              ประวัติผู้สอบที่ส่งข้อสอบเรียบร้อยแล้ว (<span id="completedHeaderCount">0</span> คน)
             </div>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <div style="display: flex; align-items: center; gap: 6px;">
-                <label for="completedDateFilterSelect" style="font-size: 12.5px; color: var(--text-secondary); font-weight: 600; white-space: nowrap;">📅 วันที่ส่งข้อสอบ:</label>
-                <select id="completedDateFilterSelect" class="form-control" style="font-size: 12.5px; min-width: 190px; padding: 4px 10px; height: 34px;">
+                <label for="completedDateFilterSelect" style="font-size: 16px; color: var(--text-secondary); font-weight: 600; white-space: nowrap;">วันที่ส่งข้อสอบ:</label>
+                <select id="completedDateFilterSelect" class="form-control" style="font-size: 16px; min-width: 190px; padding: 4px 10px; height: 36px;">
                   <option value="all">ทุกวันที่ (แยกกลุ่มตามวัน)</option>
                 </select>
               </div>
-              <button id="clearCutoffBtn" type="button" class="btn btn-secondary" style="display: none; padding: 2px 10px; font-size: 11.5px; min-height: 28px;" title="รีเซ็ตตัวตัดรอบและแสดงประวัติทั้งหมด">ล้างตัวตัดรอบ (แสดงทั้งหมด)</button>
+              <button id="clearCutoffBtn" type="button" class="btn btn-secondary" style="display: none; padding: 2px 10px; font-size: 14px; min-height: 28px;" title="รีเซ็ตตัวตัดรอบและแสดงประวัติทั้งหมด">ล้างตัวตัดรอบ (แสดงทั้งหมด)</button>
             </div>
           </div>
           <div id="completedScreensGrid">
@@ -420,8 +420,8 @@
           <!-- ตารางกราฟ 2 คอลัมน์ -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-bottom: 20px;">
             <div class="card" style="padding: 18px;">
-              <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-                <span>📈 ไทม์ไลน์ความถี่การเกิดเหตุการณ์ผิดปกติ (Incidents Over Time)</span>
+              <div style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <span>ไทม์ไลน์ความถี่การเกิดเหตุการณ์ผิดปกติ (Incidents Over Time)</span>
               </div>
               <div style="position: relative; height: 260px;">
                 <canvas id="analyticsTimelineChart"></canvas>
@@ -429,8 +429,8 @@
             </div>
 
             <div class="card" style="padding: 18px;">
-              <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-                <span>🍩 สัดส่วนประเภทเหตุการณ์ผิดปกติ (Violation Types)</span>
+              <div style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <span>สัดส่วนประเภทเหตุการณ์ผิดปกติ (Violation Types)</span>
               </div>
               <div style="position: relative; height: 260px;">
                 <canvas id="analyticsTypeChart"></canvas>
@@ -495,12 +495,12 @@
       </div>
 
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <button class="btn btn-secondary" id="modalCopyHistoryBtn" style="padding: 8px 16px; font-size: 13px;">📋 คัดลอกประวัติเหตุการณ์</button>
+        <button class="btn btn-secondary" id="modalCopyHistoryBtn" style="padding: 8px 16px; font-size: 16px;">คัดลอกประวัติเหตุการณ์</button>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" class="btn btn-success" id="modalAcknowledgeAlertBtn" style="padding: 8px 18px; font-size: 13px; font-weight: 700; background: #059669; border-color: #059669; color: white;">
-            ✅ ตรวจสอบแล้ว (กลับสู่สถานะปกติ)
+          <button type="button" class="btn btn-success" id="modalAcknowledgeAlertBtn" style="padding: 8px 18px; font-size: 16px; font-weight: 700; background: #059669; border-color: #059669; color: white;">
+            ตรวจสอบแล้ว (กลับสู่สถานะปกติ)
           </button>
-          <button class="btn btn-primary" id="modalDismissBtn" style="padding: 8px 18px; font-size: 13px;">ปิดหน้าต่าง</button>
+          <button class="btn btn-primary" id="modalDismissBtn" style="padding: 8px 18px; font-size: 16px;">ปิดหน้าต่าง</button>
         </div>
       </div>
     </div>
@@ -512,15 +512,14 @@
       <!-- ส่วนแถบคำสั่งด้านบน ไม่พิมพ์ลงกระดาษ -->
       <div class="modal-header no-print" style="background: #0f172a; color: white;">
         <div class="modal-header-title">
-          <div class="modal-header-icon" style="background: rgba(255,255,255,0.15); color: white;">🖨️</div>
           <div>
-            <div class="modal-title-text" style="color: white;">รายงานสรุปผลและบันทึกเหตุการณ์การคุมสอบราชการ</div>
-            <div class="modal-subtitle-text" style="color: #cbd5e1;">Official Examination Incident & Proctoring Report (พร้อมพิมพ์หรือบันทึกเป็น PDF)</div>
+            <div class="modal-title-text" style="color: white; font-size: 19px;">รายงานสรุปผลและบันทึกเหตุการณ์การคุมสอบราชการ</div>
+            <div class="modal-subtitle-text" style="color: #cbd5e1; font-size: 15px;">Official Examination Incident & Proctoring Report (พร้อมพิมพ์หรือบันทึกเป็น PDF)</div>
           </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" id="triggerPrintBtn" class="btn btn-primary" style="background: #0284c7; border-color: #0284c7; font-weight: 700; padding: 8px 16px; font-size: 13px;">
-            🖨️ สั่งพิมพ์ / บันทึก PDF
+          <button type="button" id="triggerPrintBtn" class="btn btn-primary" style="background: #0284c7; border-color: #0284c7; font-weight: 700; padding: 8px 16px; font-size: 16px;">
+            สั่งพิมพ์ / บันทึก PDF
           </button>
           <button type="button" class="modal-close-btn" id="closeReportModalBtn" style="color: white;" title="ปิดหน้าต่าง">✕</button>
         </div>
@@ -531,12 +530,12 @@
         <div id="printableReportArea" class="printable-document">
           <!-- โลโก้และหัวเอกสารราชการ -->
           <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
-            <div style="font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.01em;">บันทึกรายงานสรุปผลและเหตุการณ์การคุมสอบออนไลน์</div>
-            <div style="font-size: 13px; color: #475569; font-weight: 600; margin-top: 2px;">Exam Proctor Studio — Academic Assessment & Integrity Assurance Report</div>
+            <div style="font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.01em;">บันทึกรายงานสรุปผลและเหตุการณ์การคุมสอบออนไลน์</div>
+            <div style="font-size: 16px; color: #475569; font-weight: 600; margin-top: 2px;">Exam Proctor Studio — Academic Assessment & Integrity Assurance Report</div>
           </div>
 
           <!-- ข้อมูลห้องสอบและรายละเอียด -->
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12.5px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px 16px;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px 16px;">
             <div><strong>ห้องสอบ:</strong> <span id="reportRoomTitle">-</span></div>
             <div><strong>รหัสห้องสอบ:</strong> <span id="reportRoomId" style="font-family: monospace; font-weight: bold;">-</span></div>
             <div><strong>กลุ่มสาระ/หมวดหมู่:</strong> <span id="reportCategory">-</span></div>
@@ -548,15 +547,15 @@
           </div>
 
           <!-- ตารางสถิติสรุปตัวเลข -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; text-align: center;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 15px; text-align: center;">
             <thead>
               <tr style="background: #f1f5f9; border: 1px solid #cbd5e1;">
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">👥 ผู้เข้าสอบทั้งหมด</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">✅ ส่งข้อสอบสำเร็จ</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">⏳ กำลังสอบ/ไม่ส่ง</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">⚠️ มีประวัติแจ้งเตือน</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">🚨 จำนวนเตือนรวม</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">🛡️ อัตราความซื่อสัตย์</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">ผู้เข้าสอบทั้งหมด</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">ส่งข้อสอบสำเร็จ</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">กำลังสอบ / ไม่ส่ง</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">มีประวัติแจ้งเตือน</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">จำนวนเตือนรวม</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">อัตราความซื่อสัตย์</th>
               </tr>
             </thead>
             <tbody>
@@ -572,8 +571,8 @@
           </table>
 
           <!-- ตารางบันทึกเหตุการณ์ผิดปกติรายบุคคล -->
-          <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">📋 บัญชีรายชื่อผู้สอบที่พบเหตุการณ์ผิดปกติ (เรียงตามลำดับความรุนแรง)</div>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 11px;">
+          <div style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">บัญชีรายชื่อผู้สอบที่พบเหตุการณ์ผิดปกติ (เรียงตามลำดับความรุนแรง)</div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 15px;">
             <thead>
               <tr style="background: #f1f5f9; border: 1px solid #cbd5e1; text-align: left;">
                 <th style="padding: 6px 8px; border: 1px solid #cbd5e1; width: 45px; text-align: center;">ลำดับ</th>
@@ -590,24 +589,24 @@
           </table>
 
           <!-- ส่วนลงนามรับรองเอกสารราชการ (Signatures Section) -->
-          <div style="margin-top: 36px; page-break-inside: avoid; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center; font-size: 12px;">
+          <div style="margin-top: 36px; page-break-inside: avoid; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center; font-size: 15px;">
             <div>
               <div style="height: 48px; border-bottom: 1px dotted #64748b; margin-bottom: 8px;"></div>
               <div>ลงชื่อ........................................................</div>
               <div style="margin-top: 4px; font-weight: 600;">( <span id="reportSigProctor1">........................................................</span> )</div>
-              <div style="color: #64748b; font-size: 11px;">กรรมการผู้คุมสอบคนที่ 1</div>
+              <div style="color: #64748b; font-size: 14px;">กรรมการผู้คุมสอบคนที่ 1</div>
             </div>
             <div>
               <div style="height: 48px; border-bottom: 1px dotted #64748b; margin-bottom: 8px;"></div>
               <div>ลงชื่อ........................................................</div>
               <div style="margin-top: 4px; font-weight: 600;">( ........................................................ )</div>
-              <div style="color: #64748b; font-size: 11px;">กรรมการผู้คุมสอบคนที่ 2</div>
+              <div style="color: #64748b; font-size: 14px;">กรรมการผู้คุมสอบคนที่ 2</div>
             </div>
             <div>
               <div style="height: 48px; border-bottom: 1px dotted #64748b; margin-bottom: 8px;"></div>
               <div>ลงชื่อ........................................................</div>
               <div style="margin-top: 4px; font-weight: 600;">( ........................................................ )</div>
-              <div style="color: #64748b; font-size: 11px;">หัวหน้าฝ่ายวิชาการและวัดผล</div>
+              <div style="color: #64748b; font-size: 14px;">หัวหน้าฝ่ายวิชาการและวัดผล</div>
             </div>
           </div>
         </div>
@@ -618,10 +617,10 @@
 
 
 
-  <script src="../js/shared/config.js?v=6.2"></script>
-  <script src="../js/shared/common.js?v=6.2"></script>
-  <script src="../js/backend/auth.js?v=6.2"></script>
-  <script src="../js/backend/rooms.js?v=6.2"></script>
-  <script src="../js/backend/monitor.js?v=6.2"></script>
+  <script src="../js/shared/config.js?v=6.3"></script>
+  <script src="../js/shared/common.js?v=6.3"></script>
+  <script src="../js/backend/auth.js?v=6.3"></script>
+  <script src="../js/backend/rooms.js?v=6.3"></script>
+  <script src="../js/backend/monitor.js?v=6.3"></script>
 </body>
 </html>

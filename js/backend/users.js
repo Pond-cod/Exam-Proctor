@@ -35,8 +35,7 @@ function populateUsersList() {
     container.innerHTML = `
       <tr>
         <td colspan="7" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
-          <div style="font-size: 32px; margin-bottom: 8px;">👤</div>
-          <p style="font-size: 14px;">ไม่พบข้อมูลผู้ใช้งานที่ตรงกับเงื่อนไขการค้นหา</p>
+          <p style="font-size: 16px;">ไม่พบข้อมูลผู้ใช้งานที่ตรงกับเงื่อนไขการค้นหา</p>
         </td>
       </tr>
     `;
@@ -49,12 +48,12 @@ function populateUsersList() {
     const isPrimaryAdmin = u.userId === "USR-ADMIN" || u.username === "admin";
 
     const roleBadge = isAdmin
-      ? `<span class="badge badge-danger" style="font-weight: 700;">🛡️ ผู้ดูแลระบบ (Admin)</span>`
-      : `<span class="badge badge-primary" style="font-weight: 700;">👨‍🏫 ครูผู้สอน (Teacher)</span>`;
+      ? `<span class="badge badge-danger" style="font-weight: 700;">ผู้ดูแลระบบ (Admin)</span>`
+      : `<span class="badge badge-primary" style="font-weight: 700;">ครูผู้สอน (Teacher)</span>`;
 
     const statusBadge = isActive
-      ? `<span class="badge badge-success" style="font-weight: 700;">🟢 ใช้งานได้</span>`
-      : `<span class="badge badge-neutral" style="font-weight: 700; color: #dc2626; background: #fef2f2;">🔴 ระงับการใช้งาน</span>`;
+      ? `<span class="badge badge-success" style="font-weight: 700;">ใช้งานได้</span>`
+      : `<span class="badge badge-neutral" style="font-weight: 700; color: #dc2626; background: #fef2f2;">ระงับการใช้งาน</span>`;
 
     const lastLoginText = u.lastLogin
       ? new Date(u.lastLogin).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
@@ -63,38 +62,38 @@ function populateUsersList() {
     return `
       <tr>
         <td>
-          <code style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">${escapeHtml(u.username || "-")}</code>
+          <code style="font-size: 15px; font-weight: 700; color: var(--text-primary);">${escapeHtml(u.username || "-")}</code>
         </td>
         <td>
-          <strong style="color: var(--text-primary);">${escapeHtml(u.displayName || "-")}</strong>
-          ${isPrimaryAdmin ? `<span style="font-size: 10.5px; color: #dc2626; display: block; font-weight: 600;">(บัญชีหลัก Master Admin)</span>` : ""}
+          <strong style="color: var(--text-primary); font-size: 16px;">${escapeHtml(u.displayName || "-")}</strong>
+          ${isPrimaryAdmin ? `<span style="font-size: 13px; color: #dc2626; display: block; font-weight: 600;">(บัญชีหลัก Master Admin)</span>` : ""}
         </td>
         <td>${roleBadge}</td>
         <td>
-          <span style="font-size: 12.5px; color: #059669; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-            🔒 เข้ารหัสปลอดภัย
+          <span style="font-size: 14px; color: #059669; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+            เข้ารหัสปลอดภัย
           </span>
         </td>
         <td>${statusBadge}</td>
-        <td style="font-size: 12.5px; color: var(--text-muted);">${escapeHtml(lastLoginText)}</td>
+        <td style="font-size: 14px; color: var(--text-muted);">${escapeHtml(lastLoginText)}</td>
         <td>
           <div style="display: flex; gap: 6px;">
             <button 
               type="button" 
               class="btn btn-secondary btn-sm btn-edit-user" 
               data-user-id="${escapeHtml(u.userId)}"
-              style="padding: 4px 10px; font-size: 12px;"
+              style="padding: 4px 10px; font-size: 15px;"
             >
-              ✏️ แก้ไข
+              แก้ไข
             </button>
             ${!isPrimaryAdmin ? `
               <button 
                 type="button" 
                 class="btn btn-danger btn-sm btn-delete-user" 
                 data-user-id="${escapeHtml(u.userId)}"
-                style="padding: 4px 10px; font-size: 12px;"
+                style="padding: 4px 10px; font-size: 15px;"
               >
-                🗑️ ลบ
+                ลบ
               </button>
             ` : ""}
           </div>
@@ -140,7 +139,7 @@ function openUserModal(userId = null) {
     if (!user) return;
 
     const isPrimaryAdmin = user.userId === "USR-ADMIN" || user.username === "admin";
-    if (titleEl) titleEl.textContent = isPrimaryAdmin ? "✏️ แก้ไขข้อมูลผู้ดูแลระบบหลัก (Master Admin)" : "✏️ แก้ไขข้อมูลผู้ใช้งาน";
+    if (titleEl) titleEl.textContent = isPrimaryAdmin ? "แก้ไขข้อมูลผู้ดูแลระบบหลัก (Master Admin)" : "แก้ไขข้อมูลผู้ใช้งาน";
     if (idInput) idInput.value = user.userId;
     if (usernameInput) {
       usernameInput.value = user.username || "";
@@ -158,7 +157,7 @@ function openUserModal(userId = null) {
     }
   } else {
     // โหมดเพิ่มใหม่ (Create)
-    if (titleEl) titleEl.textContent = "➕ เพิ่มผู้ใช้งานใหม่";
+    if (titleEl) titleEl.textContent = "เพิ่มผู้ใช้งานใหม่";
     if (idInput) idInput.value = "";
     if (usernameInput) {
       usernameInput.value = "";
@@ -282,11 +281,11 @@ async function handleDeleteUser(userId) {
   const confirmed = await showConfirm(
     `คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งาน "${user.displayName || user.username}" (Username: ${user.username})?\n\nการลบนี้จะทำให้ผู้ใช้ดังกล่าวไม่สามารถเข้าสู่ระบบได้อีกต่อไป`,
     {
-      title: "ยืนยันการลบผู้ใช้งาน 🗑️",
+      title: "ยืนยันการลบผู้ใช้งาน",
       confirmText: "ลบผู้ใช้งาน",
       cancelText: "ยกเลิก",
       confirmClass: "danger",
-      icon: "🗑️"
+      icon: ""
     }
   );
 

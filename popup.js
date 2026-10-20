@@ -101,7 +101,7 @@ if (detectTabBtn) {
   detectTabBtn.addEventListener("click", () => {
     if (detectedActiveTab) {
       customFormUrl.value = detectedActiveTab.url;
-      detectTabBtn.textContent = "✅ เลือกแท็บนี้แล้ว พร้อมเริ่มสอบ";
+      detectTabBtn.textContent = "เลือกแท็บนี้แล้ว พร้อมเริ่มสอบ";
       detectTabBtn.style.background = "#e6f4ea";
       detectTabBtn.style.color = "#137333";
     }
@@ -139,7 +139,7 @@ chrome.storage.local.get(["isExamActive", "studentId", "examFormUrl", "lockFormU
   if (data.lockFormUrl) {
     cfgLockUrl.checked = true;
     customFormUrl.disabled = true;
-    if (formUrlHint) formUrlHint.textContent = "🔒 กำหนดโดยผู้คุมสอบแล้ว (ไม่อนุญาตให้แก้ไข)";
+    if (formUrlHint) formUrlHint.textContent = "กำหนดโดยผู้คุมสอบแล้ว (ไม่อนุญาตให้แก้ไข)";
   } else {
     cfgLockUrl.checked = false;
     customFormUrl.disabled = false;
@@ -163,7 +163,7 @@ loginAdminBtn.addEventListener("click", () => {
       adminLoginBox.style.display = "none";
       adminConfigBox.style.display = "block";
     } else {
-      showPopupToast("❌ รหัสผ่านผู้คุมสอบไม่ถูกต้อง!", "danger");
+      showPopupToast("รหัสผ่านผู้คุมสอบไม่ถูกต้อง!", "danger");
     }
   });
 });
@@ -186,7 +186,7 @@ saveCfgBtn.addEventListener("click", () => {
     customFormUrl.value = formUrl;
     customFormUrl.disabled = isLocked;
     if (formUrlHint) {
-      formUrlHint.textContent = isLocked ? "🔒 กำหนดโดยผู้คุมสอบแล้ว (ไม่อนุญาตให้แก้ไข)" : "*วางลิงก์ Google Forms ใดก็ได้ที่ได้รับมอบหมาย";
+      formUrlHint.textContent = isLocked ? "กำหนดโดยผู้คุมสอบแล้ว (ไม่อนุญาตให้แก้ไข)" : "*วางลิงก์ Google Forms ใดก็ได้ที่ได้รับมอบหมาย";
     }
     saveStatus.style.display = "block";
     setTimeout(() => { saveStatus.style.display = "none"; }, 2500);
@@ -207,7 +207,7 @@ if (testWebhookBtn) {
       violation: "ทดสอบการเชื่อมต่อ Extension เข้าสู่ Neon Serverless Postgres สำเร็จ",
       timestamp: new Date().toISOString(),
       time: new Date().toLocaleTimeString("th-TH"),
-      content: "🧪 **ทดสอบการเชื่อมต่อระบบคุมสอบ**: Extension สามารถสื่อสารกับ Neon API ได้สมบูรณ์!"
+      content: "**ทดสอบการเชื่อมต่อระบบคุมสอบ**: Extension สามารถสื่อสารกับ Neon API ได้สมบูรณ์!"
     };
 
     try {
@@ -216,12 +216,12 @@ if (testWebhookBtn) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(testPayload)
       });
-      showPopupToast(`✅ ส่งข้อความทดสอบสำเร็จ! (HTTP ${res.status}) ตรวจสอบใน Live Monitor ได้ทันที`, "success");
+      showPopupToast(`ส่งข้อความทดสอบสำเร็จ! (HTTP ${res.status}) ตรวจสอบใน Live Monitor ได้ทันที`, "success");
     } catch (err) {
-      showPopupToast(`⚠️ เชื่อมต่อขัดข้อง: ${err.message}`, "danger");
+      showPopupToast(`เชื่อมต่อขัดข้อง: ${err.message}`, "danger");
     } finally {
       testWebhookBtn.disabled = false;
-      testWebhookBtn.textContent = "📡 ทดสอบส่งสัญญาณ Webhook";
+      testWebhookBtn.textContent = "ทดสอบส่งสัญญาณ Webhook";
     }
   });
 }
@@ -254,7 +254,7 @@ startBtn.addEventListener("click", () => {
     studentInput.style.borderColor = "#d93025";
     studentInput.style.boxShadow = "0 0 0 2px rgba(217,48,37,0.2)";
     if (studentIdError) {
-      studentIdError.textContent = "⚠️ กรุณากรอกรหัสนักเรียน (ตัวเลขเท่านั้น) ก่อนเริ่มสอบ!";
+      studentIdError.textContent = "กรุณากรอกรหัสนักเรียน (ตัวเลขเท่านั้น) ก่อนเริ่มสอบ!";
       studentIdError.style.display = "block";
     }
     return;
@@ -266,7 +266,7 @@ startBtn.addEventListener("click", () => {
     studentInput.style.borderColor = "#d93025";
     studentInput.style.boxShadow = "0 0 0 2px rgba(217,48,37,0.2)";
     if (studentIdError) {
-      studentIdError.textContent = "⚠️ รหัสนักเรียนต้องเป็นตัวเลขเท่านั้น (0-9)";
+      studentIdError.textContent = "รหัสนักเรียนต้องเป็นตัวเลขเท่านั้น (0-9)";
       studentIdError.style.display = "block";
     }
     return;
@@ -289,7 +289,7 @@ startBtn.addEventListener("click", () => {
         customFormUrl.focus();
         customFormUrl.style.borderColor = "#d93025";
         if (formUrlError) {
-          formUrlError.textContent = "⚠️ ยังไม่ได้ระบุลิงก์ข้อสอบ Google Forms!";
+          formUrlError.textContent = "ยังไม่ได้ระบุลิงก์ข้อสอบ Google Forms!";
           formUrlError.style.display = "block";
         }
         return;
@@ -312,7 +312,7 @@ startBtn.addEventListener("click", () => {
       customFormUrl.focus();
       customFormUrl.style.borderColor = "#d93025";
       if (formUrlError) {
-        formUrlError.textContent = "⚠️ URL นี้ไม่ใช่ Google Forms กรุณาใส่ URL ของ Google Forms เท่านั้น";
+        formUrlError.textContent = "URL นี้ไม่ใช่ Google Forms กรุณาใส่ URL ของ Google Forms เท่านั้น";
         formUrlError.style.display = "block";
       }
       return;
@@ -372,7 +372,7 @@ stopBtn.addEventListener("click", () => {
   chrome.storage.local.get(["adminPasscode"], (data) => {
     const currentPass = data.adminPasscode || "1234"; // fallback สำหรับกรณี storage ถูกล้างเท่านั้น
     if (pass !== currentPass) {
-      showPopupToast("❌ รหัสผ่านผู้คุมสอบไม่ถูกต้อง! (หากส่งข้อสอบแล้วระบบจะปลดล็อกให้อัตโนมัติ)", "danger");
+      showPopupToast("รหัสผ่านผู้คุมสอบไม่ถูกต้อง! (หากส่งข้อสอบแล้วระบบจะปลดล็อกให้อัตโนมัติ)", "danger");
       return;
     }
 
@@ -392,5 +392,5 @@ function setExamActiveUI(studentId) {
   startBtn.style.display = "none";
   stopBtn.style.display = "block";
   statusBadge.classList.add("active");
-  statusText.textContent = "🔒 กำลังคุมสอบ (ห้ามสลับหน้าจอ)";
+  statusText.textContent = "กำลังคุมสอบ (ห้ามสลับหน้าจอ)";
 }

@@ -18,10 +18,9 @@ function renderPortalRooms() {
 
   if (activeRooms.length === 0) {
     container.innerHTML = `
-      <div class="portal-empty-state" style="grid-column: 1 / -1; padding: 48px 16px;">
-        <div style="font-size: 48px; margin-bottom: 10px;">🏖️</div>
-        <h3 style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">ขณะนี้ยังไม่มีห้องสอบที่เปิดรับ</h3>
-        <p style="font-size: 13.5px; color: var(--text-muted); max-width: 400px; margin: 0 auto;">
+      <div class="portal-empty-state" style="grid-column: 1 / -1; padding: 48px 16px; border: 1.5px dashed var(--bg-card-border); border-radius: var(--radius-sm); background: var(--bg-subtle);">
+        <h3 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">ขณะนี้ยังไม่มีห้องสอบที่เปิดรับ</h3>
+        <p style="font-size: 17px; color: var(--text-muted); max-width: 460px; margin: 0 auto; line-height: 1.55;">
           กรุณารอครูผู้สอนเปิดรับนักเรียนเข้าสอบ หรือสอบถามรหัสเข้าห้องสอบจากครูผู้คุมสอบ
         </p>
       </div>
@@ -41,8 +40,8 @@ function renderPortalRooms() {
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div class="portal-empty-state" style="grid-column: 1 / -1; padding: 36px 16px;">
-        <p style="font-size: 14px; color: var(--text-muted);">ไม่พบห้องสอบที่ตรงกับคำค้นหาของคุณ</p>
+      <div class="portal-empty-state" style="grid-column: 1 / -1; padding: 36px 16px; border: 1.5px dashed var(--bg-card-border); border-radius: var(--radius-sm); background: var(--bg-subtle);">
+        <p style="font-size: 17px; color: var(--text-muted); margin: 0;">ไม่พบห้องสอบที่ตรงกับคำค้นหาของคุณ</p>
       </div>
     `;
     return;
@@ -51,8 +50,8 @@ function renderPortalRooms() {
   container.innerHTML = filtered.map((r) => `
     <div class="portal-room-card">
       <div class="portal-card-badges">
-        <span class="badge badge-primary" style="font-size: 11px;">${escapeHtml(r.category || "ทั่วไป")}</span>
-        <span class="badge badge-neutral" style="font-size: 11px;">${escapeHtml(r.gradeLevel || "ทุกระดับชั้น")}</span>
+        <span class="badge badge-primary" style="font-size: 15px; font-weight: 600;">${escapeHtml(r.category || "ทั่วไป")}</span>
+        <span class="badge badge-neutral" style="font-size: 15px; font-weight: 600;">${escapeHtml(r.gradeLevel || "ทุกระดับชั้น")}</span>
       </div>
       <h3 class="portal-card-title">${escapeHtml(r.title)}</h3>
       <div class="portal-card-meta">
@@ -65,7 +64,7 @@ function renderPortalRooms() {
         data-room-id="${escapeHtml(r.roomId)}"
         style="margin-top: 14px; font-weight: 700;"
       >
-        🚀 เข้าสู่ห้องสอบ
+        เข้าสู่ห้องสอบ
       </button>
     </div>
   `).join("");

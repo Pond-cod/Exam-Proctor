@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" href="../logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../css/style.css?v=6.2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/style.css?v=6.3">
 </head>
 <body>
 
@@ -33,24 +33,24 @@
 
       <!-- เมนูนำทางหลังบ้าน -->
       <div class="nav-links" id="navLinksMenu">
-        <a href="create.html" class="nav-tab-btn">➕ สร้างห้องสอบ</a>
-        <a href="monitor.html" class="nav-tab-btn">🖥️ หน้าจอคุมสอบสด</a>
-        <a href="rooms.html" class="nav-tab-btn">📁 จัดการห้องสอบ</a>
-        <a href="users.html" class="nav-tab-btn admin-only-nav-item">👥 จัดการผู้ใช้</a>
-        <a href="settings.html" class="nav-tab-btn active admin-only-nav-item">⚙️ ตั้งค่าระบบ</a>
+        <a href="create.html" class="nav-tab-btn">สร้างห้องสอบ</a>
+        <a href="monitor.html" class="nav-tab-btn">หน้าจอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn">จัดการห้องสอบ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">จัดการผู้ใช้</a>
+        <a href="settings.html" class="nav-tab-btn active admin-only-nav-item">ตั้งค่าระบบ</a>
       </div>
 
       <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ -->
       <div class="nav-role-box">
         <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 4px;">
-          <span id="navRoleBadge" class="role-badge role-badge-admin">ผู้ดูแลระบบ (Admin) 🛡️</span>
-          <span id="navUserNameDisplay" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"></span>
+          <span id="navRoleBadge" class="role-badge role-badge-admin">ผู้ดูแลระบบ (Admin)</span>
+          <span id="navUserNameDisplay" style="font-size: 14px; color: var(--text-muted); margin-top: 2px;"></span>
         </div>
         <button id="logoutBtn" type="button" class="btn btn-sm btn-secondary" title="ออกจากระบบหลังบ้าน">
-          🚪 ออกจากระบบ
+          ออกจากระบบ
         </button>
         <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
-          🌐 หน้าบ้าน
+          หน้าบ้าน
         </a>
       </div>
     </div>
@@ -63,8 +63,8 @@
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title">⚙️ ตั้งค่าระบบกลาง (System Settings)</div>
-            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+            <div class="card-title">ตั้งค่าระบบกลาง (System Settings)</div>
+            <div style="font-size: 15px; color: var(--text-muted); margin-top: 2px;">
               จัดการการตั้งค่าโครงสร้างระบบ ข้อความประกาศหน้าแรก รหัสผ่านกลาง และการเชื่อมต่อ Google Sheets
             </div>
           </div>
@@ -110,9 +110,9 @@
                   maxlength="6"
                   placeholder="6 หลัก (เช่น 999888)"
                   required
-                  style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #b91c1c; text-align: center; padding-right: 42px;"
+                  style="font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em; color: #b91c1c; text-align: center; padding-right: 56px;"
                 >
-                <button type="button" id="toggleAdminPassVisibleBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.7;" title="แสดง/ซ่อนรหัสผ่าน">👁️</button>
+                <button type="button" id="toggleAdminPassVisibleBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.8; font-weight: 600;" title="แสดง/ซ่อนรหัสผ่าน">แสดง</button>
               </div>
               <div class="form-hint" style="color: #991b1b;">รหัส 6 หลักสำหรับครู/แอดมินใช้ปลดล็อกหน้าจอสอบของนักเรียน</div>
             </div>
@@ -132,10 +132,10 @@
             </div>
           </div>
 
-          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12.5px; color: #1e40af; margin-bottom: 16px; line-height: 1.5;">
-            <strong>🔐 หมายเหตุเกี่ยวกับรหัสผ่านเข้าสู่ระบบ (Staff Login):</strong><br>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 15px; color: #1e40af; margin-bottom: 16px; line-height: 1.5;">
+            <strong>หมายเหตุเกี่ยวกับรหัสผ่านเข้าสู่ระบบ (Staff Login):</strong><br>
             รหัสผ่านสำหรับเข้าใช้งานระบบบุคลากร (ความยาวอย่างน้อย 8 ตัวอักษร) จะถูกจัดการแยกรายบุคคล สามารถเพิ่ม/แก้ไขได้ที่เมนู 
-            <a href="users.html" style="color: #1d4ed8; font-weight: 700; text-decoration: underline;">👥 จัดการผู้ใช้</a>
+            <a href="users.html" style="color: #1d4ed8; font-weight: 700; text-decoration: underline;">จัดการผู้ใช้</a>
           </div>
 
           <!-- 4. Webhook & Google Sheets -->
@@ -144,7 +144,7 @@
               <label class="form-label" for="settingWebhookUrlInput" style="margin-bottom: 0; font-weight: 700;">
                 5. Cloud API URL (Neon Serverless Postgres / API) *
               </label>
-              <span class="badge badge-success" style="font-size: 11px;">v6.0 Neon Postgres</span>
+              <span class="badge badge-success" style="font-size: 13px;">v6.0 Neon Postgres</span>
             </div>
             <input 
               type="url" 
@@ -156,19 +156,19 @@
             <div class="form-hint" style="margin-bottom: 12px;">URL ปลายทาง API ที่ใช้บันทึกและอ่านข้อมูล 4 ตาราง (users, system_config, exam_rooms, exam_logs) แบบเรียลไทม์</div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" id="testWebhookBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">
-                🔌 ทดสอบ Webhook
+              <button type="button" id="testWebhookBtn" class="btn btn-secondary" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
+                ทดสอบ Webhook
               </button>
-              <button type="button" id="openSheetBtn" class="btn btn-success" style="min-height: 38px; padding: 6px 14px; font-size: 12.5px;">
-                📊 เปิด Google Sheets ในแท็บใหม่
+              <button type="button" id="openSheetBtn" class="btn btn-success" style="min-height: 38px; padding: 6px 14px; font-size: 15px;">
+                เปิด Google Sheets ในแท็บใหม่
               </button>
             </div>
-            <div id="webhookTestStatus" style="font-size: 12.5px; margin-top: 8px; display: none;"></div>
+            <div id="webhookTestStatus" style="font-size: 14px; margin-top: 8px; display: none;"></div>
           </div>
 
           <div style="margin-top: 24px;">
-            <button type="button" id="saveSettingsBtn" class="btn btn-primary btn-lg" style="min-width: 220px; font-weight: 700;">
-              💾 บันทึกการตั้งค่าระบบ
+            <button type="button" id="saveSettingsBtn" class="btn btn-primary btn-lg" style="min-width: 220px; font-weight: 700; font-size: 16px;">
+              บันทึกการตั้งค่าระบบ
             </button>
           </div>
         </form>
@@ -177,9 +177,9 @@
 
   </main>
 
-  <script src="../js/shared/config.js?v=6.2"></script>
-  <script src="../js/shared/common.js?v=6.2"></script>
-  <script src="../js/backend/auth.js?v=6.2"></script>
-  <script src="../js/backend/settings.js?v=6.2"></script>
+  <script src="../js/shared/config.js?v=6.3"></script>
+  <script src="../js/shared/common.js?v=6.3"></script>
+  <script src="../js/backend/auth.js?v=6.3"></script>
+  <script src="../js/backend/settings.js?v=6.3"></script>
 </body>
 </html>
