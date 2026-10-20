@@ -79,12 +79,17 @@ async function runTests() {
     teacherToken = r.data.token;
   });
 
-  // 3. getAllRooms without Auth should be 401 (C-04)
-  await test("3. getAllRooms without Auth returns 401 Unauthorized", async () => {
+  // 3. getAllRooms without Auth gracefully returns active rooms with masked passcodes (200 OK)
+  await test("3. getAllRooms without Auth gracefully returns active rooms (200 OK)", async () => {
     const { req, res, getResult } = mockReqRes("GET", {}, { action: "getAllRooms" });
     await handler(req, res);
     const r = getResult();
-    if (r.status !== 401) throw new Error(`Expected 401 but got ${r.status}`);
+    if (r.status !== 200) throw new Error(`Expected 200 but got ${r.status}`);
+    if (r.data.status !== "success" || !Array.isArray(r.data.data)) {
+      throw new Error("Expected success status and array of rooms");
+    }
+    const exposed = r.data.data.find(rm => rm.adminPasscode && rm.adminPasscode !== "******");
+    if (exposed) throw new Error("Found unmasked adminPasscode in public getAllRooms response!");
   });
 
   // 4. getAllRooms with Admin Auth should return rooms and unmasked passcodes
@@ -122,7 +127,7 @@ async function runTests() {
   // 7. Reject token in queryParams (M-05)
   await test("7. Token in URL queryParams is rejected", async () => {
     const { req, res, getResult } = mockReqRes("GET", {}, {
-      action: "getAllRooms",
+      action: "getLogs",
       authToken: adminToken // passed via URL queryParam
     });
     await handler(req, res);

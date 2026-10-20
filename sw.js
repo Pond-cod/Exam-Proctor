@@ -4,7 +4,7 @@
  * Version: 6.0
  */
 
-const CACHE_NAME = "exam-proctor-shell-v6.0";
+const CACHE_NAME = "exam-proctor-shell-v6.1";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
@@ -20,12 +20,13 @@ const SHELL_ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(SHELL_ASSETS).catch((err) => {
         console.debug("Cache addAll partial skip:", err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -50,16 +51,22 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network first with cache fallback for HTML, cache first for static assets
-  if (event.request.headers.get("accept") && event.request.headers.get("accept").includes("text/html")) {
+  // Network first with cache fallback for HTML, JS and CSS to ensure latest updates are immediately loaded
+  const isCodeAsset = url.pathname.endsWith(".js") || url.pathname.endsWith(".css");
+  const isHtml = event.request.headers.get("accept") && event.request.headers.get("accept").includes("text/html");
+
+  if (isHtml || isCodeAsset) {
     event.respondWith(
       fetch(event.request).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
+        if (res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
+        }
         return res;
-      }).catch(() => caches.match(event.request).then((matched) => matched || caches.match("/index.html")))
+      }).catch(() => caches.match(event.request).then((matched) => matched || (isHtml ? caches.match("/index.html") : null)))
     );
   } else {
+    // Cache first with network fallback for images and static media
     event.respondWith(
       caches.match(event.request).then((cached) => {
         return cached || fetch(event.request).then((res) => {

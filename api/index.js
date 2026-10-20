@@ -157,8 +157,8 @@ function extractAuthUser(req, bodyData, queryParams) {
     token = authHeader.substring(7).trim();
   } else if (bodyData && bodyData.authToken) {
     token = String(bodyData.authToken).trim();
-  } else if (queryParams && (queryParams.action === "streamLogs" || queryParams.action === "getLogs") && queryParams.authToken) {
-    // Only permit query token for SSE EventSource / direct media where browser forbids custom headers
+  } else if (queryParams && queryParams.action === "streamLogs" && queryParams.authToken) {
+    // Only permit query token for SSE EventSource where browser EventSource API forbids custom headers
     token = String(queryParams.authToken).trim();
   }
   return verifySessionToken(token);
@@ -662,12 +662,32 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === "getAllRooms") {
-      // C-04: ป้องกัน Information Disclosure ตรวจสอบสิทธิ์ล็อกอินก่อนเข้าถึงรายการห้องสอบทั้งหมด
+      // C-04: หากยังไม่ได้ล็อกอิน ให้ fallback ส่งเฉพาะห้องที่เปิดสอบอยู่ (status = 'OPEN') และ Mask adminPasscode เป็น '******'
+      // เพื่อป้องกัน Information Disclosure และป้องกัน HTTP 401 error ในหน้าบ้านนักเรียน
       if (!authUser) {
-        return res.status(401).json({
-          status: "error",
-          message: "กรุณาเข้าสู่ระบบก่อนดูรายการห้องสอบ"
-        });
+        const rows = await sql`
+          SELECT room_id, title, category, grade_level, form_url, exam_url, entry_code, status, created_by, created_at, updated_at
+          FROM exam_rooms
+          WHERE status = 'OPEN'
+          ORDER BY created_at DESC;
+        `;
+        const publicRooms = rows.map((r) => ({
+          roomId: r.room_id,
+          title: r.title,
+          category: r.category,
+          gradeLevel: r.grade_level,
+          formUrl: r.form_url,
+          examUrl: r.exam_url,
+          entryCode: r.entry_code,
+          adminPasscode: "******",
+          status: r.status,
+          createdBy: r.created_by || "",
+          creatorUsername: "",
+          creatorId: "",
+          createdAt: r.created_at ? new Date(r.created_at).toISOString() : "",
+          updatedAt: r.updated_at ? new Date(r.updated_at).toISOString() : ""
+        }));
+        return res.status(200).json({ status: "success", data: publicRooms });
       }
 
       const rows = await sql`
