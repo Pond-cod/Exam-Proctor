@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=7.5">
+  <link rel="stylesheet" href="css/style.css?v=7.7">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0284c7">
 </head>
@@ -80,97 +80,128 @@
           
           <!-- การ์ดฝั่งซ้าย: วิธีการใช้งาน 4 ขั้นตอนสำหรับนักเรียน -->
           <div class="guide-card guide-steps-card">
-            <div class="guide-card-header">
-              <div class="guide-card-icon" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">📖</div>
-              <div>
-                <h2 class="guide-card-title">วิธีการใช้งานระบบสำหรับนักเรียน</h2>
-                <div class="guide-card-subtitle">4 ขั้นตอนง่ายๆ ในการเริ่มทำข้อสอบออนไลน์</div>
+            <div>
+              <div class="guide-card-header">
+                <div class="guide-card-icon" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">📖</div>
+                <div>
+                  <h2 class="guide-card-title">วิธีการใช้งานระบบสำหรับนักเรียน</h2>
+                  <div class="guide-card-subtitle">4 ขั้นตอนง่ายๆ ในการเริ่มทำข้อสอบออนไลน์</div>
+                </div>
+              </div>
+
+              <div class="guide-items-stack">
+                <div class="guide-item-row guide-item-row-step">
+                  <div class="step-number-badge">1</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>ค้นหาและเลือกวิชาที่สอบ</span>
+                    </div>
+                    <p class="guide-item-detail">พิมพ์ชื่อวิชาหรือระดับชั้นในช่องค้นหา แล้วคลิกปุ่ม <strong>"เข้าสู่ห้องสอบ"</strong> ในการ์ดวิชาของตนเอง</p>
+                  </div>
+                </div>
+
+                <div class="guide-item-row guide-item-row-step">
+                  <div class="step-number-badge">2</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>กรอกรหัสเข้าห้องสอบ (Entry Code)</span>
+                    </div>
+                    <p class="guide-item-detail">รับรหัส 6 หลักจากคุณครูผู้คุมสอบ (หรือสแกน QR Code) แล้วกรอกในหน้าต่างยืนยันเพื่อเปิดห้องสอบ</p>
+                  </div>
+                </div>
+
+                <div class="guide-item-row guide-item-row-step">
+                  <div class="step-number-badge">3</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>ระบุรหัสประจำตัวนักเรียน</span>
+                    </div>
+                    <p class="guide-item-detail">พิมพ์รหัสประจำตัวนักเรียน (เฉพาะตัวเลข เช่น <code>54321</code>) ให้ถูกต้องตรงตามทะเบียนเรียน</p>
+                  </div>
+                </div>
+
+                <div class="guide-item-row guide-item-row-step">
+                  <div class="step-number-badge">4</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>ทำข้อสอบเต็มจอ & กดส่งข้อสอบ</span>
+                    </div>
+                    <p class="guide-item-detail">ทำข้อสอบใน Google Forms จนเสร็จ เมื่อกดส่งในฟอร์มแล้ว ให้คลิกปุ่ม <strong>"ส่งข้อสอบเรียบร้อยแล้ว"</strong> ด้านบน</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="student-steps-timeline">
-              <div class="student-step-row">
-                <div class="step-number-badge">1</div>
-                <div class="step-text-body">
-                  <strong class="step-title">ค้นหาและเลือกวิชาที่สอบ</strong>
-                  <p class="step-desc">พิมพ์ชื่อวิชาหรือระดับชั้นในช่องค้นหาด้านล่าง หรือเลือกหมวดหมู่วิชา แล้วคลิกปุ่ม <strong>"เข้าสู่ห้องสอบ"</strong> ในการ์ดวิชาของตนเอง</p>
-                </div>
-              </div>
-
-              <div class="student-step-row">
-                <div class="step-number-badge">2</div>
-                <div class="step-text-body">
-                  <strong class="step-title">กรอกรหัสเข้าห้องสอบ (Entry Code 6 หลัก)</strong>
-                  <p class="step-desc">รับรหัสตัวเลข 6 หลักจากคุณครูผู้คุมสอบ (หรือสแกน QR Code หน้าห้องสอบ) แล้วกรอกในหน้าต่างยืนยันเพื่อเปิดประตูห้องสอบ</p>
-                </div>
-              </div>
-
-              <div class="student-step-row">
-                <div class="step-number-badge">3</div>
-                <div class="step-text-body">
-                  <strong class="step-title">ระบุรหัสประจำตัวนักเรียน</strong>
-                  <p class="step-desc">พิมพ์รหัสประจำตัวนักเรียน (เฉพาะตัวเลข เช่น <code>54321</code>) ให้ถูกต้องตรงตามทะเบียนเรียน เพื่อให้ระบบบันทึกและส่งคะแนนไปยังครูผู้สอน</p>
-                </div>
-              </div>
-
-              <div class="student-step-row">
-                <div class="step-number-badge">4</div>
-                <div class="step-text-body">
-                  <strong class="step-title">ทำข้อสอบเต็มจอ & กดส่งข้อสอบ</strong>
-                  <p class="step-desc">คลิก <strong>"เริ่มทำข้อสอบ"</strong> หน้าจอจะขยายเต็มจออัตโนมัติ ทำข้อสอบใน Google Forms ให้ครบถ้วน เมื่อกดปุ่มส่งในฟอร์มแล้ว ให้คลิกปุ่มสีเขียว <strong>"ส่งข้อสอบเรียบร้อยแล้ว"</strong> ที่แถบด้านบนสุด</p>
-                </div>
+            <div class="guide-footer-callout guide-footer-tip">
+              <span style="font-size: 15px; flex-shrink: 0;">💡</span>
+              <div>
+                <strong>คำแนะนำก่อนสอบ:</strong> ตรวจสอบสัญญาณอินเทอร์เน็ตและปิดแท็บอื่นๆ ทั้งหมดก่อนเริ่มทำข้อสอบเพื่อความราบรื่น
               </div>
             </div>
           </div>
 
           <!-- การ์ดฝั่งขวา: กฎ ระเบียบ และข้อห้ามในการสอบ -->
           <div class="guide-card guide-rules-card" id="studentRulesCard">
-            <div class="guide-card-header">
-              <div class="guide-card-icon" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;">⚠️</div>
-              <div>
-                <h2 class="guide-card-title" style="color: #be123c;">กฎ ระเบียบ และข้อห้ามในการสอบ</h2>
-                <div class="guide-card-subtitle">ระบบตรวจจับความซื่อสัตย์แบบเรียลไทม์ (Anti-Cheating)</div>
+            <div>
+              <div class="guide-card-header">
+                <div class="guide-card-icon" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;">⚠️</div>
+                <div>
+                  <h2 class="guide-card-title" style="color: #be123c;">กฎ ระเบียบ และข้อห้ามในการสอบ</h2>
+                  <div class="guide-card-subtitle">ระบบตรวจจับความซื่อสัตย์แบบเรียลไทม์ (Anti-Cheating)</div>
+                </div>
+              </div>
+
+              <div class="guide-items-stack">
+                <div class="guide-item-row guide-item-row-rule">
+                  <div class="rule-icon-badge">🚫</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>ห้ามออกจากโหมดเต็มหน้าจอ</span>
+                      <span class="rule-tag">Fullscreen</span>
+                    </div>
+                    <p class="guide-item-detail">ห้ามกด <code>Esc</code> หรือย่อจอ หากหลุดเต็มจอระบบจะล็อกหน้าจอและส่งสัญญาณเตือนครูทันที</p>
+                  </div>
+                </div>
+
+                <div class="guide-item-row guide-item-row-rule">
+                  <div class="rule-icon-badge">🚫</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>ห้ามสลับแท็บ / ย่อหน้าจอ / เปิดโปรแกรม</span>
+                      <span class="rule-tag">Blur Detect</span>
+                    </div>
+                    <p class="guide-item-detail">ห้ามเปิดเว็บหาคำตอบหรือเปิดแอปอื่น ระบบตรวจจับการสลับจอ (Tab Blur) และบันทึกเวลาจริง</p>
+                  </div>
+                </div>
+
+                <div class="guide-item-row guide-item-row-rule">
+                  <div class="rule-icon-badge">🚫</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>ห้ามคลิกนอกหน้าข้อสอบ หรือใช้หน้าจอเสริม</span>
+                      <span class="rule-tag">Dual Screen</span>
+                    </div>
+                    <p class="guide-item-detail">ห้ามคลิกแถบ Taskbar ด้านล่าง หรือต่อจอเสริม (Dual Monitor) การคลิกนอกหน้าต่างจะถูกบันทึก</p>
+                  </div>
+                </div>
+
+                <div class="guide-item-row guide-item-row-rule">
+                  <div class="rule-icon-badge">🚫</div>
+                  <div class="guide-item-content">
+                    <div class="guide-item-heading">
+                      <span>ห้ามใช้คีย์ลัดต้องห้ามและคลิกขวา</span>
+                      <span class="rule-tag">Key Locked</span>
+                    </div>
+                    <p class="guide-item-detail">ระบบบล็อก <code>Alt+Tab</code>, <code>Win</code>, <code>Ctrl+C/V</code>, <code>PrintScreen</code> และป้องกันคัดลอกข้อความ</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="student-rules-list">
-              <div class="rule-item-box rule-item-danger">
-                <div class="rule-icon">🚫</div>
-                <div class="rule-content">
-                  <strong class="rule-heading">ห้ามออกจากโหมดเต็มหน้าจอ (No Fullscreen Exit)</strong>
-                  <p class="rule-detail">ต้องคงอยู่ในโหมดเต็มจอตลอดการสอบ หากกด <code>Esc</code> หรือหลุดจากเต็มจอ ระบบจะล็อกหน้าจอทันทีและส่งสัญญาณเตือนไปยังครู</p>
-                </div>
-              </div>
-
-              <div class="rule-item-box rule-item-danger">
-                <div class="rule-icon">🚫</div>
-                <div class="rule-content">
-                  <strong class="rule-heading">ห้ามสลับแท็บ / สลับหน้าจอ / เปิดโปรแกรมอื่น</strong>
-                  <p class="rule-detail">ห้ามเปิดเว็บหาคำตอบ ห้ามใช้แอปพลิเคชันอื่น หรือย่อหน้าต่าง ระบบตรวจจับการสลับจอ (Tab/Window Blur) และบันทึกเวลาที่หลุดออกไป</p>
-                </div>
-              </div>
-
-              <div class="rule-item-box rule-item-warning">
-                <div class="rule-icon">🚫</div>
-                <div class="rule-content">
-                  <strong class="rule-heading">ห้ามคลิกออกนอกหน้าข้อสอบ หรือใช้หน้าจอเสริม</strong>
-                  <p class="rule-detail">ห้ามคลิกแถบ Taskbar ด้านล่าง หรือใช้สองหน้าจอ (Dual Monitor) สัญญาณคลิกออกนอกพื้นที่จะถูกบันทึกเป็นประวัติเหตุการณ์</p>
-                </div>
-              </div>
-
-              <div class="rule-item-box rule-item-warning">
-                <div class="rule-icon">🚫</div>
-                <div class="rule-content">
-                  <strong class="rule-heading">ห้ามใช้คีย์ลัดต้องห้ามและคลิกขวา</strong>
-                  <p class="rule-detail">ระบบทำการบล็อกคีย์ลัด <code>Alt+Tab</code>, <code>Windows Key</code>, <code>Ctrl+C</code>, <code>Ctrl+V</code>, <code>PrintScreen</code> และการคัดลอกข้อความ</p>
-                </div>
-              </div>
-
-              <div class="rules-penalty-callout">
-                <div style="font-size: 18px; flex-shrink: 0;">⚖️</div>
-                <div>
-                  <strong>มาตรการลงโทษ:</strong> ทุกพฤติกรรมผิดปกติจะถูกส่งไปยังจอคุมสอบของครูแบบสดๆ หากเตือนสะสมเกินกำหนด ระบบจะล็อกข้อสอบถาวร หรือครูผู้สอนอาจกดสั่ง <em>"ยุติการสอบทันที"</em>
-                </div>
+            <div class="guide-footer-callout guide-footer-penalty">
+              <span style="font-size: 15px; flex-shrink: 0;">⚖️</span>
+              <div>
+                <strong>มาตรการลงโทษ:</strong> ทุกพฤติกรรมผิดปกติส่งถึงครูแบบสดๆ หากฝ่าฝืนสะสม ระบบจะล็อกถาวร หรือครูอาจสั่ง <em>"ยุติการสอบทันที"</em>
               </div>
             </div>
           </div>
@@ -296,33 +327,44 @@
 
         <!-- เนื้อหาแท็บที่ 1: ขั้นตอนการสอบ -->
         <div id="guideTabContentSteps" class="guide-tab-panel" style="display: block;">
-          <div class="student-steps-timeline">
-            <div class="student-step-row">
+          <div class="guide-items-stack">
+            <div class="guide-item-row guide-item-row-step">
               <div class="step-number-badge">1</div>
-              <div class="step-text-body">
-                <strong class="step-title">เลือกวิชาและห้องสอบ</strong>
-                <p class="step-desc">พิมพ์ค้นหารายวิชาในแถบค้นหา แล้วกดปุ่ม <strong>"เข้าสู่ห้องสอบ"</strong> ให้ตรงกับรายวิชาและกลุ่มการเรียนของตนเอง</p>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>ค้นหาและเลือกวิชาที่สอบ</span>
+                </div>
+                <p class="guide-item-detail">พิมพ์ชื่อวิชาหรือระดับชั้นในช่องค้นหา แล้วคลิกปุ่ม <strong>"เข้าสู่ห้องสอบ"</strong> ในการ์ดวิชาของตนเอง</p>
               </div>
             </div>
-            <div class="student-step-row">
+
+            <div class="guide-item-row guide-item-row-step">
               <div class="step-number-badge">2</div>
-              <div class="step-text-body">
-                <strong class="step-title">กรอกรหัสเข้าห้องสอบ (Entry Code)</strong>
-                <p class="step-desc">รับรหัสตัวเลข 6 หลักจากคุณครูผู้คุมสอบ (หรือสแกน QR Code หน้าห้อง) แล้วกรอกในกล่องรหัสผ่าน</p>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>กรอกรหัสเข้าห้องสอบ (Entry Code)</span>
+                </div>
+                <p class="guide-item-detail">รับรหัส 6 หลักจากคุณครูผู้คุมสอบ (หรือสแกน QR Code) แล้วกรอกในหน้าต่างยืนยันเพื่อเปิดห้องสอบ</p>
               </div>
             </div>
-            <div class="student-step-row">
+
+            <div class="guide-item-row guide-item-row-step">
               <div class="step-number-badge">3</div>
-              <div class="step-text-body">
-                <strong class="step-title">กรอกรหัสประจำตัวนักเรียน</strong>
-                <p class="step-desc">กรอกเลขประจำตัวนักเรียนเฉพาะตัวเลข (เช่น <code>54321</code>) ก่อนกดเริ่มสอบ เพื่อให้ระบบเชื่อมโยงคะแนนไปยังครูผู้สอน</p>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>ระบุรหัสประจำตัวนักเรียน</span>
+                </div>
+                <p class="guide-item-detail">พิมพ์รหัสประจำตัวนักเรียน (เฉพาะตัวเลข เช่น <code>54321</code>) ให้ถูกต้องตรงตามทะเบียนเรียน</p>
               </div>
             </div>
-            <div class="student-step-row">
+
+            <div class="guide-item-row guide-item-row-step">
               <div class="step-number-badge">4</div>
-              <div class="step-text-body">
-                <strong class="step-title">ทำข้อสอบในโหมดเต็มจอ & กดส่งข้อสอบ</strong>
-                <p class="step-desc">ตอบข้อสอบ Google Forms ให้ครบทุกข้อ เมื่อกดปุ่ม "ส่ง" (Submit) ในฟอร์มเสร็จสิ้น ให้กดปุ่มสีเขียว <strong>"ส่งข้อสอบเรียบร้อยแล้ว"</strong> ด้านบนสุด เพื่อยืนยันการจบการสอบอย่างสมบูรณ์</p>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>ทำข้อสอบเต็มจอ & กดส่งข้อสอบ</span>
+                </div>
+                <p class="guide-item-detail">ทำข้อสอบใน Google Forms จนเสร็จ เมื่อกดส่งในฟอร์มแล้ว ให้คลิกปุ่ม <strong>"ส่งข้อสอบเรียบร้อยแล้ว"</strong> ด้านบน</p>
               </div>
             </div>
           </div>
@@ -330,63 +372,79 @@
 
         <!-- เนื้อหาแท็บที่ 2: กฎและข้อห้าม -->
         <div id="guideTabContentRules" class="guide-tab-panel" style="display: none;">
-          <div class="student-rules-list">
-            <div class="rule-item-box rule-item-danger">
-              <div class="rule-icon">🚫</div>
-              <div class="rule-content">
-                <strong class="rule-heading">ห้ามออกจากโหมดเต็มหน้าจอ (Fullscreen)</strong>
-                <p class="rule-detail">ตลอดการสอบต้องอยู่ในโหมดเต็มจอ หากกด <code>Esc</code> หรือหลุดออกจากเต็มจอ ระบบจะล็อกหน้าจอทันทีและส่งสัญญาณเตือนไปยังครู</p>
+          <div class="guide-items-stack">
+            <div class="guide-item-row guide-item-row-rule">
+              <div class="rule-icon-badge">🚫</div>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>ห้ามออกจากโหมดเต็มหน้าจอ</span>
+                  <span class="rule-tag">Fullscreen</span>
+                </div>
+                <p class="guide-item-detail">ห้ามกด <code>Esc</code> หรือย่อจอ หากหลุดเต็มจอระบบจะล็อกหน้าจอและส่งสัญญาณเตือนครูทันที</p>
               </div>
             </div>
-            <div class="rule-item-box rule-item-danger">
-              <div class="rule-icon">🚫</div>
-              <div class="rule-content">
-                <strong class="rule-heading">ห้ามสลับหน้าจอ / สลับแท็บ / เปิดโปรแกรมช่วยสอบ</strong>
-                <p class="rule-detail">ห้ามเปิดแท็บอื่นเพื่อหาคำตอบ ห้ามใช้แอปพลิเคชันอื่น ระบบตรวจจับสัญญาณเบลอหน้าจอ (Tab Blur) และนับจำนวนครั้งสะสม</p>
+
+            <div class="guide-item-row guide-item-row-rule">
+              <div class="rule-icon-badge">🚫</div>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>ห้ามสลับแท็บ / ย่อหน้าจอ / เปิดโปรแกรม</span>
+                  <span class="rule-tag">Blur Detect</span>
+                </div>
+                <p class="guide-item-detail">ห้ามเปิดเว็บหาคำตอบหรือเปิดแอปอื่น ระบบตรวจจับการสลับจอ (Tab Blur) และบันทึกเวลาจริง</p>
               </div>
             </div>
-            <div class="rule-item-box rule-item-warning">
-              <div class="rule-icon">🚫</div>
-              <div class="rule-content">
-                <strong class="rule-heading">ห้ามคลิกออกนอกหน้าข้อสอบ หรือต่อสองหน้าจอ (Dual Monitor)</strong>
-                <p class="rule-detail">ห้ามคลิกแถบ Taskbar หรือคลิกจอที่สอง สัญญาณจะถูกตรวจจับเป็นความพยายามสลับหน้าจอ</p>
+
+            <div class="guide-item-row guide-item-row-rule">
+              <div class="rule-icon-badge">🚫</div>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>ห้ามคลิกนอกหน้าข้อสอบ หรือใช้หน้าจอเสริม</span>
+                  <span class="rule-tag">Dual Screen</span>
+                </div>
+                <p class="guide-item-detail">ห้ามคลิกแถบ Taskbar ด้านล่าง หรือต่อจอเสริม (Dual Monitor) การคลิกนอกหน้าต่างจะถูกบันทึก</p>
               </div>
             </div>
-            <div class="rule-item-box rule-item-warning">
-              <div class="rule-icon">🚫</div>
-              <div class="rule-content">
-                <strong class="rule-heading">ห้ามใช้คีย์ลัดต้องห้ามและคลิกขวา</strong>
-                <p class="rule-detail">ระบบบล็อกคีย์ลัด <code>Alt+Tab</code>, <code>Windows Key</code>, <code>Ctrl+C</code>, <code>Ctrl+V</code>, <code>PrintScreen</code> และการคัดลอกข้อสอบ</p>
+
+            <div class="guide-item-row guide-item-row-rule">
+              <div class="rule-icon-badge">🚫</div>
+              <div class="guide-item-content">
+                <div class="guide-item-heading">
+                  <span>ห้ามใช้คีย์ลัดต้องห้ามและคลิกขวา</span>
+                  <span class="rule-tag">Key Locked</span>
+                </div>
+                <p class="guide-item-detail">ระบบบล็อก <code>Alt+Tab</code>, <code>Win</code>, <code>Ctrl+C/V</code>, <code>PrintScreen</code> และป้องกันคัดลอกข้อความ</p>
               </div>
             </div>
-            <div class="rules-penalty-callout">
-              <div style="font-size: 18px; flex-shrink: 0;">⚖️</div>
-              <div>
-                <strong>ผลของการฝ่าฝืน:</strong> หากมีการแจ้งเตือนสะสมเกินกำหนด ระบบจะตัดสิทธิ์และล็อกหน้าจอทันที หรือครูผู้คุมสอบมีอำนาจกดสั่ง <em>"ยุติการสอบ"</em> ของนักเรียนรายบุคคล
-              </div>
+          </div>
+
+          <div class="guide-footer-callout guide-footer-penalty" style="margin-top: 14px;">
+            <span style="font-size: 15px; flex-shrink: 0;">⚖️</span>
+            <div>
+              <strong>ผลของการฝ่าฝืน:</strong> หากมีการแจ้งเตือนสะสมเกินกำหนด ระบบจะตัดสิทธิ์และล็อกหน้าจอทันที หรือครูผู้คุมสอบมีอำนาจกดสั่ง <em>"ยุติการสอบ"</em> ของนักเรียนรายบุคคล
             </div>
           </div>
         </div>
 
         <!-- เนื้อหาแท็บที่ 3: คำถามพบบ่อย (FAQ) -->
         <div id="guideTabContentFaq" class="guide-tab-panel" style="display: none;">
-          <div style="display: flex; flex-direction: column; gap: 14px;">
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
-              <strong style="color: var(--primary); font-size: 15.5px; display: block; margin-bottom: 4px;">Q: ถ้าเผลอกดสลับหน้าจอหรือหลุดจากเต็มจอต้องทำอย่างไร?</strong>
-              <p style="font-size: 14.5px; color: var(--text-secondary); margin: 0; line-height: 1.6;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
+              <strong style="color: var(--primary); font-size: 13.5px; display: block; margin-bottom: 2px;">Q: ถ้าเผลอกดสลับหน้าจอหรือหลุดจากเต็มจอต้องทำอย่างไร?</strong>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
                 ให้รีบคลิกปุ่ม "กลับสู่โหมดเต็มหน้าจอ" ทันที หากระบบล็อกหน้าจอ ให้ยกมือแจ้งคุณครูผู้คุมสอบประจำห้อง เพื่อให้ครูมาตรวจสอบและกรอกรหัสผ่านปลดล็อกให้
               </p>
             </div>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
-              <strong style="color: var(--primary); font-size: 15.5px; display: block; margin-bottom: 4px;">Q: ทำข้อสอบเสร็จแล้วต้องกดปุ่มไหนบ้าง?</strong>
-              <p style="font-size: 14.5px; color: var(--text-secondary); margin: 0; line-height: 1.6;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
+              <strong style="color: var(--primary); font-size: 13.5px; display: block; margin-bottom: 2px;">Q: ทำข้อสอบเสร็จแล้วต้องกดปุ่มไหนบ้าง?</strong>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
                 1) ให้กดปุ่ม <strong>"ส่ง" (Submit)</strong> ในแบบฟอร์ม Google Forms ก่อนเพื่อส่งคะแนนเข้าฐานข้อมูลแบบทดสอบ<br>
                 2) จากนั้นให้กดปุ่มสีเขียว <strong>"ส่งข้อสอบเรียบร้อยแล้ว"</strong> ที่แถบด้านบนสุดของระบบคุมสอบเพื่อจบเซสชัน
               </p>
             </div>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
-              <strong style="color: var(--primary); font-size: 15.5px; display: block; margin-bottom: 4px;">Q: รองรับการเข้าสอบบน iPad, แท็บเล็ต หรือสมาร์ตโฟนหรือไม่?</strong>
-              <p style="font-size: 14.5px; color: var(--text-secondary); margin: 0; line-height: 1.6;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
+              <strong style="color: var(--primary); font-size: 13.5px; display: block; margin-bottom: 2px;">Q: รองรับการเข้าสอบบน iPad, แท็บเล็ต หรือสมาร์ตโฟนหรือไม่?</strong>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
                 รองรับทุกอุปกรณ์ โดยบนแท็บเล็ตและมือถือจะต้องทำข้อสอบในโหมดเต็มจอ และห้ามสลับแอปพลิเคชันหรือรูดแถบแจ้งเตือนเช่นเดียวกัน
               </p>
             </div>

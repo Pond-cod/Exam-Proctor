@@ -3089,16 +3089,16 @@ img, svg, video, canvas, iframe {
    ========================================================================== */
 .portal-hero-banner {
   background: linear-gradient(135deg, #312e81 0%, #4338ca 25%, #2563eb 60%, #0284c7 100%);
-  border-radius: 24px;
-  padding: 34px 38px;
+  border-radius: 20px;
+  padding: 24px 30px;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 20px 48px -10px rgba(79, 70, 229, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4);
-  margin-bottom: 24px;
+  box-shadow: 0 14px 36px -8px rgba(79, 70, 229, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  margin-bottom: 20px;
   position: relative;
   overflow: hidden;
 }
@@ -3108,8 +3108,8 @@ img, svg, video, canvas, iframe {
   position: absolute;
   top: -20%;
   right: -5%;
-  width: 320px;
-  height: 320px;
+  width: 280px;
+  height: 280px;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
@@ -3131,10 +3131,10 @@ img, svg, video, canvas, iframe {
 }
 
 .portal-hero-mascot {
-  width: 140px;
-  height: 140px;
+  width: 105px;
+  height: 105px;
   object-fit: contain;
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.25));
   animation: floatLogo 5s ease-in-out infinite;
 }
 
@@ -3158,10 +3158,10 @@ img, svg, video, canvas, iframe {
 }
 
 .exam-portal-logo {
-  width: 84px;
-  height: 84px;
+  width: 74px;
+  height: 74px;
   object-fit: contain;
-  margin: 0 auto 16px auto;
+  margin: 0 auto 14px auto;
   display: block;
   filter: drop-shadow(0 6px 16px rgba(2, 132, 199, 0.28));
   animation: floatLogo 5s ease-in-out infinite;
@@ -3173,29 +3173,29 @@ img, svg, video, canvas, iframe {
   background: rgba(255, 255, 255, 0.22);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  padding: 5px 16px;
+  padding: 3px 12px;
   border-radius: var(--radius-full);
-  font-size: 15px !important;
+  font-size: 12px !important;
   font-weight: 600;
   letter-spacing: 0.02em;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .portal-hero-title {
-  font-size: 28px !important;
+  font-size: 22px !important;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   color: #ffffff;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .portal-hero-desc {
-  font-size: 18px !important;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.95);
-  max-width: 680px;
+  font-size: 14px !important;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 640px;
 }
 
 .portal-filter-bar {
@@ -4568,224 +4568,232 @@ img, svg, video, canvas, iframe {
 }
 
 /* ==========================================================================
-   v7.6: Student Examination Guide & Anti-Cheating Regulations Hub
+   v7.7: Student Examination Guide & Anti-Cheating Regulations Hub (Clean & Balanced UX/UI)
    ========================================================================== */
 .student-guide-container {
-  margin-top: 24px;
-  margin-bottom: 28px;
+  margin-top: 18px;
+  margin-bottom: 22px;
 }
 
 .student-guide-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
   align-items: stretch;
 }
 
 @media (max-width: 768px) {
   .student-guide-grid {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 14px;
   }
 }
 
 .guide-card {
   background: var(--bg-card, #ffffff);
   border: 1px solid var(--bg-card-border, #e2e8f0);
-  border-radius: 20px;
-  padding: 26px 28px;
-  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.05);
   position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .guide-card:hover {
-  box-shadow: 0 10px 28px -6px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 6px 18px -4px rgba(15, 23, 42, 0.08);
 }
 
 .guide-steps-card {
-  border-top: 4px solid var(--primary, #2563eb);
+  border-top: 3.5px solid var(--primary, #2563eb);
 }
 
 .guide-rules-card {
-  border-top: 4px solid var(--danger, #e11d48);
+  border-top: 3.5px solid var(--danger, #e11d48);
 }
 
 .guide-card-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1.5px solid var(--bg-subtle, #f1f5f9);
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bg-subtle, #f1f5f9);
 }
 
 .guide-card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 17px;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .guide-card-title {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 15.5px;
+  font-weight: 700;
   color: var(--text-primary, #0f172a);
   margin: 0;
   line-height: 1.3;
 }
 
 .guide-card-subtitle {
-  font-size: 14.5px;
+  font-size: 12px;
   color: var(--text-muted, #64748b);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-/* Steps Timeline */
-.student-steps-timeline {
+/* Identical List Stack on both cards */
+.guide-items-stack {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  position: relative;
+  gap: 9px;
+  flex: 1;
 }
 
-.student-step-row {
+.guide-item-row {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.guide-item-row-step {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.guide-item-row-step:hover {
+  background: #f0f7ff;
+  border-color: #bfdbfe;
+}
+
+.guide-item-row-rule {
+  background: #fffafa;
+  border-color: #fee2e2;
+}
+
+.guide-item-row-rule:hover {
+  background: #fff1f2;
+  border-color: #fecdd3;
 }
 
 .step-number-badge {
-  width: 32px;
-  height: 32px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--primary, #2563eb);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 800;
   font-family: 'Prompt', sans-serif;
   flex-shrink: 0;
-  margin-top: 2px;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+  margin-top: 1px;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
 }
 
-.step-text-body {
-  flex: 1;
-}
-
-.step-title {
-  display: block;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary, #0f172a);
-  line-height: 1.4;
-}
-
-.step-desc {
-  font-size: 14.5px;
-  color: var(--text-secondary, #334155);
-  margin: 3px 0 0 0;
-  line-height: 1.55;
-}
-
-/* Rules List */
-.student-rules-list {
+.rule-icon-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #e11d48;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.rule-item-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  transition: background 0.15s;
-}
-
-.rule-item-danger {
-  background: #fff5f5;
-  border-color: #fed7d7;
-}
-
-.rule-item-warning {
-  background: #fffaf0;
-  border-color: #feebc8;
-}
-
-.rule-icon {
-  font-size: 18px;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-.rule-content {
+.guide-item-content {
   flex: 1;
+  min-width: 0;
 }
 
-.rule-heading {
-  display: block;
-  font-size: 15.5px;
+.guide-item-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text-primary, #0f172a);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
-.rule-item-danger .rule-heading {
-  color: #9b2c2c;
+.guide-item-row-rule .guide-item-heading {
+  color: #9f1239;
 }
 
-.rule-item-warning .rule-heading {
-  color: #9c4221;
+.rule-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fee2e2;
+  color: #be123c;
+  white-space: nowrap;
 }
 
-.rule-detail {
-  font-size: 14px;
-  color: var(--text-secondary, #4a5568);
-  margin: 3px 0 0 0;
-  line-height: 1.55;
+.guide-item-detail {
+  font-size: 12px;
+  color: #475569;
+  margin: 2px 0 0 0;
+  line-height: 1.45;
 }
 
-.rules-penalty-callout {
+/* Balanced Footer Callouts */
+.guide-footer-callout {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+.guide-footer-tip {
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  font-size: 14.5px;
-  line-height: 1.6;
   color: #1e40af;
-  margin-top: 4px;
+}
+
+.guide-footer-penalty {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #9f1239;
 }
 
 /* Hero Chips */
 .portal-chip-btn {
   background: rgba(255, 255, 255, 0.22);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   color: #ffffff;
-  padding: 6px 16px;
+  padding: 4px 13px;
   border-radius: var(--radius-full);
-  font-size: 14.5px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   text-decoration: none;
@@ -4799,47 +4807,47 @@ img, svg, video, canvas, iframe {
 }
 
 .portal-chip-danger {
-  background: rgba(244, 63, 94, 0.28);
-  border-color: rgba(253, 164, 175, 0.6);
+  background: rgba(244, 63, 94, 0.25);
+  border-color: rgba(253, 164, 175, 0.55);
   color: #ffe4e6;
 }
 
 .portal-chip-danger:hover {
-  background: rgba(244, 63, 94, 0.42);
+  background: rgba(244, 63, 94, 0.38);
   color: #ffffff;
 }
 
 /* Modal Tab Styles for Student Guide */
 .guide-tab-nav {
   display: flex;
-  gap: 8px;
-  padding: 4px;
+  gap: 6px;
+  padding: 3px;
   background: var(--bg-subtle, #f1f5f9);
-  border-radius: 10px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
 .guide-tab-item {
   flex: 1;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--text-secondary, #64748b);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .guide-tab-item.active {
   background: #ffffff;
   color: var(--primary, #2563eb);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 /* Dark Theme Overrides for Guide */
@@ -4852,33 +4860,49 @@ img, svg, video, canvas, iframe {
   border-bottom-color: #334155;
 }
 
-[data-theme="dark"] .rule-item-box {
+[data-theme="dark"] .guide-item-row-step {
   background: #1e293b;
   border-color: #334155;
 }
 
-[data-theme="dark"] .rule-item-danger {
-  background: rgba(225, 29, 72, 0.12);
-  border-color: rgba(225, 29, 72, 0.3);
+[data-theme="dark"] .guide-item-row-step:hover {
+  background: #253349;
+  border-color: #475569;
 }
 
-[data-theme="dark"] .rule-item-warning {
-  background: rgba(217, 119, 6, 0.12);
-  border-color: rgba(217, 119, 6, 0.3);
+[data-theme="dark"] .guide-item-row-rule {
+  background: rgba(225, 29, 72, 0.1);
+  border-color: rgba(225, 29, 72, 0.25);
 }
 
-[data-theme="dark"] .rule-item-danger .rule-heading {
+[data-theme="dark"] .guide-item-row-rule:hover {
+  background: rgba(225, 29, 72, 0.18);
+  border-color: rgba(225, 29, 72, 0.35);
+}
+
+[data-theme="dark"] .guide-item-row-rule .guide-item-heading {
   color: #fda4af;
 }
 
-[data-theme="dark"] .rule-item-warning .rule-heading {
-  color: #fde68a;
+[data-theme="dark"] .rule-tag {
+  background: rgba(225, 29, 72, 0.25);
+  color: #fecdd3;
 }
 
-[data-theme="dark"] .rules-penalty-callout {
+[data-theme="dark"] .guide-item-detail {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .guide-footer-tip {
   background: rgba(37, 99, 235, 0.15);
-  border-color: rgba(37, 99, 235, 0.35);
+  border-color: rgba(37, 99, 235, 0.3);
   color: #93c5fd;
+}
+
+[data-theme="dark"] .guide-footer-penalty {
+  background: rgba(225, 29, 72, 0.15);
+  border-color: rgba(225, 29, 72, 0.3);
+  color: #fda4af;
 }
 
 [data-theme="dark"] .guide-tab-nav {
@@ -4889,3 +4913,4 @@ img, svg, video, canvas, iframe {
   background: #1e293b;
   color: #38bdf8;
 }
+
