@@ -29,14 +29,21 @@
         <input type="url" id="manualFormUrl" class="form-control" placeholder="https://docs.google.com/forms/d/e/.../viewform">
       </div>
 
-      <div class="rules-list">
-        <strong style="color: var(--text-primary);">ข้อกำหนดและระเบียบการสอบ:</strong>
-        <ol>
-          <li>ต้องทำข้อสอบในโหมดเต็มหน้าจอ (Fullscreen) ตลอดระยะเวลาการสอบ</li>
-          <li>ห้ามสลับแท็บ ย่อหน้าจอ หรือเปิดโปรแกรมอื่น ระบบจะบันทึกเวลาและส่งรายงานไปยังผู้คุมสอบ</li>
-          <li>ระบบ AI Proctor ตรวจจับใบหน้าและเสียงเพื่อรักษาความซื่อสัตย์ (ประมวลผลบนเครื่องเท่านั้น ไม่บันทึกภาพ/เสียง)</li>
-          <li>เมื่อทำข้อสอบเสร็จสิ้น ให้กดปุ่มส่ง (Submit) ในแบบฟอร์ม จากนั้นกดปุ่ม "ส่งข้อสอบเรียบร้อยแล้ว" ด้านบน</li>
+      <div class="rules-list" style="background: #fff8f8; border: 1.5px solid #fecdd3; border-radius: 14px; padding: 18px 20px; text-align: left; margin-bottom: 22px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span style="font-size: 20px;">⚠️</span>
+          <strong style="color: #9f1239; font-size: 16px;">ระเบียบและข้อห้ามเด็ดขาดในการสอบ:</strong>
+        </div>
+        <ol style="margin-left: 18px; margin-top: 6px; padding-left: 0; color: #4b5563; font-size: 14.5px; line-height: 1.65;">
+          <li><strong style="color: #111827;">ต้องทำข้อสอบในโหมดเต็มหน้าจอ (Fullscreen) ตลอดเวลา</strong> — ห้ามกด <code>Esc</code> หรือกดย่อหน้าต่าง</li>
+          <li><strong style="color: #111827;">ห้ามสลับแท็บ / สลับหน้าจอ / เปิดโปรแกรมอื่น</strong> — ระบบตรวจจับสัญญาณเบลอหน้าจอ (Tab Blur) และนับจำนวนครั้งสะสมทันที</li>
+          <li><strong style="color: #111827;">ห้ามคลิกออกนอกหน้าข้อสอบหรือใช้สองหน้าจอ</strong> — ห้ามคลิกแถบ Taskbar หรือคลิกจอที่สอง</li>
+          <li><strong style="color: #111827;">ห้ามใช้คีย์ลัดต้องห้ามและคลิกขวา</strong> — ระบบบล็อก <code>Alt+Tab</code>, <code>Windows Key</code>, <code>Ctrl+C</code>, <code>Ctrl+V</code>, <code>PrintScreen</code></li>
+          <li><strong style="color: #111827;">ขั้นตอนเมื่อทำข้อสอบเสร็จ</strong> — กดปุ่ม "ส่ง" (Submit) ใน Google Forms ก่อน จากนั้นกดปุ่มสีเขียว <strong>"ส่งข้อสอบเรียบร้อยแล้ว"</strong> ที่แถบด้านบนสุด</li>
         </ol>
+        <div style="margin-top: 10px; padding: 8px 12px; background: #fff1f2; border-radius: 8px; font-size: 13.5px; color: #be123c; font-weight: 600;">
+          ⚖️ หากพบพฤติกรรมผิดปกติสะสมเกินกำหนด ระบบจะตัดสิทธิ์และล็อกหน้าจอ หรือครูผู้คุมสอบมีสิทธิ์สั่งยุติการสอบทันที
+        </div>
       </div>
 
       <div style="margin-bottom: 18px; text-align: left; background: #f0fdf4; border: 1.5px solid #bbf7d0; padding: 10px 14px; border-radius: var(--radius-sm);">

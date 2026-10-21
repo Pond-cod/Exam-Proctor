@@ -4567,6 +4567,325 @@ img, svg, video, canvas, iframe {
   line-height: 1.2;
 }
 
+/* ==========================================================================
+   v7.6: Student Examination Guide & Anti-Cheating Regulations Hub
+   ========================================================================== */
+.student-guide-container {
+  margin-top: 24px;
+  margin-bottom: 28px;
+}
 
+.student-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 22px;
+  align-items: stretch;
+}
 
+@media (max-width: 768px) {
+  .student-guide-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
 
+.guide-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--bg-card-border, #e2e8f0);
+  border-radius: 20px;
+  padding: 26px 28px;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.06);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.guide-card:hover {
+  box-shadow: 0 10px 28px -6px rgba(15, 23, 42, 0.1);
+}
+
+.guide-steps-card {
+  border-top: 4px solid var(--primary, #2563eb);
+}
+
+.guide-rules-card {
+  border-top: 4px solid var(--danger, #e11d48);
+}
+
+.guide-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--bg-subtle, #f1f5f9);
+}
+
+.guide-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.guide-card-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.guide-card-subtitle {
+  font-size: 14.5px;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+}
+
+/* Steps Timeline */
+.student-steps-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.student-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.step-number-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary, #2563eb);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: 'Prompt', sans-serif;
+  flex-shrink: 0;
+  margin-top: 2px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+}
+
+.step-text-body {
+  flex: 1;
+}
+
+.step-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  line-height: 1.4;
+}
+
+.step-desc {
+  font-size: 14.5px;
+  color: var(--text-secondary, #334155);
+  margin: 3px 0 0 0;
+  line-height: 1.55;
+}
+
+/* Rules List */
+.student-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rule-item-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: background 0.15s;
+}
+
+.rule-item-danger {
+  background: #fff5f5;
+  border-color: #fed7d7;
+}
+
+.rule-item-warning {
+  background: #fffaf0;
+  border-color: #feebc8;
+}
+
+.rule-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.rule-content {
+  flex: 1;
+}
+
+.rule-heading {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  line-height: 1.4;
+}
+
+.rule-item-danger .rule-heading {
+  color: #9b2c2c;
+}
+
+.rule-item-warning .rule-heading {
+  color: #9c4221;
+}
+
+.rule-detail {
+  font-size: 14px;
+  color: var(--text-secondary, #4a5568);
+  margin: 3px 0 0 0;
+  line-height: 1.55;
+}
+
+.rules-penalty-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #1e40af;
+  margin-top: 4px;
+}
+
+/* Hero Chips */
+.portal-chip-btn {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.portal-chip-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+
+.portal-chip-danger {
+  background: rgba(244, 63, 94, 0.28);
+  border-color: rgba(253, 164, 175, 0.6);
+  color: #ffe4e6;
+}
+
+.portal-chip-danger:hover {
+  background: rgba(244, 63, 94, 0.42);
+  color: #ffffff;
+}
+
+/* Modal Tab Styles for Student Guide */
+.guide-tab-nav {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background: var(--bg-subtle, #f1f5f9);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.guide-tab-item {
+  flex: 1;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.guide-tab-item.active {
+  background: #ffffff;
+  color: var(--primary, #2563eb);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark Theme Overrides for Guide */
+[data-theme="dark"] .guide-card {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: #334155;
+}
+
+[data-theme="dark"] .guide-card-header {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .rule-item-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .rule-item-danger {
+  background: rgba(225, 29, 72, 0.12);
+  border-color: rgba(225, 29, 72, 0.3);
+}
+
+[data-theme="dark"] .rule-item-warning {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+[data-theme="dark"] .rule-item-danger .rule-heading {
+  color: #fda4af;
+}
+
+[data-theme="dark"] .rule-item-warning .rule-heading {
+  color: #fde68a;
+}
+
+[data-theme="dark"] .rules-penalty-callout {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .guide-tab-nav {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .guide-tab-item.active {
+  background: #1e293b;
+  color: #38bdf8;
+}

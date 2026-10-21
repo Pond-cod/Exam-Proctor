@@ -215,4 +215,50 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   if (closeEntryBtn) closeEntryBtn.addEventListener("click", closeEntryModal);
   if (cancelEntryBtn) cancelEntryBtn.addEventListener("click", closeEntryModal);
+
+  // Student Guide & Rules Modal Handlers
+  const guideModal = document.getElementById("studentGuideModal");
+  const openGuideBtn = document.getElementById("openStudentGuideModalBtn");
+  const closeGuideBtn = document.getElementById("closeGuideModalBtn");
+  const understandGuideBtn = document.getElementById("understandGuideModalBtn");
+
+  const openGuideModal = () => {
+    if (guideModal) guideModal.classList.add("active");
+  };
+  const closeGuideModal = () => {
+    if (guideModal) guideModal.classList.remove("active");
+  };
+
+  if (openGuideBtn) openGuideBtn.addEventListener("click", openGuideModal);
+  if (closeGuideBtn) closeGuideBtn.addEventListener("click", closeGuideModal);
+  if (understandGuideBtn) understandGuideBtn.addEventListener("click", closeGuideModal);
+
+  if (guideModal) {
+    guideModal.addEventListener("click", (e) => {
+      if (e.target === guideModal) closeGuideModal();
+    });
+  }
+
+  // Guide Modal Tabs
+  const guideTabBtns = document.querySelectorAll(".guide-tab-item[data-guide-tab]");
+  const guidePanels = {
+    steps: document.getElementById("guideTabContentSteps"),
+    rules: document.getElementById("guideTabContentRules"),
+    faq: document.getElementById("guideTabContentFaq")
+  };
+
+  guideTabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-guide-tab");
+      guideTabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      Object.keys(guidePanels).forEach(key => {
+        if (guidePanels[key]) {
+          guidePanels[key].style.display = key === target ? "block" : "none";
+        }
+      });
+    });
+  });
 });
+
