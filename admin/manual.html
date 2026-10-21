@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Proctor Studio - คู่มือการใช้งานระบบ</title>
+  <meta name="description" content="คู่มือการใช้งานระบบ Exam Proctor Studio สำหรับครูผู้สอนและผู้ดูแลระบบ">
+  <link rel="icon" type="image/png" href="../logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/style.css?v=7.5">
+  <style>
+    /* Styling สำหรับหน้าคู่มือการใช้งานภายใน Studio */
+    .manual-container-fluid {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    .manual-wrapper-grid {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+    }
+
+    .manual-sidebar-panel {
+      width: 300px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 86px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+      background: var(--bg-card, #ffffff);
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: var(--radius-md, 14px);
+      padding: 18px 16px;
+      box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.05);
+    }
+
+    .manual-main-area {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .manual-search-box {
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .manual-search-box input {
+      width: 100%;
+      padding: 9px 12px 9px 34px;
+      border: 1px solid var(--border-color, #cbd5e1);
+      border-radius: 8px;
+      font-size: 14.5px;
+      background: var(--bg-body, #f8fafc);
+      color: var(--text-primary, #0f172a);
+      outline: none;
+      transition: border 0.15s;
+    }
+
+    .manual-search-box input:focus {
+      border-color: var(--primary, #0284c7);
+    }
+
+    .manual-search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      opacity: 0.65;
+    }
+
+    .toc-menu-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .toc-menu-item {
+      margin-bottom: 4px;
+    }
+
+    .toc-menu-link {
+      display: block;
+      padding: 7px 12px;
+      border-radius: 6px;
+      color: var(--text-primary, #1e293b);
+      text-decoration: none;
+      font-size: 14.5px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .toc-menu-link:hover {
+      background: #eff6ff;
+      color: #0284c7;
+    }
+
+    .toc-menu-link.active {
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .toc-menu-sub {
+      list-style: none;
+      padding-left: 14px;
+      margin-top: 3px;
+    }
+
+    .toc-menu-sub .toc-menu-link {
+      font-size: 13.5px;
+      padding: 5px 10px;
+    }
+
+    .doc-section-card {
+      background: var(--bg-card, #ffffff);
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: var(--radius-md, 14px);
+      padding: 32px 36px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .doc-hero-header {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+      border: 1.5px solid #bfdbfe;
+      border-radius: var(--radius-md, 14px);
+      padding: 26px 32px;
+      margin-bottom: 28px;
+    }
+
+    .manual-figure-box {
+      margin: 20px 0 28px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .manual-figure-box:hover {
+      box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.14);
+    }
+
+    .manual-figure-box img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: zoom-in;
+    }
+
+    .manual-figure-cap {
+      padding: 10px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .manual-fig-id {
+      font-family: monospace;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .manual-step-list {
+      list-style: none;
+      counter-reset: manual-step;
+      margin: 16px 0;
+      padding: 0;
+    }
+
+    .manual-step-item {
+      position: relative;
+      padding-left: 44px;
+      margin-bottom: 16px;
+      counter-increment: manual-step;
+    }
+
+    .manual-step-item::before {
+      content: counter(manual-step);
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 28px;
+      height: 28px;
+      background: #0284c7;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Prompt', sans-serif;
+    }
+
+    .manual-callout {
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 18px 0;
+      font-size: 15.5px;
+      line-height: 1.6;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .manual-callout-info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+
+    .manual-callout-tip {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+    }
+
+    .manual-callout-warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #b45309;
+    }
+
+    .manual-callout-danger {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+
+    /* Lightbox Modal */
+    .manual-lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 999999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      cursor: zoom-out;
+    }
+
+    .manual-lightbox.active {
+      display: flex;
+    }
+
+    .manual-lightbox img {
+      max-width: 95%;
+      max-height: 92vh;
+      border-radius: 10px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+    }
+
+    @media print {
+      .navbar, .manual-sidebar-panel, .card-actions-group, #manualPrintBtn {
+        display: none !important;
+      }
+      .manual-container-fluid {
+        padding: 0;
+        max-width: 100%;
+      }
+      .manual-main-area {
+        width: 100%;
+      }
+      .doc-section-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 24px;
+      }
+      .manual-figure-box {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .manual-sidebar-panel {
+        display: none;
+      }
+      .manual-wrapper-grid {
+        display: block;
+      }
+    }
+
+    /* สิทธิ์การแสดงผลคู่มือแยกตาม Role แบบเด็ดขาด (Strict Role Segregation) */
+    body.viewing-role-teacher .admin-only-manual,
+    body.viewing-role-teacher .toc-admin,
+    body.viewing-role-teacher .admin-only-nav-item {
+      display: none !important;
+    }
+
+    body.viewing-role-admin .teacher-only-manual,
+    body.viewing-role-admin .toc-teacher {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- แถบเมนูด้านบนหลังบ้าน (Back-Office Navigation) -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="rooms.html" class="brand">
+        <img src="../logo.png" alt="Exam Proctor Studio" class="brand-logo-img">
+        <div>
+          <div class="brand-title">Exam Proctor Studio</div>
+          <div class="brand-subtitle">ระบบบริหารจัดการห้องสอบและคุมสอบออนไลน์</div>
+        </div>
+      </a>
+
+      <!-- ปุ่ม Hamburger สำหรับหน้าจอมือถือ -->
+      <button class="nav-hamburger" id="navHamburgerBtn" type="button" aria-label="เปิดเมนู" aria-expanded="false">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <!-- เมนูนำทางหลังบ้าน -->
+      <div class="nav-links" id="navLinksMenu">
+        <a href="create.html" class="nav-tab-btn">สร้างห้องสอบ</a>
+        <a href="monitor.html" class="nav-tab-btn">หน้าจอคุมสอบสด</a>
+        <a href="rooms.html" class="nav-tab-btn">จัดการห้องสอบ</a>
+        <a href="manual.html" class="nav-tab-btn active">คู่มือ</a>
+        <a href="users.html" class="nav-tab-btn admin-only-nav-item">จัดการผู้ใช้</a>
+        <a href="settings.html" class="nav-tab-btn admin-only-nav-item">ตั้งค่าระบบ</a>
+      </div>
+
+      <!-- สิทธิ์การใช้งานระบบและโปรไฟล์ผู้ใช้ (Executive User Hub) -->
+      <div class="nav-role-box">
+        <button type="button" class="theme-toggle-btn" title="สลับโหมดมืด/สว่าง">
+          <span class="theme-text">โหมดมืด</span>
+        </button>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span id="navRoleBadge" class="role-badge role-badge-user">กำลังโหลด...</span>
+          <span id="navUserNameDisplay" style="font-size: 13px; font-weight: 700; color: var(--text-primary);"></span>
+        </div>
+        <a href="../index.html" class="btn btn-sm btn-outline-role" title="ไปยังหน้าศูนย์รวมข้อสอบนักเรียน" target="_blank" style="text-decoration: none;">
+          หน้าบ้าน
+        </a>
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-soft-danger" title="ออกจากระบบหลังบ้าน">
+          ออกจากระบบ
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="manual-container-fluid">
+
+    <!-- Hero Header Banner -->
+    <div class="doc-hero-header">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+        <span id="manualScopeBadge" class="badge badge-primary" style="font-size: 15px; font-weight: 700; padding: 4px 12px;">กำลังระบุสิทธิ์...</span>
+        <div class="card-actions-group">
+          <button id="manualPrintBtn" type="button" class="btn btn-primary" style="min-height: 38px; padding: 6px 16px; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            🖨️ สั่งพิมพ์ / บันทึก PDF
+          </button>
+        </div>
+      </div>
+      <h1 id="manualHeroTitle" style="font-size: 26px; font-weight: 800; color: var(--text-primary); margin: 6px 0;">คู่มือการใช้งานระบบ Exam Proctor Studio (v6.3)</h1>
+      <p id="manualHeroSub" style="font-size: 16px; color: var(--text-muted); margin: 0; line-height: 1.6;">
+        กำลังโหลดเนื้อหาคู่มือที่สอดคล้องกับสิทธิ์การเข้าใช้งานของท่าน...
+      </p>
+    </div>
+
+    <div class="manual-wrapper-grid">
+
+      <!-- Sidebar Navigation -->
+      <aside class="manual-sidebar-panel">
+        <div class="manual-search-box">
+          <input type="text" id="manualSearchInput" placeholder="ค้นหาหัวข้อ หรือฟังก์ชัน...">
+        </div>
+
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; padding-left: 6px;">
+          สารบัญคู่มือ (CONTENTS)
+        </div>
+
+        <!-- TOC สำหรับ Teacher -->
+        <ul class="toc-menu-list toc-teacher" style="display: none;">
+          <li class="toc-menu-item"><a href="#t-intro" class="toc-menu-link">1. บทนำและสถาปัตยกรรม</a></li>
+          <li class="toc-menu-item"><a href="#t-auth" class="toc-menu-link">2. การเข้าสู่ระบบ & 2FA</a></li>
+          <li class="toc-menu-item"><a href="#t-create" class="toc-menu-link">3. การสร้างห้องสอบใหม่</a></li>
+          <li class="toc-menu-item"><a href="#t-passcodes" class="toc-menu-link">4. รหัสผ่าน 2 ระดับ</a></li>
+          <li class="toc-menu-item"><a href="#t-qr" class="toc-menu-link">5. ลิงก์ตรง & QR Code</a></li>
+          <li class="toc-menu-item"><a href="#t-rooms" class="toc-menu-link">6. จัดการห้องสอบตนเอง</a></li>
+          <li class="toc-menu-item"><a href="#t-monitor" class="toc-menu-link">7. ศูนย์คุมสอบสด Live</a></li>
+          <li class="toc-menu-item"><a href="#t-cards" class="toc-menu-link">8. การอ่านจอภาพผู้สอบ</a></li>
+          <li class="toc-menu-item"><a href="#t-student-modal" class="toc-menu-link">9. ไทม์ไลน์เหตุการณ์</a></li>
+          <li class="toc-menu-item"><a href="#t-archives" class="toc-menu-link">10. คลังประวัติผู้ส่งสอบ</a></li>
+          <li class="toc-menu-item"><a href="#t-analytics" class="toc-menu-link">11. แดชบอร์ดกราฟวิเคราะห์</a></li>
+          <li class="toc-menu-item"><a href="#t-report" class="toc-menu-link">12. รายงานราชการ PDF</a></li>
+          <li class="toc-menu-item"><a href="#t-csv" class="toc-menu-link">13. ส่งออกไฟล์ CSV/Excel</a></li>
+          <li class="toc-menu-item"><a href="#t-faq" class="toc-menu-link">14. คำถามที่พบบ่อย (FAQ)</a></li>
+        </ul>
+
+        <!-- TOC สำหรับ Admin -->
+        <ul class="toc-menu-list toc-admin" style="display: none;">
+          <li class="toc-menu-item"><a href="#a-intro" class="toc-menu-link">1. บทบาทผู้ดูแลระบบ</a></li>
+          <li class="toc-menu-item"><a href="#a-auth" class="toc-menu-link">2. การเข้าสู่ระบบ Master Admin</a></li>
+          <li class="toc-menu-item"><a href="#a-rooms" class="toc-menu-link">3. กำกับดูแลห้องสอบรวม</a></li>
+          <li class="toc-menu-item"><a href="#a-creator-filter" class="toc-menu-link">4. กรองผู้สร้างห้องสอบ</a></li>
+          <li class="toc-menu-item"><a href="#a-reset-session" class="toc-menu-link">5. ตัดรอบสอบ Reset Session</a></li>
+          <li class="toc-menu-item"><a href="#a-users" class="toc-menu-link">6. จัดการบัญชีผู้ใช้งาน</a></li>
+          <li class="toc-menu-item"><a href="#a-settings" class="toc-menu-link">7. ตั้งค่าระบบกลาง & Cloud</a></li>
+          <li class="toc-menu-item"><a href="#a-faq" class="toc-menu-link">8. คำถามที่พบบ่อย (FAQ)</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Manual Content -->
+      <div class="manual-main-area">
+
+        <!-- =================================================================== -->
+        <!-- ส่วนที่ 1: เนื้อหาคู่มือเฉพาะ ครูผู้สอน (TEACHER ONLY MANUAL) -->
+        <!-- =================================================================== -->
+        <div class="teacher-only-manual" style="display: none;">
+
+          <section id="t-intro" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">1. บทนำและสถาปัตยกรรมระบบคุมสอบ</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              ระบบ <strong>Exam Proctor Studio</strong> ออกแบบมาเพื่ออำนวยความสะดวกแก่ครูผู้สอนในการจัดสอบออนไลน์ โดยครูสามารถสร้างห้องสอบที่ครอบลิงก์แบบทดสอบ Google Forms เดิมที่มีอยู่ได้ทันที พร้อมระบบป้องกันการทุจริตแบบเรียลไทม์ (บังคับเต็มจอ, ตรวจจับการสลับแท็บ/ย่อหน้าต่าง, ตรวจจับการคลิกออกนอกหน้าจอ และบล็อกคีย์ลัด) โดยนักเรียนไม่ต้องติดตั้งโปรแกรมเสริมใดๆ
+            </p>
+            <div class="manual-callout manual-callout-tip">
+              <div>💡</div>
+              <div>
+                <strong>ฟอนต์มาตรฐานราชการ TH Sarabun PSK:</strong> คมชัด อ่านง่าย และมีแบบพิมพ์รายงานสรุปผลการคุมสอบราชการทางการ พร้อมช่องลงนามกรรมการคุมสอบ เพื่อแนบรายงานผลการเรียนการสอนได้ทันที
+              </div>
+            </div>
+          </section>
+
+          <section id="t-auth" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">2. การเข้าสู่ระบบและความปลอดภัย (Staff Login & 2FA)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              ครูผู้สอนเข้าสู่ระบบผ่านหน้า <code>admin/login.html</code> ด้วยชื่อผู้ใช้และรหัสผ่านที่ได้รับมอบหมาย:
+            </p>
+
+            <ol class="manual-step-list">
+              <li class="manual-step-item"><strong>ชื่อผู้ใช้ (Username)</strong>: กรอกชื่อผู้ใช้ เช่น <code>teacher</code></li>
+              <li class="manual-step-item"><strong>รหัสผ่าน (Password)</strong>: ความยาวอย่างน้อย 8 ตัวอักษรขึ้นไป</li>
+              <li class="manual-step-item"><strong>ปุ่มแสดงรหัสผ่าน</strong>: คลิกเพื่อตรวจสอบตัวสะกด ป้องกันการกรอกผิดพลาด</li>
+              <li class="manual-step-item"><strong>การยืนยันตัวตน 2FA</strong>: หากบัญชีเปิดใช้งาน 2FA ระบบจะแสดงป็อปอัปให้กรอกรหัส 6 หลักจากแอป Authenticator</li>
+            </ol>
+
+            <div class="manual-figure-box">
+              <img src="images/img_01_login.png" alt="หน้าเข้าสู่ระบบบุคลากร" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 1: หน้าจอเข้าสู่ระบบบุคลากร (Staff Login)</span>
+                <span class="manual-fig-id">IMG-01</span>
+              </div>
+            </div>
+
+            <div class="manual-figure-box">
+              <img src="images/img_02_2fa_modal.png" alt="ป็อปอัปยืนยัน 2FA" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 2: หน้าต่างป็อปอัปยืนยันรหัสความปลอดภัย 2FA 6 หลัก</span>
+                <span class="manual-fig-id">IMG-02</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-create" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">3. การสร้างห้องสอบใหม่ (Create Room)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              เข้าสู่เมนู <strong>"สร้างห้องสอบ"</strong> (<code>admin/create.html</code>) เพื่อกำหนดข้อมูลข้อสอบและสร้างลิงก์สำหรับส่งให้นักเรียน:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_04_create_room.png" alt="ฟอร์มสร้างห้องสอบใหม่" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 3: ฟอร์มสร้างห้องสอบใหม่ ครอบลิงก์ Google Forms</span>
+                <span class="manual-fig-id">IMG-04</span>
+              </div>
+            </div>
+
+            <ol class="manual-step-list">
+              <li class="manual-step-item"><strong>ชื่อวิชา หรือหัวข้อการสอบ</strong>: เช่น *"แบบทดสอบวิชาคณิตศาสตร์ ม.3 กลางภาคเรียนที่ 1"*</li>
+              <li class="manual-step-item"><strong>กลุ่มสาระการเรียนรู้ / หมวดหมู่</strong>: เลือกระบุหมวดหมู่วิชา</li>
+              <li class="manual-step-item"><strong>ระดับชั้นการศึกษา</strong>: เลือกระดับชั้นของนักเรียน</li>
+              <li class="manual-step-item"><strong>ลิงก์ Google Forms ข้อสอบ</strong>: วางลิงก์ Google Forms (รองรับทั้งลิงก์ยาวและลิงก์สั้น forms.gle)</li>
+              <li class="manual-step-item"><strong>สถานะเปิดรับนักเรียน</strong>: เลือก <code>OPEN</code> เพื่อเปิดสอบทันที หรือ <code>CLOSED</code> เพื่อเตรียมไว้ก่อน</li>
+            </ol>
+          </section>
+
+          <section id="t-passcodes" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">4. รหัสผ่าน 2 รูปแบบ (Entry Code VS Admin Passcode)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              ระบบสร้างรหัสผ่าน 2 ชุดที่มีหน้าที่แยกขาดจากกัน เพื่อความโปร่งใสและปลอดภัย:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_05_passcode_cards.png" alt="การ์ดรหัสผ่าน 2 รูปแบบ" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 4: การ์ดรหัสผ่าน 2 รูปแบบ (Entry Code สำหรับนักเรียน VS Admin Passcode สำหรับครู)</span>
+                <span class="manual-fig-id">IMG-05</span>
+              </div>
+            </div>
+
+            <div class="manual-callout manual-callout-info">
+              <div>ℹ️</div>
+              <div>
+                <strong>รหัสเข้าห้องสอบ (Entry Code 6 หลัก สีน้ำเงิน)</strong>: นำไปแจ้งนักเรียนเพื่อปลดล็อกเข้าสู่ห้องสอบจากหน้าแรก<br>
+                <strong>รหัสผ่านผู้คุมสอบ (Admin Passcode 6 หลัก สีแดง)</strong>: ห้ามเปิดเผยแก่นักเรียน ครูจะใช้เดินไปกดปลดล็อกหน้าจอเครื่องนักเรียนกรณีเกิดเหตุจำเป็น
+              </div>
+            </div>
+          </section>
+
+          <section id="t-qr" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">5. การส่งต่อลิงก์และการฉาย QR Code ขึ้นจอโปรเจกเตอร์</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              เมื่อกดปุ่ม <em>"สร้างห้องสอบและบันทึกลงระบบ"</em> กล่องผลลัพธ์จะปรากฏขึ้นพร้อมตัวเลือกการแชร์:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_06_link_result_box.png" alt="กล่องผลลัพธ์ลิงก์ห้องสอบ" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 5: ผลลัพธ์ลิงก์ห้องสอบ ปุ่มคัดลอก และสรุปรหัสผ่าน</span>
+                <span class="manual-fig-id">IMG-06</span>
+              </div>
+            </div>
+
+            <p style="font-size: 16.5px; line-height: 1.7;">
+              คลิกปุ่ม <strong>"ฉาย QR Code ขยายใหญ่"</strong> เพื่อเปิดหน้าจอแสดง QR Code คมชัดขนาดใหญ่ สำหรับฉายขึ้นจอโปรเจกเตอร์หน้าห้องสอบ หรือกดบันทึกเป็นรูปภาพ <code>.png</code>:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_07_qr_modal.png" alt="หน้าต่างแสดง QR Code" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 6: หน้าต่างแสดง QR Code ขยายใหญ่สำหรับฉายโปรเจกเตอร์</span>
+                <span class="manual-fig-id">IMG-07</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-rooms" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">6. การจัดการห้องสอบและประวัติของตนเอง (Rooms Management)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              เข้าสู่เมนู <strong>"จัดการห้องสอบ"</strong> (<code>admin/rooms.html</code>) จะแสดงเฉพาะห้องสอบที่ครูท่านนี้เป็นผู้สร้าง (มี Badge สีน้ำเงินระบุชัดเจน):
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_08_rooms_teacher.png" alt="หน้ารายการห้องสอบของครู" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 7: รายการห้องสอบมุมมองครูผู้สอน พร้อมสวิตช์เปิด/ปิดสถานะ</span>
+                <span class="manual-fig-id">IMG-08</span>
+              </div>
+            </div>
+
+            <p style="font-size: 16.5px; line-height: 1.7;">
+              ครูสามารถกดปุ่ม <strong>"แก้ไข"</strong> เพื่อเปลี่ยนชื่อวิชา หรือเปลี่ยนรหัสผ่าน หรือกดปุ่ม <strong>"ลบ"</strong> พร้อมหน้าต่างยืนยัน:
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+              <div class="manual-figure-box" style="margin: 0;">
+                <img src="images/img_09_edit_room_modal.png" alt="หน้าต่างแก้ไขห้องสอบ" loading="lazy">
+                <div class="manual-figure-cap">
+                  <span>ภาพที่ 8: แก้ไขห้องสอบ</span>
+                  <span class="manual-fig-id">IMG-09</span>
+                </div>
+              </div>
+              <div class="manual-figure-box" style="margin: 0;">
+                <img src="images/img_10_delete_room_confirm.png" alt="หน้าต่างยืนยันลบห้องสอบ" loading="lazy">
+                <div class="manual-figure-cap">
+                  <span>ภาพที่ 9: ยืนยันการลบห้องสอบ</span>
+                  <span class="manual-fig-id">IMG-10</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-monitor" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">7. ศูนย์คุมสอบสดแบบเรียลไทม์ (Live Proctoring Center)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              เข้าสู่เมนู <strong>"หน้าจอคุมสอบสด"</strong> (<code>admin/monitor.html</code>) เพื่อติดตามผู้สอบสดผ่านสตรีมมิ่งความเร็วสูง:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_11_live_monitor_overview.png" alt="ศูนย์คุมสอบสด" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 10: ภาพรวมศูนย์คุมสอบสด สถิติสด 4 มิติ และ Live Ticker</span>
+                <span class="manual-fig-id">IMG-11</span>
+              </div>
+            </div>
+
+            <p style="font-size: 16.5px; line-height: 1.7;">แถบควบคุมจำเป็นขณะคุมสอบจริง (Live Action Bar):</p>
+            <div class="manual-figure-box">
+              <img src="images/img_12_live_action_bar.png" alt="แถบควบคุมสด" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 11: แถบสถานะซิงค์สด ปุ่มเปิด/ปิดเสียงไซเรนเตือน และปุ่มรีเฟรช</span>
+                <span class="manual-fig-id">IMG-12</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-cards" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">8. การอ่านจอภาพผู้สอบและการจัดการแจ้งเตือนสด</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              การ์ดจอภาพนักเรียนสดจำแนกสถานะด้วยสีอย่างเด่นชัด:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_13_live_student_cards.png" alt="การ์ดจอภาพนักเรียนสด" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 12: เปรียบเทียบการ์ดสีเขียว (ปกติ ซื่อสัตย์) VS การ์ดสีกะพริบแดง (สลับหน้าจอ)</span>
+                <span class="manual-fig-id">IMG-13</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-student-modal" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">9. หน้าต่างรายละเอียดผู้สอบและไทม์ไลน์เหตุการณ์</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              คลิกที่การ์ดนักเรียนเพื่อเปิดหน้าต่างบันทึกพฤติกรรมระดับวินาที (Timeline):
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_14_student_detail_modal.png" alt="หน้าต่างรายละเอียดจอผู้สอบ" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 13: หน้าต่างประวัติผู้สอบ ไทม์ไลน์รายวินาที พร้อมปุ่มตรวจสอบแล้ว และ สั่งจบการสอบ</span>
+                <span class="manual-fig-id">IMG-14</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-archives" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">10. คลังประวัติผู้ส่งข้อสอบและตารางบันทึกเหตุการณ์ (Exam Archives)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              คลิกแท็บ <em>"2. คลังประวัติและรายงานย้อนหลัง"</em> เพื่อดูประวัตินักเรียนที่ส่งข้อสอบแล้ว แยกตามวันที่:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_15_archive_completed_grid.png" alt="คลังประวัติผู้ส่งข้อสอบ" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 14: คลังประวัติผู้ส่งข้อสอบแล้ว จัดกลุ่มแยกตามวันที่จัดสอบ</span>
+                <span class="manual-fig-id">IMG-15</span>
+              </div>
+            </div>
+
+            <p style="font-size: 16.5px; line-height: 1.7;">สลับไปดูตารางบันทึกเหตุการณ์ทั้งหมด (Audit Log Table) เพื่อตรวจสอบย้อนหลัง:</p>
+            <div class="manual-figure-box">
+              <img src="images/img_16_archive_table_view.png" alt="ตารางบันทึกเหตุการณ์ทั้งหมด" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 15: ตารางประวัติเหตุการณ์ทั้งหมด (Audit Log Table)</span>
+                <span class="manual-fig-id">IMG-16</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-analytics" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">11. แดชบอร์ดกราฟและสถิติวิเคราะห์ (Analytics Dashboard)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              มุมมองกราฟสถิติวิเคราะห์ดัชนีความซื่อสัตย์ Integrity Rate และไทม์ไลน์เหตุการณ์:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_17_analytics_dashboard.png" alt="แดชบอร์ดกราฟวิเคราะห์" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 16: แดชบอร์ดสถิติวิเคราะห์ผล และกราฟประเภทเหตุการณ์ผิดปกติ</span>
+                <span class="manual-fig-id">IMG-17</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-report" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">12. การพิมพ์รายงานสรุปผลการคุมสอบราชการ (Official PDF Report)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              คลิกปุ่ม <strong>"พิมพ์รายงาน PDF"</strong> เพื่อเปิดเอกสารสรุปผลทางการตามระเบียบงานสารบรรณ พร้อมช่องลงนามกรรมการคุมสอบ:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_18_official_pdf_report.png" alt="แบบพิมพ์รายงานสรุปผลการคุมสอบราชการ" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 17: ตัวอย่างแบบพิมพ์รายงานการคุมสอบราชการ พร้อมช่องลงนามกรรมการคุมสอบ</span>
+                <span class="manual-fig-id">IMG-18</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="t-csv" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">13. การส่งออกข้อมูลเป็นไฟล์ Excel / CSV</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              คลิกปุ่ม <strong>"ส่งออก CSV"</strong> เพื่อดาวน์โหลดข้อมูลประวัติผู้เข้าสอบไปเปิดคำนวณตัดเกรดใน <strong>Microsoft Excel</strong> ได้ทันที โดยภาษาไทยไม่เพี้ยน
+            </p>
+          </section>
+
+          <section id="t-faq" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">14. คำถามที่พบบ่อยสำหรับครูผู้สอน (FAQ)</h2>
+            <div style="margin-top: 14px; margin-bottom: 18px;">
+              <h4 style="font-size: 16.5px; font-weight: 700; color: var(--primary);">Q1: นักเรียนเผลอกดปิดหน้าต่างสอบ หรือเครื่องดับ ต้องทำอย่างไร?</h4>
+              <p style="font-size: 15.5px; color: var(--text-primary); line-height: 1.6;">
+                <strong>คำตอบ:</strong> ให้นักเรียนเปิดเบราว์เซอร์แล้วเข้าลิงก์เดิมหรือสแกน QR Code อีกครั้ง ระบบจะจำสถานะและให้นักเรียนทำแบบทดสอบต่อได้ทันที โดยจะบันทึกประวัติการหลุดจอลง Timeline ให้ครูตรวจสอบ
+              </p>
+            </div>
+            <div style="margin-bottom: 18px;">
+              <h4 style="font-size: 16.5px; font-weight: 700; color: var(--primary);">Q2: หน้าจอนักเรียนล็อคหรือขึ้นเตือนให้ใส่รหัสปลดล็อก ครูต้องทำอย่างไร?</h4>
+              <p style="font-size: 15.5px; color: var(--text-primary); line-height: 1.6;">
+                <strong>คำตอบ:</strong> ให้ครูเดินไปที่เครื่องนักเรียน แล้วกรอก <strong>Admin Passcode 6 หลัก</strong> ประจำห้องสอบนั้นเพื่อปลดล็อกหน้าจอ
+              </p>
+            </div>
+            <div>
+              <h4 style="font-size: 16.5px; font-weight: 700; color: var(--primary);">Q3: ลืมรหัสผ่านเข้าสู่ระบบหลังบ้าน ต้องทำอย่างไร?</h4>
+              <p style="font-size: 15.5px; color: var(--text-primary); line-height: 1.6;">
+                <strong>คำตอบ:</strong> ให้ติดต่อผู้ดูแลระบบหลัก (Admin) ของสถานศึกษา เพื่อให้ Admin กดรีเซ็ตรหัสผ่านใหม่ให้ท่านได้ทันที
+              </p>
+            </div>
+          </section>
+
+        </div>
+
+
+        <!-- =================================================================== -->
+        <!-- ส่วนที่ 2: เนื้อหาคู่มือเฉพาะ ผู้ดูแลระบบ (ADMIN ONLY MANUAL) -->
+        <!-- =================================================================== -->
+        <div class="admin-only-manual" style="display: none;">
+
+          <section id="a-intro" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">1. บทบาทและสิทธิ์ของผู้ดูแลระบบ (Admin Role Overview)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              ในฐานะ <strong>ผู้ดูแลระบบหลัก (Master Admin)</strong> ท่านมีสิทธิ์สูงสุดในการกำกับดูแลห้องสอบทุกห้องของครูทุกคนในสถาบันการศึกษา จัดการบัญชีผู้ใช้งานระบบ (เพิ่ม/แก้/ลบ/รีเซ็ตรหัสผ่าน) ตัดรอบการสอบสด (Reset Session) และตั้งค่าระบบกลางร่วมกับฐานข้อมูล Cloud Neon PostgreSQL
+            </p>
+            <div class="manual-callout manual-callout-danger">
+              <div>🛡️</div>
+              <div>
+                <strong>การคุ้มครองบัญชี Master Admin:</strong> บัญชี <code>admin</code> ได้รับการป้องกันไม่ให้ถูกลบหรือระงับการใช้งานเด็ดขาด เพื่อป้องกันความเสี่ยงจากการล็อคตัวเองออกจากระบบ
+              </div>
+            </div>
+          </section>
+
+          <section id="a-auth" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">2. การเข้าสู่ระบบและความปลอดภัยระดับสูง (Master Admin Login)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              ผู้ดูแลระบบเข้าสู่ระบบด้วยสิทธิ์ Master Admin แถบ Navbar จะแสดง Badge สีแดง <code>ผู้ดูแลระบบ</code> และแสดงเมนูครบทั้ง 5 เมนูหลัก:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_03_navbar_comparison.png" alt="แถบเมนูสิทธิ์ Admin" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 1: แถบนำทางหลังบ้านสำหรับผู้ดูแลระบบ (Admin Navbar)</span>
+                <span class="manual-fig-id">IMG-03</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="a-rooms" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">3. การกำกับดูแลห้องสอบรวมทั้งระบบ (System Oversight)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              ในเมนู <strong>"จัดการห้องสอบ"</strong> สิทธิ์ Admin จะแสดงห้องสอบทั้งหมดของครูทุกคนในระบบ พร้อมสิทธิ์ในการแทรกแซง เปิด/ปิดห้อง หรือแก้ไขข้อมูลกรณีฉุกเฉิน:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_19_admin_rooms_overview.png" alt="หน้ารวมห้องสอบสิทธิ์ Admin" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 2: หน้ารวมห้องสอบสิทธิ์ Admin (แสดง Badge สีแดง All Rooms)</span>
+                <span class="manual-fig-id">IMG-19</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="a-creator-filter" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">4. การใช้งานตัวกรองผู้สร้างห้องสอบ (Creator Filter)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              Admin สามารถใช้เมนูดรอปดาวน์ <strong>"ทุกผู้สร้างห้องสอบ"</strong> ที่แถบค้นหา เพื่อเลือกดูเฉพาะห้องสอบของครูแต่ละท่านได้อย่างรวดเร็ว
+            </p>
+          </section>
+
+          <section id="a-reset-session" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">5. การเริ่มรอบสอบใหม่และการตัดรอบข้อมูล (Reset Session)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              ในหน้าจอคุมสอบสด (<code>admin/monitor.html</code>) เฉพาะสิทธิ์ Admin จะมีปุ่ม <strong>"เริ่มรอบใหม่" (Reset Session)</strong>:
+            </p>
+
+            <div class="manual-callout manual-callout-warning">
+              <div>⚠️</div>
+              <div>
+                <strong>ผลของการกด "เริ่มรอบใหม่":</strong> ระบบจะย้ายหน้าจอผู้สอบชุดก่อนหน้าทั้งหมดเข้าสู่คลังประวัติ (Archive) ทันที และเปิดหน้าจอคุมสอบสดให้ว่างเปล่า พร้อมสำหรับนักเรียนรอบถัดไป โดยข้อมูลรอบเดิมจะไม่สูญหาย
+              </div>
+            </div>
+          </section>
+
+          <section id="a-users" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">6. ระบบจัดการบัญชีผู้ใช้งาน (User Management)</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              เข้าสู่เมนู <strong>"จัดการผู้ใช้"</strong> (<code>admin/users.html</code>) เพื่อควบคุมบัญชีบุคลากร:
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_20_admin_user_management.png" alt="หน้าจัดการผู้ใช้งาน" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 3: ระบบจัดการบัญชีผู้ใช้งาน เพิ่ม แก้ไข ระงับ และรีเซ็ตรหัสผ่าน</span>
+                <span class="manual-fig-id">IMG-20</span>
+              </div>
+            </div>
+
+            <ol class="manual-step-list">
+              <li class="manual-step-item"><strong>เพิ่มผู้ใช้งานใหม่</strong>: คลิกปุ่ม *"เพิ่มผู้ใช้งานใหม่"* กำหนด Username, Display Name, Role (Teacher/Admin) และรหัสผ่าน</li>
+              <li class="manual-step-item"><strong>แก้ไขและเปลี่ยน Role</strong>: คลิกปุ่ม *"แก้ไข"* เพื่อเปลี่ยนสิทธิ์ หรือเปลี่ยนสถานะเป็น *"ระงับการใช้งาน"*</li>
+              <li class="manual-step-item"><strong>รีเซ็ตรหัสผ่านครู</strong>: สามารถกรอกรหัสผ่านใหม่ในหน้าต่างแก้ไขได้ทันทีในเวลาไม่เกิน 1 นาที</li>
+            </ol>
+          </section>
+
+          <section id="a-settings" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">7. การตั้งค่าระบบกลางและการเชื่อมต่อ Cloud Database</h2>
+            <p style="font-size: 16.5px; line-height: 1.7; margin-top: 14px;">
+              เข้าสู่เมนู <strong>"ตั้งค่าระบบ"</strong> (<code>admin/settings.html</code>):
+            </p>
+
+            <div class="manual-figure-box">
+              <img src="images/img_21_admin_system_settings.png" alt="หน้าตั้งค่าระบบกลาง" loading="lazy">
+              <div class="manual-figure-cap">
+                <span>ภาพที่ 4: หน้าตั้งค่าระบบกลาง ชื่อสถาบัน ประกาศหน้าแรก และรหัสผ่านกลาง</span>
+                <span class="manual-fig-id">IMG-21</span>
+              </div>
+            </div>
+
+            <ol class="manual-step-list">
+              <li class="manual-step-item"><strong>ชื่อระบบ / สถาบันการศึกษา</strong>: จะปรากฏที่แถบ Navbar ทุกหน้า และหัวกระดาษรายงานผลราชการ</li>
+              <li class="manual-step-item"><strong>ข้อความประกาศหน้านักเรียน</strong>: แสดงบนหน้าศูนย์สอบนักเรียน (index.html) เช่น คำเตือนเรื่องการสลับหน้าจอ</li>
+              <li class="manual-step-item"><strong>รหัสผ่านกลางผู้ดูแลระบบ (Master Admin Passcode)</strong>: รหัสผ่านฉุกเฉินสูงสุดสำหรับ Admin ใช้ปลดล็อกหน้าจอนักเรียนได้ทุกห้องสอบ</li>
+              <li class="manual-step-item"><strong>Cloud Webhook URL</strong>: ที่อยู่ API สำหรับซิงก์ข้อมูลกับ Neon Serverless PostgreSQL</li>
+            </ol>
+          </section>
+
+          <section id="a-faq" class="doc-section-card">
+            <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">8. คำถามที่พบบ่อยสำหรับผู้ดูแลระบบ (Admin FAQ)</h2>
+            <div style="margin-top: 14px; margin-bottom: 18px;">
+              <h4 style="font-size: 16.5px; font-weight: 700; color: var(--danger);">Q1: ครูผู้สอนลืมรหัสผ่านเข้าหลังบ้าน Admin ต้องทำอย่างไร?</h4>
+              <p style="font-size: 15.5px; color: var(--text-primary); line-height: 1.6;">
+                <strong>คำตอบ:</strong> เข้าเมนู <em>"จัดการผู้ใช้"</em> ค้นหาชื่อครู กดปุ่ม <em>"แก้ไข"</em> แล้วพิมพ์รหัสผ่านใหม่ลงในช่องรหัสผ่าน จากนั้นกดบันทึก แจ้งรหัสผ่านใหม่ให้ครูเข้าใช้งานได้ทันที
+              </p>
+            </div>
+            <div>
+              <h4 style="font-size: 16.5px; font-weight: 700; color: var(--danger);">Q2: ต้องการทดสอบความเร็วและการเชื่อมต่อฐานข้อมูลก่อนวันสอบจริง?</h4>
+              <p style="font-size: 15.5px; color: var(--text-primary); line-height: 1.6;">
+                <strong>คำตอบ:</strong> ไปที่หน้า <em>"หน้าจอคุมสอบสด"</em> แล้วคลิกปุ่ม <strong>"ทดสอบ API"</strong> ระบบจะส่งคำขอ Ping ไปยัง Cloud Postgres และรายงานความเร็วการตอบสนองให้ทราบทันที
+              </p>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Image Lightbox Modal -->
+  <div id="imageLightboxModal" class="manual-lightbox">
+    <img id="lightboxImg" src="" alt="Enlarged Screenshot">
+  </div>
+
+  <script src="../js/shared/config.js?v=6.3"></script>
+  <script src="../js/shared/common.js?v=6.3"></script>
+  <script src="../js/backend/auth.js?v=6.3"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // 1. Guard check
+      if (typeof requireAuth === "function") {
+        if (!requireAuth()) return;
+      }
+
+      // 2. Setup user hub (profile name, badge, theme, logout)
+      if (typeof applyRoleUI === "function") {
+        applyRoleUI();
+      }
+      if (typeof setupMobileNavigation === "function") {
+        setupMobileNavigation();
+      }
+
+      const isAdmin = typeof isCurrentUserAdmin === "function" ? isCurrentUserAdmin() : false;
+      const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+
+      // 3. Strict Role Separation: "เข้าด้วย role ไหน ให้เห็นแค่คู่มือของ role นั้น"
+      if (isAdmin) {
+        document.body.classList.add("viewing-role-admin");
+        document.querySelectorAll(".teacher-only-manual").forEach(el => el.style.display = "none");
+        document.querySelectorAll(".admin-only-manual").forEach(el => el.style.display = "block");
+        document.querySelectorAll(".toc-teacher").forEach(el => el.style.display = "none");
+        document.querySelectorAll(".toc-admin").forEach(el => el.style.display = "block");
+
+        const roleBadge = document.getElementById("manualScopeBadge");
+        if (roleBadge) {
+          roleBadge.textContent = "สิทธิ์ผู้ดูแลระบบ: แสดงเฉพาะคู่มือ Admin (Admin Manual)";
+          roleBadge.className = "badge badge-danger";
+        }
+        const titleEl = document.getElementById("manualHeroTitle");
+        if (titleEl) {
+          titleEl.textContent = "คู่มือการใช้งานระบบสำหรับผู้ดูแลระบบ (Role Admin)";
+        }
+        const subEl = document.getElementById("manualHeroSub");
+        if (subEl) {
+          subEl.textContent = "คู่มือการกำกับดูแลห้องสอบรวมทั้งระบบ จัดการบัญชีผู้ใช้งานผู้สอน เริ่มรอบสอบใหม่ และการตั้งค่าระบบกลาง";
+        }
+      } else {
+        document.body.classList.add("viewing-role-teacher");
+        document.querySelectorAll(".admin-only-manual").forEach(el => el.style.display = "none");
+        document.querySelectorAll(".teacher-only-manual").forEach(el => el.style.display = "block");
+        document.querySelectorAll(".toc-teacher").forEach(el => el.style.display = "block");
+        document.querySelectorAll(".toc-admin").forEach(el => el.style.display = "none");
+
+        const roleBadge = document.getElementById("manualScopeBadge");
+        if (roleBadge) {
+          const uName = currentUser ? (currentUser.displayName || currentUser.username) : "ครูผู้สอน";
+          roleBadge.textContent = `สิทธิ์ครูผู้สอน: แสดงเฉพาะคู่มือสำหรับครู (${uName})`;
+          roleBadge.className = "badge badge-primary";
+        }
+        const titleEl = document.getElementById("manualHeroTitle");
+        if (titleEl) {
+          titleEl.textContent = "คู่มือการใช้งานระบบสำหรับครูผู้สอน (Role Teacher)";
+        }
+        const subEl = document.getElementById("manualHeroSub");
+        if (subEl) {
+          subEl.textContent = "คู่มือการสร้างห้องสอบ Google Forms รหัสผ่าน 2 ระดับ การคุมสอบสดแบบเรียลไทม์ และการพิมพ์รายงานผลการสอบราชการ";
+        }
+      }
+
+      // 4. Print button
+      const printBtn = document.getElementById("manualPrintBtn");
+      if (printBtn) {
+        printBtn.addEventListener("click", () => window.print());
+      }
+
+      // 5. Image Lightbox Zoom
+      const lightboxModal = document.getElementById("imageLightboxModal");
+      const lightboxImg = document.getElementById("lightboxImg");
+      const allImgs = document.querySelectorAll(".manual-figure-box img");
+
+      allImgs.forEach(img => {
+        img.addEventListener("click", () => {
+          lightboxImg.src = img.src;
+          lightboxModal.classList.add("active");
+        });
+      });
+
+      lightboxModal.addEventListener("click", () => {
+        lightboxModal.classList.remove("active");
+      });
+
+      // 6. Live Search Filter in Sidebar
+      const searchInput = document.getElementById("manualSearchInput");
+      const activeTocLinks = document.querySelectorAll(isAdmin ? ".toc-admin .toc-menu-link" : ".toc-teacher .toc-menu-link");
+
+      searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        activeTocLinks.forEach(link => {
+          const text = link.textContent.toLowerCase();
+          const parent = link.closest("li");
+          if (!query || text.includes(query)) {
+            if (parent) parent.style.display = "block";
+          } else {
+            if (parent) parent.style.display = "none";
+          }
+        });
+      });
+
+      // 7. Scroll Spy for active TOC link
+      const sections = document.querySelectorAll(isAdmin ? ".admin-only-manual section[id]" : ".teacher-only-manual section[id]");
+      window.addEventListener("scroll", () => {
+        let current = "";
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop - 140;
+          if (pageYOffset >= sectionTop) {
+            current = section.getAttribute("id");
+          }
+        });
+
+        activeTocLinks.forEach(link => {
+          link.classList.remove("active");
+          if (link.getAttribute("href") === `#${current}`) {
+            link.classList.add("active");
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

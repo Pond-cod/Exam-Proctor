@@ -6,6 +6,12 @@
 
 ---
 
+## 📖 คู่มือการใช้งานระบบฉบับสมบูรณ์ (Official User Manuals)
+- **[Interactive Web Manual (เปิดผ่านระบบหลังบ้าน & สั่งพิมพ์ PDF)](admin/manual.html)**: หน้าเว็บคู่มืออินเตอร์แอคทีฟ มีสารบัญคลิกได้ ค้นหาด่วน สลับมุมมองตามสิทธิ์ครู/Admin และพิมพ์เป็นรูปเล่มได้ทันที
+- **[Full Markdown User Manual (เอกสารฉบับเต็ม)](docs/USER_MANUAL.md)**: คู่มือฉบับเต็มพร้อมภาพประกอบครอบคลุมทุกฟังก์ชันและเมนู
+
+---
+
 ## จุดเด่นของระบบ
 - **รองรับทุกอุปกรณ์**: ใช้งานได้ทั้งคอมพิวเตอร์ตั้งโต๊ะ, โน้ตบุ๊ก, แท็บเล็ต, iPad, สมาร์ตโฟน และ Chromebook
 - **ฟอนต์ราชการ TH Sarabun PSK**: ตัวอักษรขนาดมาตรฐาน คมชัด อ่านง่าย และแสดงผลขนาดเท่ากันในทุกขนาดหน้าจอ
@@ -33,6 +39,7 @@
 - `admin/monitor.html`: หน้าจอศูนย์คุมสอบสด (Live Proctoring Center) และคลังประวัติย้อนหลัง (Exam Archives) ติดตามผู้สอบรายบุคคลแบบสดๆ และพิมพ์รายงานสรุปผลการสอบ PDF
 - `admin/users.html`: จัดการบัญชีผู้ใช้งานระบบ (User Management) เพิ่ม/แก้ไข/ลบ กำหนดสิทธิ์ Admin หรือ Teacher
 - `admin/settings.html`: ตั้งค่าระบบกลาง (System Settings) และเชื่อมต่อ Cloud API
+- `admin/manual.html`: คู่มือการใช้งานระบบในตัว (Official User Manual) แยกตามสิทธิ์ Teacher และ Admin อัตโนมัติ
 - `js/backend/`: รวมสคริปต์ตรรกะหลังบ้าน (`auth.js`, `rooms.js`, `creator.js`, `monitor.js`, `users.js`, `settings.js`)
 
 ### 3. ส่วนประมวลผลเซิร์ฟเวอร์และฐานข้อมูล (Cloud Backend & Database)

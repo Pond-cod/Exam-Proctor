@@ -10,7 +10,7 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/(login|rooms|monitor|create|users|settings).html",
+      "source": "/(login|rooms|monitor|create|users|settings|manual).html",
       "destination": "/admin/$1.html"
     }
   ],

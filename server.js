@@ -101,7 +101,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Route legacy root admin pages to admin/ folder
-  if (["/login.html", "/rooms.html", "/monitor.html", "/create.html", "/users.html", "/settings.html"].includes(relativePath)) {
+  if (["/login.html", "/rooms.html", "/monitor.html", "/create.html", "/users.html", "/settings.html", "/manual.html"].includes(relativePath)) {
     relativePath = "/admin" + relativePath;
   }
 
